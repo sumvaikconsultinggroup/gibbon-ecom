@@ -107,6 +107,7 @@ export async function GET(request: Request) {
         count: products.length, // Number of products returned in this response
         total: totalCount, // Total number of products matching the filter
         data: products,
+        products: products, // For frontend compatibility
       },
       {
         status: 200,
