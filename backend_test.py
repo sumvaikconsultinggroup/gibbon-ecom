@@ -40,6 +40,369 @@ class APITester:
         if response_data and not success:
             print(f"   Response: {json.dumps(response_data, indent=2)}")
 
+    def test_admin_setup_status(self) -> bool:
+        """Test GET /api/admin/auth/setup - Check setup status"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/auth/setup")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    needs_setup = data.get('needsSetup', True)
+                    if not needs_setup:
+                        self.log_test(
+                            "GET /api/admin/auth/setup", 
+                            True, 
+                            "Setup status correct: Admin already exists (needsSetup: false)"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "GET /api/admin/auth/setup", 
+                            False, 
+                            "Setup status incorrect: needsSetup should be false since admin exists", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "GET /api/admin/auth/setup", 
+                        False, 
+                        f"API returned success=false: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "GET /api/admin/auth/setup", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/auth/setup", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_login(self) -> bool:
+        """Test POST /api/admin/auth/login - Login with admin credentials"""
+        login_data = {
+            "email": "admin@gibbonnutrition.com",
+            "password": "Admin@123"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/auth/login",
+                json=login_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    user = data.get('user', {})
+                    self.admin_user_info = user
+                    self.admin_authenticated = True
+                    
+                    # Check if Set-Cookie header is present
+                    set_cookie = response.headers.get('Set-Cookie', '')
+                    has_admin_token = 'admin_token=' in set_cookie
+                    
+                    self.log_test(
+                        "POST /api/admin/auth/login", 
+                        True, 
+                        f"Login successful for {user.get('email', 'unknown')} (Role: {user.get('role', 'unknown')}) - Cookie set: {has_admin_token}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/admin/auth/login", 
+                        False, 
+                        f"Login failed: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/auth/login", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/auth/login", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_me(self) -> bool:
+        """Test GET /api/admin/auth/me - Get current user info"""
+        if not self.admin_authenticated:
+            self.log_test("GET /api/admin/auth/me", False, "Cannot test /me endpoint - not authenticated")
+            return False
+            
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/auth/me")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    user = data.get('user', {})
+                    expected_email = "admin@gibbonnutrition.com"
+                    actual_email = user.get('email', '')
+                    
+                    if actual_email.lower() == expected_email.lower():
+                        self.log_test(
+                            "GET /api/admin/auth/me", 
+                            True, 
+                            f"User info retrieved successfully: {user.get('name', 'Unknown')} ({user.get('role', 'unknown')})"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "GET /api/admin/auth/me", 
+                            False, 
+                            f"User email mismatch: expected {expected_email}, got {actual_email}", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "GET /api/admin/auth/me", 
+                        False, 
+                        f"API returned success=false: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "GET /api/admin/auth/me", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/admin/auth/me", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/auth/me", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_staff_list(self) -> bool:
+        """Test GET /api/admin/staff - List all staff members"""
+        if not self.admin_authenticated:
+            self.log_test("GET /api/admin/staff", False, "Cannot test staff list - not authenticated")
+            return False
+            
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/staff")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    staff = data.get('staff', [])
+                    owner_found = any(s.get('role') == 'owner' for s in staff)
+                    
+                    if owner_found and len(staff) >= 1:
+                        self.log_test(
+                            "GET /api/admin/staff", 
+                            True, 
+                            f"Staff list retrieved successfully: {len(staff)} members (owner found)"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "GET /api/admin/staff", 
+                            False, 
+                            f"Staff list incomplete: {len(staff)} members, owner found: {owner_found}", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "GET /api/admin/staff", 
+                        False, 
+                        f"API returned success=false: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "GET /api/admin/staff", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            elif response.status_code == 403:
+                self.log_test(
+                    "GET /api/admin/staff", 
+                    False, 
+                    "Permission denied - user lacks staff.view permission"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/admin/staff", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/staff", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_staff_invite(self) -> bool:
+        """Test POST /api/admin/staff - Invite new staff member"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/staff", False, "Cannot test staff invite - not authenticated")
+            return False
+            
+        invite_data = {
+            "email": "staff@test.com",
+            "name": "Test Staff",
+            "role": "staff"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/staff",
+                json=invite_data
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('success'):
+                    staff = data.get('staff', {})
+                    temp_password = data.get('staff', {}).get('tempPassword')
+                    
+                    if temp_password:
+                        self.log_test(
+                            "POST /api/admin/staff", 
+                            True, 
+                            f"Staff invited successfully: {staff.get('email')} with temp password"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "POST /api/admin/staff", 
+                            False, 
+                            "Staff invite missing temporary password", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "POST /api/admin/staff", 
+                        False, 
+                        f"API returned success=false: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 400:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                if "already registered" in data.get('message', ''):
+                    self.log_test(
+                        "POST /api/admin/staff", 
+                        True, 
+                        "Staff invite working (email already exists - expected behavior)"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/admin/staff", 
+                        False, 
+                        f"Bad request: {data.get('message', response.text)}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "POST /api/admin/staff", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            elif response.status_code == 403:
+                self.log_test(
+                    "POST /api/admin/staff", 
+                    False, 
+                    "Permission denied - user lacks staff.invite permission"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/staff", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/staff", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_logout(self) -> bool:
+        """Test POST /api/admin/auth/logout - Logout and clear cookie"""
+        try:
+            response = self.session.post(f"{self.base_url}/api/admin/auth/logout")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.admin_authenticated = False
+                    self.admin_user_info = None
+                    
+                    # Check if cookie is cleared by trying to access /me
+                    me_response = self.session.get(f"{self.base_url}/api/admin/auth/me")
+                    if me_response.status_code == 401:
+                        self.log_test(
+                            "POST /api/admin/auth/logout", 
+                            True, 
+                            "Logout successful - cookie cleared properly"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "POST /api/admin/auth/logout", 
+                            False, 
+                            "Logout incomplete - cookie not cleared properly"
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "POST /api/admin/auth/logout", 
+                        False, 
+                        f"API returned success=false: {data.get('message', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/auth/logout", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/auth/logout", False, f"Exception: {str(e)}")
+            return False
+
     def test_discounts_get(self) -> bool:
         """Test GET /api/discounts - List all discount codes"""
         try:
