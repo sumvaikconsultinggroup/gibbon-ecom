@@ -89,6 +89,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       })
       
@@ -101,6 +102,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       
       return { success: false, message: data.message || 'Login failed' }
     } catch (error) {
+      console.error('Login error:', error)
       return { success: false, message: 'Network error. Please try again.' }
     }
   }
