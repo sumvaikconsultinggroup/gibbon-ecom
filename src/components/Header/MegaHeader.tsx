@@ -389,7 +389,7 @@ export default function MegaHeader() {
                               <span className="font-medium text-neutral-700 group-hover:text-[#1B198F] dark:text-neutral-200">
                                 {sub.name}
                               </span>
-                              {sub.badge && (
+                              {'badge' in sub && sub.badge && (
                                 <span className="rounded-full bg-[#1B198F]/10 px-2 py-0.5 text-xs font-semibold text-[#1B198F]">
                                   {sub.badge}
                                 </span>
