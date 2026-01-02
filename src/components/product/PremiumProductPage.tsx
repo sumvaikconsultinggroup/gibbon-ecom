@@ -219,10 +219,24 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
       variants: currentVariant?.option1Value ? [{ name: 'Size', option: currentVariant.option1Value }] : [],
     })
     setIsAddingToCart(false)
+    // Open cart drawer after adding item
+    openCart('cart')
   }
 
-  const handleBuyNow = () => {
-    handleAddToCart()
+  const handleBuyNow = async () => {
+    setIsAddingToCart(true)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    addItem({
+      productId: product._id,
+      variantId: currentVariant?._id,
+      name: product.title,
+      price: price,
+      imageUrl: images[0]?.src || '',
+      handle: product.handle,
+      quantity: quantity,
+      variants: currentVariant?.option1Value ? [{ name: 'Size', option: currentVariant.option1Value }] : [],
+    })
+    setIsAddingToCart(false)
     window.location.href = '/checkout'
   }
 
