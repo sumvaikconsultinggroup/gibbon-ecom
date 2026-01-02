@@ -51,6 +51,7 @@ export default function ProductsPage() {
   const [totalProducts, setTotalProducts] = useState(0)
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const productsPerPage = 10
 
