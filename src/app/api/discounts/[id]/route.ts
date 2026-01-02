@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'Discount ID is required' }, { status: 400 })
     }
     
-    const discount = await PromoCode.findById(params.id).lean()
+    const discount = await PromoCode.findById(params.id).lean() as any
     
     if (!discount) {
       return NextResponse.json({ success: false, message: 'Discount not found' }, { status: 404 })
