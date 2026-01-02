@@ -26,12 +26,12 @@ const roboto = Roboto({
 })
 export const metadata: Metadata = {
   title: {
-    template: '%s - Ciseco',
-    default: 'Ciseco',
+    template: '%s | Gibbon Nutrition',
+    default: 'Gibbon Nutrition - Premium Fitness Supplements',
   },
   description:
-    'Ciseco is a modern and elegant template for Next.js, Tailwind CSS, and TypeScript. It is designed to be simple and easy to use, with a focus on performance and accessibility.',
-  keywords: ['Next.js', 'Tailwind CSS', 'TypeScript', 'Ciseco', 'Headless UI', 'Fashion', 'E-commerce'],
+    'Fuel your fitness journey with Gibbon Nutrition. Lab-tested, FSSAI certified supplements including Whey Protein, Pre-Workout, Mass Gainers, BCAAs & more. Made in India.',
+  keywords: ['Gibbon Nutrition', 'Whey Protein', 'Pre-Workout', 'BCAA', 'Mass Gainer', 'Fitness Supplements', 'Bodybuilding', 'Protein Powder India'],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
