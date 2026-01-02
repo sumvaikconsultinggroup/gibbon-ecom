@@ -74,7 +74,7 @@ function PageHome({ allCollections, groupCollections, products, blogPosts }: Pag
         <SectionCollectionSlider2 collections={departmentCollections} />
         <Divider />
         <div>
-          <Heading headingDim="From the Ciseco blog">The latest news</Heading>
+          <Heading headingDim="From the Gibbon Blog">The latest news</Heading>
           <SectionMagazine5 posts={blogPosts} />
           <div className="mt-20 flex justify-center">
             <Button href="/blog" outline>

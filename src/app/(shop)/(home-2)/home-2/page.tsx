@@ -16,10 +16,10 @@ import ButtonSecondary from '@/shared/Button/ButtonSecondary'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Home 2',
+  title: 'Gibbon Nutrition | Premium Sports Nutrition',
   description:
-    'Ciseco is a modern and elegant template for Next.js, Tailwind CSS, and TypeScript. It is designed to be simple and easy to use, with a focus on performance and accessibility.',
-  keywords: ['Next.js', 'Tailwind CSS', 'TypeScript', 'Ciseco', 'Headless UI', 'Fashion', 'E-commerce'],
+    'Gibbon Nutrition offers premium sports nutrition supplements including protein powders, pre-workout, vitamins, and fitness accessories. Shop now for quality supplements.',
+  keywords: ['Sports Nutrition', 'Protein', 'Supplements', 'Gibbon Nutrition', 'Fitness', 'Pre-Workout', 'E-commerce'],
 }
 
 async function PageHome2() {
@@ -55,7 +55,7 @@ async function PageHome2() {
         <SectionGridFeatureItems  />
         <Divider />
         <div>
-          <Heading headingDim="From the Ciseco blog">The latest news</Heading>
+          <Heading headingDim="From the Gibbon Blog">The latest news</Heading>
           <SectionMagazine5 posts={blogPosts} />
           <div className="mt-20 flex justify-center">
             <ButtonSecondary href="/blog">Show all blog articles</ButtonSecondary>
