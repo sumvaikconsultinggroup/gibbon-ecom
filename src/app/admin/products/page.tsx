@@ -528,6 +528,16 @@ export default function ProductsPage() {
       {actionMenuOpen && (
         <div className="fixed inset-0 z-0" onClick={() => setActionMenuOpen(null)} />
       )}
+
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportComplete={() => {
+          fetchProducts()
+          setShowImportModal(false)
+        }}
+      />
     </div>
   )
 }
