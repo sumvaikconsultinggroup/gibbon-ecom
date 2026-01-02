@@ -1,6 +1,6 @@
 import connectDb from '@/lib/mongodb'
 import Product from '@/models/product.model'
-import ProductPageClient from '@/components/product/ProductPageClient'
+import PremiumProductPage from '@/components/product/PremiumProductPage'
 import MegaHeader from '@/components/Header/MegaHeader'
 import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
