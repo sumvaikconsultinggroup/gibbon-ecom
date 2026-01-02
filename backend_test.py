@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base URL for testing
-BASE_URL = "https://gibbon-dashboard.preview.emergentagent.com"
+BASE_URL = "http://localhost:3000"
 
 class APITester:
     def __init__(self, base_url: str):
