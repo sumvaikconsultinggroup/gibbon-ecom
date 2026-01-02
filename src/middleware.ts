@@ -1,6 +1,12 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-export default clerkMiddleware()
+export default clerkMiddleware((auth, request) => {
+  // Skip Clerk for admin API routes - they use custom auth
+  if (request.nextUrl.pathname.startsWith('/api/admin/')) {
+    return NextResponse.next()
+  }
+})
 
 export const config = {
   matcher: [
