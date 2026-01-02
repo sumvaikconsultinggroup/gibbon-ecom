@@ -25,6 +25,7 @@ import {
   Upload,
 } from 'lucide-react'
 import ImportModal from './ImportModal'
+import { getProducts, deleteProduct, getProductStats } from './product-actions'
 
 interface Product {
   _id: string
@@ -34,6 +35,7 @@ interface Product {
   images?: { src: string }[]
   variants?: { price: number; compareAtPrice?: number; inventoryQty?: number; option1Value?: string }[]
   published?: boolean
+  status?: string
   productCategory?: string
   createdAt?: string
 }
@@ -44,7 +46,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
   const [showFilters, setShowFilters] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -62,25 +64,20 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({
-        limit: productsPerPage.toString(),
-        page: currentPage.toString(),
-        ...(searchQuery && { search: searchQuery }),
+      // Use Server Action instead of API route
+      const result = await getProducts({
+        search: searchQuery || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        page: currentPage,
+        limit: productsPerPage,
       })
-      const res = await fetch(`/api/products?${params}`)
-      const data = await res.json()
       
-      let filteredProducts = data.data || []
-      
-      // Apply status filter
-      if (statusFilter !== 'all') {
-        filteredProducts = filteredProducts.filter((p: Product) => 
-          statusFilter === 'published' ? p.published : !p.published
-        )
+      if (result.success) {
+        setProducts(result.products || [])
+        setTotalProducts(result.total || 0)
+      } else {
+        console.error('Error fetching products:', result.message)
       }
-      
-      setProducts(filteredProducts)
-      setTotalProducts(data.total || filteredProducts.length)
     } catch (error) {
       console.error('Error fetching products:', error)
     }
@@ -89,8 +86,9 @@ export default function ProductsPage() {
 
   const handleDelete = async (handle: string) => {
     try {
-      const res = await fetch(`/api/products/${handle}`, { method: 'DELETE' })
-      if (res.ok) {
+      // Use Server Action instead of API route
+      const result = await deleteProduct(handle)
+      if (result.success) {
         fetchProducts()
         setDeleteConfirm(null)
       }
