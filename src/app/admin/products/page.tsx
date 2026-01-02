@@ -133,7 +133,10 @@ export default function ProductsPage() {
           <p className="text-neutral-500">{totalProducts} products in your store</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+          >
             <Upload className="h-4 w-4" />
             Import
           </button>
