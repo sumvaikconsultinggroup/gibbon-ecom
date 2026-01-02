@@ -88,7 +88,7 @@ class APITester:
         """Test POST /api/admin/auth/login - Login with admin credentials"""
         login_data = {
             "email": "admin@gibbonnutrition.com",
-            "password": "Admin@123"
+            "password": "gibbonsecret"
         }
         
         try:
