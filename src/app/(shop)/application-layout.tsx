@@ -1,7 +1,7 @@
 import Footer from '@/components/Footer'
 import MegaHeader from '@/components/Header/MegaHeader'
 import AsideProductQuickView from '@/components/aside-product-quickview'
-import AsideSidebarCart from '@/components/aside-sidebar-cart'
+import PremiumCartDrawer from '@/components/PremiumCartDrawer'
 import AsideSidebarNavigation from '@/components/aside-sidebar-navigation'
 import 'rc-slider/assets/index.css'
 import React, { ReactNode } from 'react'
@@ -21,7 +21,7 @@ const ApplicationLayout: React.FC<ComponentProps> = ({ children, header, footer 
 
       {/* ASIDES */}
       <AsideSidebarNavigation />
-      <AsideSidebarCart />
+      <PremiumCartDrawer />
       <AsideProductQuickView />
     </div>
   )
