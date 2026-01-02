@@ -69,9 +69,8 @@ const CheckoutPage = () => {
                 quantity: item.quantity,
                 variant: {
                   price: item.price,
-                  size: item.size,
-                  color: item.color,
-                  image: item.image,
+                  option1Value: item.variant?.option1Value || '',
+                  image: item.imageUrl || '',
                 },
               })),
               totalAmount: orderSummary.total,
