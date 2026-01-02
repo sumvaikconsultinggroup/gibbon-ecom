@@ -6,11 +6,12 @@ import mongoose from 'mongoose'
 // GET single discount
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDb()
     
+    const params = await context.params
     console.log('Full params object:', params)
     console.log('Searching for discount with ID:', params.id)
     
