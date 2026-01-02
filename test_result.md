@@ -200,12 +200,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Setup Status Check"
-    - "Admin Login Authentication"
-    - "Admin Current User Info"
-    - "Admin Staff Management - List"
-    - "Admin Staff Management - Invite"
-    - "Admin Logout"
+    - "Admin Panel Login Authentication"
+    - "Admin Dashboard UI"
+    - "Admin Sidebar Navigation"
+    - "Admin Discounts Page"
+    - "Admin Products Page"
+    - "Admin Staff Management Page"
+    - "Admin Logout Functionality"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
