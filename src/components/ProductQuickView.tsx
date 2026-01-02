@@ -2,7 +2,7 @@
 
 import GalleryImages from '@/app/(shop)/(other-pages)/products/GalleryImages'
 import ProductStatus from '@/app/(shop)/(other-pages)/products/ProductStatus'
-import RecommendedProducts from '@/app/(shop)/(other-pages)/products/[handle]/RecommendedProducts'
+import RecommendedProducts from '@/components/product/RecommendedProducts'
 import LikeButton from '@/components/LikeButton'
 import NcInputNumber from '@/components/NcInputNumber'
 import ProductColorOptions from '@/components/ProductForm/ProductColorOptions'
