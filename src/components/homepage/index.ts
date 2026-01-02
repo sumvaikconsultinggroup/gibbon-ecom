@@ -1,0 +1,12 @@
+// Export all homepage components
+export { default as HeroSection } from './HeroSection'
+export { default as MarqueeBanner } from './MarqueeBanner'
+export { default as CategoryShowcase } from './CategoryShowcase'
+export { default as FeaturedProducts } from './FeaturedProducts'
+export { default as WhyGibbon } from './WhyGibbon'
+export { default as VideoReels } from './VideoReels'
+export { default as Testimonials } from './Testimonials'
+export { default as Newsletter } from './Newsletter'
+export { default as FAQ } from './FAQ'
+export { default as PromoBanners } from './PromoBanners'
+export { default as InstagramFeed } from './InstagramFeed'
