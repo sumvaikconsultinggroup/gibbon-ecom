@@ -4,6 +4,9 @@ import '@/styles/tailwind.css'
 import { Metadata } from 'next'
 import { Antonio, Poppins, Roboto } from 'next/font/google'
 import GlobalClient from './GlobalClient'
+import PremiumCartDrawer from '@/components/PremiumCartDrawer'
+import AsideSidebarNavigation from '@/components/aside-sidebar-navigation'
+import AsideProductQuickView from '@/components/aside-product-quickview'
 
 import { ClerkProvider } from '@clerk/nextjs'
 
