@@ -1,33 +1,87 @@
-import { Link } from '../Link'
+'use client'
 
-const TopBanner = () => {
+import { X, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const announcements = [
+  {
+    text: '🔥 FLASH SALE: Get 20% OFF on all Whey Protein!',
+    link: '/collections/whey-protein',
+    cta: 'Shop Now',
+  },
+  {
+    text: '🚚 Free Shipping on orders above ₹999',
+    link: '/collections/all',
+    cta: 'Shop All',
+  },
+  {
+    text: '⭐ New Launch: JOLT 2.0 Pre-Workout is here!',
+    link: '/products/jolt',
+    cta: 'Try Now',
+  },
+]
+
+export default function TopBanner() {
+  const [isVisible, setIsVisible] = useState(true)
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % announcements.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [])
+
+  if (!isVisible) return null
+
+  const current = announcements[currentIndex]
+
   return (
-    <div className="bg-white px-4 py-2 sm:py-3 font-['Roboto',serif] text-black dark:bg-neutral-800 dark:text-white border-b border-gray-200 dark:border-neutral-700/40">
-      <div className="text-center">
-        <h5 className="m-0">
-          <Link
-            href="/promo"
-            className="group inline-flex items-center justify-center text-xs sm:text-[15px] font-medium hover:underline"
+    <div className="relative bg-[#1B198F] py-2.5">
+      <div className="container mx-auto flex items-center justify-center px-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3 text-center"
           >
-            Get 3% Pre Paid Bonus
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="ml-1.5 h-4 w-4 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:translate-x-1"
-              aria-hidden="true"
+            <span className="text-sm font-medium text-white">{current.text}</span>
+            <Link
+              href={current.link}
+              className="group inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-white hover:text-[#1B198F]"
             >
-              <path
-                fillRule="evenodd"
-                d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Link>
-        </h5>
+              {current.cta}
+              <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Indicators */}
+        <div className="absolute left-1/2 bottom-0.5 flex -translate-x-1/2 gap-1">
+          {announcements.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`h-1 rounded-full transition-all ${
+                currentIndex === index ? 'w-4 bg-white' : 'w-1 bg-white/40'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={() => setIsVisible(false)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 transition-colors hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
     </div>
   )
 }
-
-export default TopBanner

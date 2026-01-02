@@ -1,158 +1,169 @@
-import Link from "next/link"
-import { Instagram, Mail, Phone, Youtube } from "lucide-react"
+import Link from 'next/link'
+import { Instagram, Mail, Phone, Youtube, MapPin, Clock, Shield, Truck, RotateCcw } from 'lucide-react'
+import Image from 'next/image'
+
+const footerLinks = {
+  categories: [
+    { name: 'Whey Protein', href: '/collections/whey-protein' },
+    { name: 'Pre-Workout', href: '/collections/pre-workout' },
+    { name: 'Mass Gainer', href: '/collections/mass-gainer' },
+    { name: 'BCAAs & EAAs', href: '/collections/bcaa' },
+    { name: 'Vitamins', href: '/collections/vitamins' },
+    { name: 'Creatine', href: '/collections/creatine' },
+  ],
+  quickLinks: [
+    { name: 'About Us', href: '/about' },
+    { name: 'Contact', href: '/contact' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'FAQs', href: '/faqs' },
+    { name: 'Track Order', href: '/track-order' },
+  ],
+  policies: [
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms of Service', href: '/terms' },
+    { name: 'Refund Policy', href: '/refund-policy' },
+    { name: 'Shipping Policy', href: '/shipping-policy' },
+  ],
+}
+
+const trustBadges = [
+  { icon: Shield, text: 'Secure Payments' },
+  { icon: Truck, text: 'Free Shipping ₹999+' },
+  { icon: RotateCcw, text: '7 Day Returns' },
+]
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1B198F] text-white">
+    <footer className="bg-neutral-950 text-white">
+      {/* Trust Badges Bar */}
+      <div className="border-b border-white/10">
+        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {trustBadges.map((badge, index) => (
+              <div key={index} className="flex items-center justify-center gap-3">
+                <badge.icon className="h-6 w-6 text-[#1B198F]" />
+                <span className="text-sm font-semibold">{badge.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Main Footer Content */}
-      <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 md:divide-x md:divide-white/20">
-          {/* Shop All Column */}
-          <div className="md:px-8">
-            <h3 className="font-black text-xl tracking-tight mb-6 [font-family:var(--font-family-antonio)]">CATEGORIES</h3>
-            <ul className="space-y-3 [font-family:var(--font-roboto)]">
-              <li>
-                <Link href="/collections/health-and-wellness" className="hover:underline">
-                  Health & Wellness
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/build-muscle" className="hover:underline">
-                  Build Muscle
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/weight-management" className="hover:underline">
-                  Weight Management
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/pre-workout" className="hover:underline">
-                  Pre Workout
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/muscle-recovery" className="hover:underline">
-                  Muscle Recovery
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Know More Column */}
-          <div className="md:px-8">
-            <h3 className="font-black text-xl tracking-tight mb-6 [font-family:var(--font-family-antonio)]">TOP PRODUCTS</h3>
-            <ul className="space-y-3 [font-family:var(--font-roboto)]">
-              <li>
-                <Link href="/products/jolt" className="hover:underline">
-                  JOLT
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/mass-gainer-5kg" className="hover:underline">
-                  Mass Gainer 5KG
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/my-omega" className="hover:underline">
-                  My Omega
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/my-whey-2-kg" className="hover:underline">
-                  My Whey 2 kg
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/daily-bcaa" className="hover:underline">
-                  Daily BCAA
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support & Policy Column */}
-          <div className="md:px-8">
-            <h3 className="font-black text-xl tracking-tight mb-6 [font-family:var(--font-family-antonio)]">USEFULL LINKS</h3>
-            <ul className="space-y-3 [font-family:var(--font-roboto)]">
-              {/* <li>
-                <Link href="#" className="hover:underline">
-                  Refer & Earn
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:underline">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:underline">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:underline">
-                  Refund & Returns
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:underline">
-                  Shipping Policy
-                </Link>
-              </li> */}
-              <li>
-                <Link href="/blog" className="hover:underline">
-                  Blogs
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:underline">
-                  Contact Us
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Follow Along Column */}
-          <div className="md:px-8">
-            <h3 className="font-black text-xl tracking-tight mb-6 [font-family:var(--font-family-antonio)]">FOLLOW ALONG</h3>
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid gap-8 lg:grid-cols-5 lg:gap-12">
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+            <Link href="/" className="mb-6 inline-block">
+              <Image
+                src="/GibbonLogoEccom.png"
+                alt="Gibbon Nutrition"
+                width={180}
+                height={54}
+                className="h-12 w-auto brightness-0 invert"
+              />
+            </Link>
+            <p className="mb-6 max-w-sm text-sm leading-relaxed text-neutral-400">
+              Gibbon Nutrition crafts premium fitness supplements that are lab-tested, 
+              FSSAI certified, and designed to help you achieve your fitness goals. 
+              Made in India with love.
+            </p>
+            
+            {/* Social Links */}
             <div className="flex gap-3">
               <Link
                 href="https://www.instagram.com/gibbonnutrition/"
-                className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-[#1B198F]"
               >
-                <Instagram className="w-6 h-6 text-black" />
+                <Instagram className="h-5 w-5" />
               </Link>
               <Link
                 href="https://www.youtube.com/channel/UCjGA-E71FwOIanpFeJspGfA"
-                className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-[#1B198F]"
               >
-                <Youtube className="w-6 h-6 text-black" />
+                <Youtube className="h-5 w-5" />
               </Link>
             </div>
           </div>
 
-          {/* Get In Touch Column */}
-          <div className="md:px-8">
-            <h3 className="font-black text-xl tracking-tight mb-6 [font-family:var(--font-family-antonio)]">GET IN TOUCH</h3>
-            <ul className="space-y-1 [font-family:var(--font-roboto)]">
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5" />
-                <Link href="tel:+917717495954" className="hover:underline">
-                 +91 77174 95954
+          {/* Categories */}
+          <div>
+            <h3 className="mb-4 font-[family-name:var(--font-family-antonio)] text-sm font-bold uppercase tracking-wider">
+              Categories
+            </h3>
+            <ul className="space-y-3">
+              {footerLinks.categories.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-neutral-400 transition-colors hover:text-white"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="mb-4 font-[family-name:var(--font-family-antonio)] text-sm font-bold uppercase tracking-wider">
+              Quick Links
+            </h3>
+            <ul className="space-y-3">
+              {footerLinks.quickLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-neutral-400 transition-colors hover:text-white"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="mb-4 font-[family-name:var(--font-family-antonio)] text-sm font-bold uppercase tracking-wider">
+              Get In Touch
+            </h3>
+            <ul className="space-y-3">
+              <li>
+                <Link
+                  href="tel:+917717495954"
+                  className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white"
+                >
+                  <Phone className="h-4 w-4" />
+                  +91 77174 95954
                 </Link>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5" />
-                <Link href="tel:+919056013132" className="hover:underline">
-                 +91 90560 13132
+              <li>
+                <Link
+                  href="tel:+919056013132"
+                  className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white"
+                >
+                  <Phone className="h-4 w-4" />
+                  +91 90560 13132
                 </Link>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5" />
-                <Link href="mailto:info@gibbonnutrition.com" className="hover:underline">
+              <li>
+                <Link
+                  href="mailto:info@gibbonnutrition.com"
+                  className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white"
+                >
+                  <Mail className="h-4 w-4" />
                   info@gibbonnutrition.com
                 </Link>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-neutral-400">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Mon - Sat: 9AM - 7PM IST</span>
               </li>
             </ul>
           </div>
@@ -160,35 +171,46 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/20">
-        <div className="container mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm">© 2025 Gibbon. All rights reserved.</p>
-          <div className="flex items-center gap-2">
-            <span className="text-sm mr-2">Pay Using:</span>
-            <div className="flex gap-1">
-              {/* Payment Icons */}
-              <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
-                <span className="text-[#1A1F71] font-bold text-xs">VISA</span>
-              </div>
-              <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
-                <div className="flex">
-                  <div className="w-4 h-4 bg-[#EB001B] rounded-full -mr-1.5"></div>
-                  <div className="w-4 h-4 bg-[#F79E1B] rounded-full opacity-80"></div>
+      <div className="border-t border-white/10">
+        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            {/* Copyright */}
+            <p className="text-center text-xs text-neutral-500">
+              © {new Date().getFullYear()} Gibbon Nutrition. All rights reserved.
+            </p>
+
+            {/* Policy Links */}
+            <div className="flex flex-wrap justify-center gap-4">
+              {footerLinks.policies.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="text-xs text-neutral-500 transition-colors hover:text-white"
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Payment Methods */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-500">Pay with:</span>
+              <div className="flex gap-1">
+                <div className="rounded bg-white px-2 py-1">
+                  <span className="text-[10px] font-bold text-[#1A1F71]">VISA</span>
                 </div>
-              </div>
-              <div className="bg-[#016FD0] rounded px-2 py-1 flex items-center justify-center">
-                <span className="text-white font-bold text-xs">AMEX</span>
-              </div>
-              <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
-                <span className="text-[#003087] font-bold text-xs italic">
-                  Pay<span className="text-[#009CDE]">Pal</span>
-                </span>
-              </div>
-              <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
-                <span className="text-[#0079BE] font-bold text-xs">DC</span>
-              </div>
-              <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
-                <span className="text-[#FF6000] font-bold text-[10px]">DISCOVER</span>
+                <div className="flex items-center rounded bg-white px-2 py-1">
+                  <div className="flex">
+                    <div className="-mr-1 h-3 w-3 rounded-full bg-[#EB001B]"></div>
+                    <div className="h-3 w-3 rounded-full bg-[#F79E1B] opacity-80"></div>
+                  </div>
+                </div>
+                <div className="rounded bg-white px-2 py-1">
+                  <span className="text-[10px] font-bold text-[#5f259f]">RuPay</span>
+                </div>
+                <div className="rounded bg-white px-2 py-1">
+                  <span className="text-[10px] font-bold text-[#002E6E]">UPI</span>
+                </div>
               </div>
             </div>
           </div>
