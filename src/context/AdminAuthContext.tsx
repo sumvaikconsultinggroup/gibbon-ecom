@@ -31,11 +31,14 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(false)
+  const [connectionError, setConnectionError] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
-  const checkAuth = async () => {
+  const checkAuth = async (retryCount = 0) => {
     try {
+      setConnectionError(false)
+      
       // First check if setup is needed
       const setupRes = await fetch('/api/admin/auth/setup', {
         method: 'GET',
@@ -74,6 +77,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Auth check error:', error)
+      // Retry up to 2 times with delay
+      if (retryCount < 2) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return checkAuth(retryCount + 1)
+      }
+      setConnectionError(true)
       setUser(null)
     } finally {
       setIsLoading(false)
