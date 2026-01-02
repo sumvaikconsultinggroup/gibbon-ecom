@@ -729,8 +729,14 @@ class APITester:
         print(f"📍 Base URL: {self.base_url}")
         print("=" * 60)
         
-        # Test sequence
+        # Test sequence - Admin Auth tests first
         tests = [
+            ("Admin Setup Status", self.test_admin_setup_status),
+            ("Admin Login", self.test_admin_login),
+            ("Admin Current User", self.test_admin_me),
+            ("Admin Staff List", self.test_admin_staff_list),
+            ("Admin Staff Invite", self.test_admin_staff_invite),
+            ("Admin Logout", self.test_admin_logout),
             ("Discounts API - GET", self.test_discounts_get),
             ("Discounts API - POST", self.test_discounts_post),
             ("Discounts API - PUT", self.test_discounts_put),
