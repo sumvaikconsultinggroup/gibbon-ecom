@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: [
+    'gibbon-dashboard.preview.emergentagent.com',
+    '*.preview.emergentagent.com',
+  ],
   images: {
     minimumCacheTTL: 2678400 * 12, // 6 months
     remotePatterns: [
