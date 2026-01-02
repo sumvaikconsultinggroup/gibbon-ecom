@@ -26,14 +26,14 @@ import Footer from '@/components/Footer'
 const freeShippingThreshold = 999
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, totalPrice } = useCart()
+  const { items, removeItem, updateItemQuantity, removeAll } = useCart()
   const [promoCode, setPromoCode] = useState('')
   const [promoDiscount, setPromoDiscount] = useState(0)
   const [promoError, setPromoError] = useState('')
   const [promoSuccess, setPromoSuccess] = useState('')
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
 
-  const subtotal = totalPrice
+  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const shipping = subtotal >= freeShippingThreshold ? 0 : 99
   const total = subtotal - promoDiscount + shipping
   const progressToFreeShipping = Math.min((subtotal / freeShippingThreshold) * 100, 100)
