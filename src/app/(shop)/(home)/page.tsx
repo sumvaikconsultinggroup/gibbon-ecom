@@ -1,22 +1,21 @@
-// This is a Server Component (no 'use client')
+import MegaHeader from '@/components/Header/MegaHeader'
 import Footer from '@/components/Footer'
 import {
-  CategoryShowcase,
-  FAQ,
-  FeaturedProducts,
   HeroSection,
-  InstagramFeed,
   MarqueeBanner,
-  Newsletter,
-  PromoBanners,
-  Testimonials,
-  VideoReels,
+  CategoryShowcase,
+  FeaturedProducts,
   WhyGibbon,
+  VideoReels,
+  Testimonials,
+  Newsletter,
+  FAQ,
+  PromoBanners,
+  InstagramFeed,
 } from '@/components/homepage'
 import connectDb from '@/lib/mongodb'
 import Product from '@/models/product.model'
 
-// Fetch products from database
 async function getProducts() {
   try {
     await connectDb()
@@ -24,8 +23,6 @@ async function getProducts() {
       .sort({ createdAt: -1 })
       .limit(12)
       .lean()
-    
-    // Convert _id to string for serialization
     return products.map((product: any) => ({
       ...product,
       _id: product._id.toString(),
@@ -41,52 +38,19 @@ export default async function PageHome() {
 
   return (
     <div className="nc-PageHome relative">
-      {/* Hero Section - Full Screen with Parallax */}
+      <MegaHeader />
       <HeroSection />
-
-      {/* Animated Marquee Banner */}
       <MarqueeBanner />
-
-      {/* Category Showcase - Shop by Goal */}
       <CategoryShowcase />
-
-      {/* Featured Products - Bestsellers */}
-      <FeaturedProducts
-        products={products}
-        title="Bestsellers"
-        subtitle="Our most loved products by the Gibbon community"
-      />
-
-      {/* Promotional Banners */}
+      <FeaturedProducts products={products} title="Bestsellers" subtitle="Our most loved products by the Gibbon community" />
       <PromoBanners />
-
-      {/* Why Choose Gibbon */}
       <WhyGibbon />
-
-      {/* Video Reels Section */}
       <VideoReels />
-
-      {/* New Arrivals - Second Product Section */}
-      <FeaturedProducts
-        products={products.slice(0, 8)}
-        title="New Arrivals"
-        subtitle="Fresh drops to elevate your fitness game"
-        className="bg-neutral-50 dark:bg-neutral-950"
-      />
-
-      {/* Customer Testimonials */}
+      <FeaturedProducts products={products.slice(0, 8)} title="New Arrivals" subtitle="Fresh drops to elevate your fitness game" className="bg-neutral-50 dark:bg-neutral-950" />
       <Testimonials />
-
-      {/* Newsletter Signup */}
       <Newsletter />
-
-      {/* FAQ Section */}
       <FAQ />
-
-      {/* Instagram Feed */}
       <InstagramFeed />
-
-      {/* Footer */}
       <Footer />
     </div>
   )

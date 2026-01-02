@@ -1,5 +1,3 @@
-import Header from '@/components/Header/Header'
-import TopBanner from '@/components/Header/TopBanner'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -28,16 +26,5 @@ export const metadata: Metadata = {
 }
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen">
-      {/* Top Banner - Announcement */}
-      <TopBanner />
-      
-      {/* Header */}
-      <Header hasBorderBottom={false} />
-      
-      {/* Main Content */}
-      <main>{children}</main>
-    </div>
-  )
+  return <>{children}</>
 }

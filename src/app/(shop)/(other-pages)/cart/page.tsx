@@ -1,364 +1,309 @@
 'use client'
 
-import NcInputNumber from '@/components/NcInputNumber'
-import Prices from '@/components/Prices'
-import { CartItem, PromoCode, useCart } from '@/components/useCartStore'
-import Breadcrumb from '@/shared/Breadcrumb'
-import ButtonPrimary from '@/shared/Button/ButtonPrimary'
-import { CheckIcon } from '@heroicons/react/24/outline'
-import { InformationCircleIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowRight,
+  Tag,
+  Truck,
+  Shield,
+  ChevronRight,
+  X,
+  Gift,
+  Percent,
+  CheckCircle,
+} from 'lucide-react'
+import { useCart } from '@/components/useCartStore'
+import MegaHeader from '@/components/Header/MegaHeader'
+import Footer from '@/components/Footer'
 
-interface PromoResponse {
-  success: boolean
-  message: string
-  promoCode?: PromoCode
-  applicableProductIds?: string[]
-}
+const freeShippingThreshold = 999
 
-const CartPage = () => {
-  const { items, removeItem, updateItemQuantity, applyPromoCode, appliedPromoCode, removePromoCode, applicableProductIds } = useCart()
-  const [subtotal, setSubtotal] = useState(0)
-  const [promoCodeInput, setPromoCodeInput] = useState('')
-  const [discount, setDiscount] = useState(0)
-  const [total, setTotal] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  
-  const handleApplyPromoCode = async () => {
-    if (!promoCodeInput.trim()) return
-    setIsLoading(true)
-    setPromoMessage(null)
+export default function CartPage() {
+  const { items, removeItem, updateQuantity, clearCart, totalPrice } = useCart()
+  const [promoCode, setPromoCode] = useState('')
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoError, setPromoError] = useState('')
+  const [promoSuccess, setPromoSuccess] = useState('')
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
+
+  const subtotal = totalPrice
+  const shipping = subtotal >= freeShippingThreshold ? 0 : 99
+  const total = subtotal - promoDiscount + shipping
+  const progressToFreeShipping = Math.min((subtotal / freeShippingThreshold) * 100, 100)
+  const amountToFreeShipping = Math.max(freeShippingThreshold - subtotal, 0)
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return
+    setIsApplyingPromo(true)
+    setPromoError('')
+    setPromoSuccess('')
+
     try {
-      const response = await fetch('http://localhost:3000/api/coupons/promo-code/check', {
+      const res = await fetch('/api/promoCode/check', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: promoCodeInput.trim(),
-          cartItems: items.map((item) => ({
-            productId: item.productId || item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode, cartTotal: subtotal }),
       })
+      const data = await res.json()
 
-      const data: PromoResponse = await response.json()
-      console.log('=== API RESPONSE ===')
-      console.log('Full response:', data)
-      console.log('Promo Code:', data.promoCode)
-      console.log('Applicable Product IDs:', data.applicableProductIds)
-
-      if (!response.ok || !data.success) {
-        setPromoMessage({ type: 'error', text: data.message || 'Invalid promo code.' })
-        removePromoCode()
-        return
-      }
-
-      if (data.promoCode) {
-        // For 'all' type coupons, pass all product IDs or empty array
-        const productIds = data.applicableProductIds || []
-        applyPromoCode(data.promoCode, productIds)
-        setPromoMessage({ type: 'success', text: data.message })
-        setPromoCodeInput('') // Clear input after successful application
-      }
-    } catch (error) {
-      console.error('An error occurred while applying the promo code:', error)
-      setPromoMessage({ type: 'error', text: 'An unexpected error occurred.' })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Calculate subtotal, discount, and total
-  useEffect(() => {
-    const newSubtotal = items.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0)
-    setSubtotal(newSubtotal)
-
-    let newDiscount = 0
-    
-    if (appliedPromoCode) {
-      console.log('=== DISCOUNT CALCULATION ===')
-      console.log('Promo Code:', appliedPromoCode)
-      console.log('Discount Type:', appliedPromoCode.discountType)
-      console.log('Discount Value:', appliedPromoCode.discountValue)
-      console.log('Applies To:', appliedPromoCode.appliesTo)
-      console.log('Subtotal:', newSubtotal)
-      
-      let applicableSubtotal = 0
-      
-      // If applies to all, use full subtotal
-      if (appliedPromoCode.appliesTo === 'all') {
-        applicableSubtotal = newSubtotal
-        console.log('Applying to ALL items, applicable subtotal:', applicableSubtotal)
+      if (data.success && data.discount) {
+        setPromoDiscount(data.discount)
+        setPromoSuccess(`Code applied! You save ₹${data.discount}`)
       } else {
-        // Calculate subtotal of only applicable products
-        const applicableItems = items.filter((item) => {
-          const itemId = item.productId || item.id
-          return applicableProductIds.includes(itemId)
-        })
-        
-        applicableSubtotal = applicableItems.reduce((acc, item) => {
-          return acc + (item.price || 0) * item.quantity
-        }, 0)
-        
-        console.log('Applicable items:', applicableItems.length)
-        console.log('Applicable subtotal:', applicableSubtotal)
+        setPromoError(data.message || 'Invalid promo code')
       }
-
-      // Calculate discount based on type
-      if (appliedPromoCode.discountType === 'percentage') {
-        newDiscount = (applicableSubtotal * appliedPromoCode.discountValue) / 100
-        console.log(`Calculating: ${applicableSubtotal} * ${appliedPromoCode.discountValue} / 100 = ${newDiscount}`)
-      } else if (appliedPromoCode.discountType === 'fixed') {
-        newDiscount = Math.min(applicableSubtotal, appliedPromoCode.discountValue)
-        console.log(`Fixed discount: ${newDiscount}`)
-      }
-      
-      console.log('Final discount amount:', newDiscount)
-      console.log('======================')
+    } catch (err) {
+      setPromoError('Failed to apply promo code')
+    } finally {
+      setIsApplyingPromo(false)
     }
-    
-    setDiscount(newDiscount)
-    const finalTotal = Math.max(0, newSubtotal - newDiscount)
-    console.log(`FINAL: Subtotal=${newSubtotal}, Discount=${newDiscount}, Total=${finalTotal}`)
-    setTotal(finalTotal)
-  }, [items, appliedPromoCode, applicableProductIds])
-
-  const renderStatusInstock = () => {
-    return (
-      <div className="flex items-center justify-center rounded-full border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-700 dark:border-neutral-700 dark:text-neutral-300">
-        <CheckIcon className="h-3.5 w-3.5" />
-        <span className="ml-1 leading-none">In Stock</span>
-      </div>
-    )
   }
 
-  const renderDiscountStatus = (item: CartItem) => {
-    if (!appliedPromoCode) return null
-
-    let isApplicable = false
-    if (appliedPromoCode.appliesTo === 'all') {
-      isApplicable = true
-    } else {
-      isApplicable = applicableProductIds.includes(item.productId)
-    }
-
-    const text = isApplicable ? 'Eligible' : 'Not eligible'
-    const colorClass = isApplicable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-
-    return (
-      <div className={`mt-2 inline-block rounded px-2 py-1 text-xs font-medium ${colorClass}`}>
-        {text}
-      </div>
-    )
+  const removePromo = () => {
+    setPromoCode('')
+    setPromoDiscount(0)
+    setPromoSuccess('')
+    setPromoError('')
   }
 
-  const renderProduct = (item: CartItem) => {
-    const { imageUrl, price, name, handle, id, quantity, variants } = item
-
+  if (items.length === 0) {
     return (
-      <div key={id} className="relative flex py-8 first:pt-0 last:pb-0 sm:py-10 xl:py-12">
-        <div className="relative h-36 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100 sm:w-32">
-          {imageUrl && (
-            <Image
-              fill
-              src={imageUrl || '/placeholder-images.webp'}
-              alt={name}
-              sizes="300px"
-              className="rounded-xl object-contain object-center"
-              priority
-            />
-          )}
-          <Link href={'/products/' + handle} className="absolute inset-0"></Link>
-        </div>
-
-        <div className="ml-3 flex flex-1 flex-col sm:ml-6">
-          <div>
-            <div className="flex justify-between">
-              <div className="flex-[1.5]">
-                <h3 className="text-base font-semibold">
-                  <Link href={'/products/' + handle}>{name}</Link>
-                </h3>
-                {variants && variants.length > 0 && (
-                  <div className="mt-1.5 flex flex-col gap-y-1 text-sm text-neutral-600 sm:mt-2.5 dark:text-neutral-300">
-                    {variants.map((variant) => (
-                      <div key={variant.name}>{`${variant.name}: ${variant.option}`}</div>
-                    ))}
-                  </div>
-                )}
-                {renderDiscountStatus(item)}
-
-                <div className="mt-3 flex w-full justify-between sm:hidden">
-                  <NcInputNumber defaultValue={quantity} onChange={(value) => updateItemQuantity(id, value)} />
-                  <Prices contentClass="py-1 px-2 md:py-1.5 md:px-2.5 text-sm font-medium h-full" price={price || 0} />
-                </div>
-              </div>
-
-              <div className="hidden text-center sm:block">
-                <NcInputNumber defaultValue={quantity} onChange={(value) => updateItemQuantity(id, value)} />
-              </div>
-
-              <div className="hidden flex-1 justify-end sm:flex">
-                <Prices price={price || 0} className="mt-0.5" />
-              </div>
-            </div>
+      <>
+        <MegaHeader />
+        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-20">
+          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+            <ShoppingBag className="h-12 w-12 text-neutral-400" />
           </div>
-
-          <div className="mt-auto flex items-end justify-between pt-4 text-sm">
-            {renderStatusInstock()}
-
-            <div
-              className="mt-3 flex cursor-pointer items-center text-sm font-medium text-primary-600 hover:text-primary-500"
-              onClick={() => removeItem(id)}
-              role="button"
-            >
-              <span>Remove</span>
-            </div>
-          </div>
+          <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-white">Your cart is empty</h1>
+          <p className="mb-8 text-neutral-500">Looks like you haven't added anything to your cart yet.</p>
+          <Link
+            href="/collections/all"
+            className="flex items-center gap-2 rounded-full bg-[#1B198F] px-8 py-4 font-bold text-white transition-all hover:bg-[#1B198F]/90"
+          >
+            Start Shopping
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
-      </div>
+        <Footer />
+      </>
     )
   }
 
   return (
-    <div className="nc-CartPage">
-      <main className="container py-16 lg:pt-20 lg:pb-28">
-        <div className="mb-12 sm:mb-16">
-          <h2 className="block text-2xl font-semibold sm:text-3xl lg:text-4xl">Shopping Cart</h2>
-          <Breadcrumb breadcrumbs={[{ id: 1, name: 'Home', href: '/' }]} currentPage="Shopping Cart" className="mt-5" />
-        </div>
-
-        <hr className="my-10 border-neutral-200 xl:my-12 dark:border-neutral-700" />
-
-        <div className="flex flex-col lg:flex-row">
-          <div className="w-full divide-y divide-neutral-200 lg:w-[60%] xl:w-[55%] dark:divide-neutral-700">
-            {items.map(renderProduct)}
+    <>
+      <MegaHeader />
+      <div className="min-h-screen bg-neutral-50 py-8 lg:py-12 dark:bg-neutral-950">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="font-[family-name:var(--font-family-antonio)] text-3xl font-black uppercase text-neutral-900 sm:text-4xl dark:text-white">
+              Shopping Cart
+            </h1>
+            <p className="mt-2 text-neutral-500">{items.length} item(s) in your cart</p>
           </div>
-          <div className="my-10 shrink-0 border-t border-neutral-200 lg:mx-10 lg:my-0 lg:border-t-0 lg:border-l xl:mx-16 2xl:mx-20 dark:border-neutral-700"></div>
-          <div className="flex-1">
-            <div className="sticky top-10">
-              <h3 className="text-lg font-semibold">Order Summary</h3>
-              <div className="mt-7 divide-y divide-neutral-200/70 text-sm text-neutral-500 dark:divide-neutral-700/80 dark:text-neutral-400">
-                <div className="flex justify-between pb-4">
-                  <span>Subtotal</span>
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-200">
-                    ₹{subtotal.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between py-4">
-                  <span>Shipping estimate</span>
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-200">
-                   Will be Calculated at checkout
-                  </span>
-                </div>
-                {appliedPromoCode && (
-                  <div className="flex justify-between py-4">
-                    <div className="flex items-center gap-x-2">
-                      <span>Discount</span>
-                      <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium dark:bg-neutral-700">
-                        {appliedPromoCode.code}
-                      </span>
-                      <span
-                        className="cursor-pointer text-red-500"
-                        onClick={() => {
-                          removePromoCode()
-                          setPromoMessage(null)
-                        }}
-                        title="Remove promo code"
-                      >
-                        (Remove)
-                      </span>
-                    </div>
-                    <span className="font-semibold text-green-600">-₹{discount.toFixed(2)}</span>
+
+          {/* Free Shipping Progress */}
+          {subtotal < freeShippingThreshold && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20"
+            >
+              <div className="flex items-center gap-3">
+                <Truck className="h-6 w-6 text-green-600" />
+                <div className="flex-1">
+                  <p className="font-semibold text-green-800 dark:text-green-400">
+                    Add ₹{amountToFreeShipping.toFixed(0)} more for FREE shipping!
+                  </p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-green-200 dark:bg-green-800">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressToFreeShipping}%` }}
+                      className="h-full rounded-full bg-green-500"
+                    />
                   </div>
-                )}
-                <div className="flex justify-between py-4">
-                  <span>Tax estimate</span>
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-200"> Will be Calculated at checkout</span>
-                </div>
-                <div className="flex justify-between pt-4 text-base font-semibold text-neutral-900 dark:text-neutral-200">
-                  <span>Order total</span>
-                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
-              {promoMessage && (
-                <div
-                  className={`mt-4 rounded-lg p-4 text-sm ${
-                    promoMessage.type === 'success'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {promoMessage.text}
-                </div>
-              )}
-              <div className="mt-5 flex justify-between">
-                <input
-                  type="text"
-                  value={promoCodeInput}
-                  onChange={(e) => {
-                    setPromoCodeInput(e.currentTarget.value)
-                    if (promoMessage) setPromoMessage(null)
-                  }}
-                  className="form-input w-full rounded-lg border-neutral-200 bg-transparent px-4 py-3 text-sm dark:border-neutral-700"
-                  placeholder="Gift card or discount code"
-                />
-                <button
-                  onClick={handleApplyPromoCode}
-                  disabled={isLoading}
-                  className="ml-4 flex-shrink-0 rounded-lg bg-neutral-200 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-300 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600"
-                >
-                  {isLoading ? 'Applying...' : 'Apply'}
+            </motion.div>
+          )}
+
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {items.map((item) => (
+                    <motion.div
+                      key={`${item.productId}-${item.variantId}`}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      className="flex gap-4 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-900 sm:gap-6 sm:p-6"
+                    >
+                      {/* Image */}
+                      <Link href={`/products/${item.handle}`} className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-neutral-100 sm:h-32 sm:w-32">
+                        <Image src={item.imageUrl || '/placeholder-images.webp'} alt={item.name} fill className="object-cover" />
+                      </Link>
+
+                      {/* Info */}
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <Link href={`/products/${item.handle}`} className="font-semibold text-neutral-900 hover:text-[#1B198F] dark:text-white">
+                              {item.name}
+                            </Link>
+                            {item.variants && item.variants.length > 0 && (
+                              <p className="mt-1 text-sm text-neutral-500">
+                                {item.variants.map((v) => `${v.name}: ${v.option}`).join(' | ')}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => removeItem(item.productId, item.variantId)}
+                            className="rounded-full p-2 text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+
+                        <div className="mt-auto flex items-end justify-between pt-4">
+                          {/* Quantity */}
+                          <div className="flex items-center rounded-full border border-neutral-200 dark:border-neutral-700">
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.variantId, Math.max(1, item.quantity - 1))}
+                              className="flex h-9 w-9 items-center justify-center text-neutral-500 hover:text-neutral-900"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.variantId, item.quantity + 1)}
+                              className="flex h-9 w-9 items-center justify-center text-neutral-500 hover:text-neutral-900"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          {/* Price */}
+                          <p className="text-lg font-bold text-neutral-900 dark:text-white">
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Clear Cart */}
+              <div className="mt-6 flex justify-end">
+                <button onClick={clearCart} className="text-sm font-semibold text-red-500 hover:text-red-600">
+                  Clear Cart
                 </button>
               </div>
+            </div>
 
-              <ButtonPrimary href="/checkout" className="mt-8 w-full">
-                Checkout
-              </ButtonPrimary>
-              <div className="mt-5 flex items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
-                <p className="relative block pl-5">
-                  <HugeiconsIcon
-                    icon={InformationCircleIcon}
-                    size={16}
-                    color="currentColor"
-                    className="absolute top-0.5 -left-1"
-                    strokeWidth={1.5}
-                  />
-                  Learn more{` `}
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="##"
-                    className="font-medium text-neutral-900 underline dark:text-neutral-200"
-                  >
-                    Taxes
-                  </a>
-                  <span>
-                    {` `}and{` `}
-                  </span>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="##"
-                    className="font-medium text-neutral-900 underline dark:text-neutral-200"
-                  >
-                    Shipping
-                  </a>
-                  {` `} infomation
-                </p>
+            {/* Order Summary */}
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-900">
+                <h2 className="mb-6 text-xl font-bold text-neutral-900 dark:text-white">Order Summary</h2>
+
+                {/* Promo Code */}
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                    Promo Code
+                  </label>
+                  {promoSuccess ? (
+                    <div className="flex items-center justify-between rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <span className="text-sm font-semibold text-green-700 dark:text-green-400">{promoSuccess}</span>
+                      </div>
+                      <button onClick={removePromo} className="text-green-600 hover:text-green-700">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        placeholder="Enter code"
+                        className="flex-1 rounded-xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-800"
+                      />
+                      <button
+                        onClick={applyPromoCode}
+                        disabled={isApplyingPromo}
+                        className="rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-700"
+                      >
+                        {isApplyingPromo ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {promoError && <p className="mt-2 text-sm text-red-500">{promoError}</p>}
+                </div>
+
+                {/* Summary Lines */}
+                <div className="space-y-3 border-b border-neutral-200 pb-4 dark:border-neutral-700">
+                  <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toLocaleString()}</span>
+                  </div>
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="flex items-center gap-1">
+                        <Tag className="h-4 w-4" /> Discount
+                      </span>
+                      <span>-₹{promoDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
+                    <span>Shipping</span>
+                    <span className={shipping === 0 ? 'font-semibold text-green-600' : ''}>
+                      {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex justify-between py-4">
+                  <span className="text-lg font-bold text-neutral-900 dark:text-white">Total</span>
+                  <span className="text-2xl font-black text-neutral-900 dark:text-white">₹{total.toLocaleString()}</span>
+                </div>
+
+                {/* Checkout Button */}
+                <Link
+                  href="/checkout"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1B198F] py-4 font-bold uppercase tracking-wider text-white transition-all hover:bg-[#1B198F]/90"
+                >
+                  Proceed to Checkout
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+
+                {/* Trust Badges */}
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <Shield className="h-4 w-4" /> Secure Payment
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <Truck className="h-4 w-4" /> Fast Delivery
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+      <Footer />
+    </>
   )
 }
-
-export default CartPage
