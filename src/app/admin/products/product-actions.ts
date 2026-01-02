@@ -6,6 +6,7 @@ import Product from '@/models/product.model'
 interface ProductQueryParams {
   search?: string
   status?: string
+  category?: string
   page?: number
   limit?: number
 }
@@ -14,6 +15,7 @@ interface ProductResult {
   success: boolean
   message?: string
   products?: any[]
+  product?: any
   total?: number
   count?: number
 }
@@ -23,7 +25,7 @@ export async function getProducts(params: ProductQueryParams = {}): Promise<Prod
   try {
     await connectDb()
     
-    const { search, status, page = 1, limit = 20 } = params
+    const { search, status, category, page = 1, limit = 20 } = params
     
     // Build filter
     const filter: any = { isDeleted: { $ne: true } }
@@ -34,6 +36,10 @@ export async function getProducts(params: ProductQueryParams = {}): Promise<Prod
     
     if (status && status !== 'all') {
       filter.status = status
+    }
+    
+    if (category && category !== 'all') {
+      filter.productCategory = category
     }
     
     // Get total count
@@ -78,7 +84,169 @@ export async function getProducts(params: ProductQueryParams = {}): Promise<Prod
   }
 }
 
-// Delete a product
+// Get single product by handle
+export async function getProductByHandle(handle: string): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    const product = await Product.findOne({ handle, isDeleted: { $ne: true } }).lean()
+    
+    if (!product) {
+      return { success: false, message: 'Product not found' }
+    }
+    
+    // Convert to plain object
+    const plainProduct = {
+      ...product,
+      _id: product._id?.toString(),
+      options: product.options?.map((opt: any) => ({
+        name: opt.name,
+        values: opt.values,
+      })),
+      variants: product.variants?.map((v: any) => ({
+        ...v,
+        _id: v._id?.toString(),
+      })),
+      images: product.images?.map((img: any) => ({
+        src: img.src,
+        position: img.position,
+        altText: img.altText,
+      })),
+    }
+    
+    return { success: true, product: plainProduct }
+  } catch (error: any) {
+    console.error('Get product error:', error)
+    return { success: false, message: error.message || 'Failed to fetch product' }
+  }
+}
+
+// Create a new product
+export async function createProduct(data: any): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    // Check if handle exists
+    const existing = await Product.findOne({ handle: data.handle })
+    if (existing) {
+      return { success: false, message: 'A product with this handle already exists' }
+    }
+    
+    const product = await Product.create({
+      handle: data.handle,
+      title: data.title,
+      bodyHtml: data.bodyHtml || '',
+      vendor: data.vendor || '',
+      productCategory: data.productCategory || 'Uncategorized',
+      type: data.type || '',
+      tags: data.tags || [],
+      published: data.published ?? true,
+      status: data.status || 'active',
+      options: data.options || [],
+      variants: data.variants?.map((v: any) => ({
+        option1Value: v.option1Value || 'Default',
+        option2Value: v.option2Value,
+        option3Value: v.option3Value,
+        sku: v.sku || '',
+        grams: v.grams || 0,
+        inventoryQty: v.inventoryQty || 0,
+        inventoryPolicy: v.inventoryPolicy || 'deny',
+        price: v.price || 0,
+        compareAtPrice: v.compareAtPrice,
+        requiresShipping: v.requiresShipping ?? true,
+        taxable: v.taxable ?? true,
+        barcode: v.barcode,
+        image: v.image,
+        weightUnit: v.weightUnit || 'kg',
+        costPerItem: v.costPerItem,
+      })) || [{ option1Value: 'Default', price: 0, inventoryQty: 0 }],
+      images: data.images || [],
+      seo: data.seo || {},
+    })
+    
+    return { 
+      success: true, 
+      message: 'Product created successfully',
+      product: { ...product.toObject(), _id: product._id.toString() }
+    }
+  } catch (error: any) {
+    console.error('Create product error:', error)
+    return { success: false, message: error.message || 'Failed to create product' }
+  }
+}
+
+// Update a product
+export async function updateProduct(handle: string, data: any): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    // If handle is changing, check for conflicts
+    if (data.handle && data.handle !== handle) {
+      const existing = await Product.findOne({ handle: data.handle })
+      if (existing) {
+        return { success: false, message: 'A product with this handle already exists' }
+      }
+    }
+    
+    const updateData: any = {}
+    
+    // Update fields if provided
+    if (data.title !== undefined) updateData.title = data.title
+    if (data.handle !== undefined) updateData.handle = data.handle
+    if (data.bodyHtml !== undefined) updateData.bodyHtml = data.bodyHtml
+    if (data.vendor !== undefined) updateData.vendor = data.vendor
+    if (data.productCategory !== undefined) updateData.productCategory = data.productCategory
+    if (data.type !== undefined) updateData.type = data.type
+    if (data.tags !== undefined) updateData.tags = data.tags
+    if (data.published !== undefined) updateData.published = data.published
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.options !== undefined) updateData.options = data.options
+    if (data.seo !== undefined) updateData.seo = data.seo
+    if (data.images !== undefined) updateData.images = data.images
+    
+    // Update variants if provided
+    if (data.variants !== undefined) {
+      updateData.variants = data.variants.map((v: any) => ({
+        option1Value: v.option1Value || 'Default',
+        option2Value: v.option2Value,
+        option3Value: v.option3Value,
+        sku: v.sku || '',
+        grams: v.grams || 0,
+        inventoryQty: v.inventoryQty || 0,
+        inventoryPolicy: v.inventoryPolicy || 'deny',
+        price: v.price || 0,
+        compareAtPrice: v.compareAtPrice,
+        requiresShipping: v.requiresShipping ?? true,
+        taxable: v.taxable ?? true,
+        barcode: v.barcode,
+        image: v.image,
+        weightUnit: v.weightUnit || 'kg',
+        costPerItem: v.costPerItem,
+      }))
+    }
+    
+    const product = await Product.findOneAndUpdate(
+      { handle, isDeleted: { $ne: true } },
+      { $set: updateData },
+      { new: true }
+    ).lean()
+    
+    if (!product) {
+      return { success: false, message: 'Product not found' }
+    }
+    
+    return { 
+      success: true, 
+      message: 'Product updated successfully',
+      product: { ...product, _id: product._id?.toString() }
+    }
+  } catch (error: any) {
+    console.error('Update product error:', error)
+    return { success: false, message: error.message || 'Failed to update product' }
+  }
+}
+
+// Delete a product (soft delete)
 export async function deleteProduct(handle: string): Promise<ProductResult> {
   try {
     await connectDb()
@@ -120,6 +288,51 @@ export async function updateProductStatus(handle: string, status: 'active' | 'dr
   }
 }
 
+// Bulk update product status
+export async function bulkUpdateProductStatus(
+  handles: string[], 
+  status: 'active' | 'draft' | 'archived'
+): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    const result = await Product.updateMany(
+      { handle: { $in: handles } },
+      { $set: { status } }
+    )
+    
+    return { 
+      success: true, 
+      message: `Updated ${result.modifiedCount} products`,
+      count: result.modifiedCount
+    }
+  } catch (error: any) {
+    console.error('Bulk update error:', error)
+    return { success: false, message: error.message || 'Failed to update products' }
+  }
+}
+
+// Bulk delete products
+export async function bulkDeleteProducts(handles: string[]): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    const result = await Product.updateMany(
+      { handle: { $in: handles } },
+      { $set: { isDeleted: true } }
+    )
+    
+    return { 
+      success: true, 
+      message: `Deleted ${result.modifiedCount} products`,
+      count: result.modifiedCount
+    }
+  } catch (error: any) {
+    console.error('Bulk delete error:', error)
+    return { success: false, message: error.message || 'Failed to delete products' }
+  }
+}
+
 // Get product counts by status
 export async function getProductStats(): Promise<{
   total: number
@@ -146,5 +359,61 @@ export async function getProductStats(): Promise<{
   } catch (error) {
     console.error('Get product stats error:', error)
     return { total: 0, active: 0, draft: 0, archived: 0, lowStock: 0 }
+  }
+}
+
+// Get all categories
+export async function getCategories(): Promise<string[]> {
+  try {
+    await connectDb()
+    
+    const categories = await Product.distinct('productCategory', { 
+      isDeleted: { $ne: true },
+      productCategory: { $ne: null, $ne: '' }
+    })
+    
+    return categories.filter(Boolean).sort()
+  } catch (error) {
+    console.error('Get categories error:', error)
+    return []
+  }
+}
+
+// Duplicate a product
+export async function duplicateProduct(handle: string): Promise<ProductResult> {
+  try {
+    await connectDb()
+    
+    const original = await Product.findOne({ handle, isDeleted: { $ne: true } }).lean()
+    
+    if (!original) {
+      return { success: false, message: 'Product not found' }
+    }
+    
+    // Generate new handle
+    let newHandle = `${handle}-copy`
+    let counter = 1
+    while (await Product.findOne({ handle: newHandle })) {
+      newHandle = `${handle}-copy-${counter}`
+      counter++
+    }
+    
+    const { _id, createdAt, updatedAt, ...productData } = original as any
+    
+    const newProduct = await Product.create({
+      ...productData,
+      handle: newHandle,
+      title: `${productData.title} (Copy)`,
+      status: 'draft',
+    })
+    
+    return { 
+      success: true, 
+      message: 'Product duplicated successfully',
+      product: { ...newProduct.toObject(), _id: newProduct._id.toString() }
+    }
+  } catch (error: any) {
+    console.error('Duplicate product error:', error)
+    return { success: false, message: error.message || 'Failed to duplicate product' }
   }
 }
