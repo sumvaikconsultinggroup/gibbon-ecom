@@ -46,6 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Aside.Provider>
               {children}
 
+              {/* Global Aside Components */}
+              <PremiumCartDrawer />
+              <AsideSidebarNavigation />
+              <AsideProductQuickView />
+
               {/* Client component: Toaster, ... */}
               <GlobalClient />
             </Aside.Provider>
