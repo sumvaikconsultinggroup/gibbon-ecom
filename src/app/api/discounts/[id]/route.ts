@@ -11,12 +11,9 @@ export async function GET(
   try {
     await connectDb()
     
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json({ success: false, message: 'Invalid discount ID format' }, { status: 400 })
-    }
-    
+    console.log('Searching for discount with ID:', params.id)
     const discount = await PromoCode.findById(params.id).lean()
+    console.log('Found discount:', discount)
     
     if (!discount) {
       return NextResponse.json({ success: false, message: 'Discount not found' }, { status: 404 })
