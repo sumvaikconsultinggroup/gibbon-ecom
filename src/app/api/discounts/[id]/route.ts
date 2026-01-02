@@ -102,10 +102,12 @@ export async function PUT(
 // DELETE discount
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDb()
+    
+    const params = await context.params
     
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
