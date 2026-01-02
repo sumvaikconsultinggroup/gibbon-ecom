@@ -141,7 +141,7 @@ export default function CartPage() {
                 <AnimatePresence mode="popLayout">
                   {items.map((item) => (
                     <motion.div
-                      key={`${item.productId}-${item.variantId}`}
+                      key={item.id}
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -167,7 +167,7 @@ export default function CartPage() {
                             )}
                           </div>
                           <button
-                            onClick={() => removeItem(item.productId, item.variantId)}
+                            onClick={() => removeItem(item.id)}
                             className="rounded-full p-2 text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500"
                           >
                             <Trash2 className="h-5 w-5" />
