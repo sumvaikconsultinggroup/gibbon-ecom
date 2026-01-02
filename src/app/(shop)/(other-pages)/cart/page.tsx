@@ -178,14 +178,14 @@ export default function CartPage() {
                           {/* Quantity */}
                           <div className="flex items-center rounded-full border border-neutral-200 dark:border-neutral-700">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.variantId, Math.max(1, item.quantity - 1))}
+                              onClick={() => updateItemQuantity(item.id, Math.max(1, item.quantity - 1))}
                               className="flex h-9 w-9 items-center justify-center text-neutral-500 hover:text-neutral-900"
                             >
                               <Minus className="h-4 w-4" />
                             </button>
                             <span className="w-8 text-center font-semibold">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.variantId, item.quantity + 1)}
+                              onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
                               className="flex h-9 w-9 items-center justify-center text-neutral-500 hover:text-neutral-900"
                             >
                               <Plus className="h-4 w-4" />
@@ -205,7 +205,7 @@ export default function CartPage() {
 
               {/* Clear Cart */}
               <div className="mt-6 flex justify-end">
-                <button onClick={clearCart} className="text-sm font-semibold text-red-500 hover:text-red-600">
+                <button onClick={removeAll} className="text-sm font-semibold text-red-500 hover:text-red-600">
                   Clear Cart
                 </button>
               </div>
