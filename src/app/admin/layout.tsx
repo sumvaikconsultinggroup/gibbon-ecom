@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useUser, SignIn, useClerk } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 import {
   LayoutDashboard,
   Package,
@@ -19,92 +19,296 @@ import {
   Search,
   Menu,
   X,
-  TrendingUp,
   BarChart3,
   Tag,
   Percent,
-  FileText,
-  HelpCircle,
   Moon,
   Sun,
   Store,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+  Building2,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react'
 
 const sidebarItems = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Products', href: '/admin/products', icon: Package },
-  { name: 'Inventory', href: '/admin/inventory', icon: Tag },
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Customers', href: '/admin/customers', icon: Users },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Discounts', href: '/admin/discounts', icon: Percent },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, permission: null },
+  { name: 'Products', href: '/admin/products', icon: Package, permission: 'products.view' },
+  { name: 'Inventory', href: '/admin/inventory', icon: Tag, permission: 'products.view' },
+  { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
+  { name: 'Customers', href: '/admin/customers', icon: Users, permission: 'customers.view' },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: 'analytics.view' },
+  { name: 'Discounts', href: '/admin/discounts', icon: Percent, permission: 'discounts.view' },
+  { name: 'Staff', href: '/admin/staff', icon: UserPlus, permission: 'staff.view' },
+  { name: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded, isSignedIn } = useUser()
-  const { signOut } = useClerk()
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, isLoading, isAuthenticated, needsSetup, login, logout, setup, hasPermission } = useAdminAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
-  const [notifications, setNotifications] = useState(3)
+  const [notifications] = useState(3)
 
-  // Check if user is admin
-  const isAdmin = user?.publicMetadata?.role === 'admin' || user?.emailAddresses?.[0]?.emailAddress?.includes('admin')
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+
+  // Setup form state
+  const [setupName, setSetupName] = useState('')
+  const [setupEmail, setSetupEmail] = useState('')
+  const [setupPassword, setSetupPassword] = useState('')
+  const [setupStoreName, setSetupStoreName] = useState('Gibbon Nutrition')
+  const [setupError, setSetupError] = useState('')
+  const [setupLoading, setSetupLoading] = useState(false)
 
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [pathname])
 
-  if (!isLoaded) {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    setLoginLoading(true)
+
+    const result = await login(loginEmail, loginPassword)
+    
+    if (!result.success) {
+      setLoginError(result.message)
+    }
+    setLoginLoading(false)
+  }
+
+  const handleSetup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSetupError('')
+    setSetupLoading(true)
+
+    const result = await setup({
+      email: setupEmail,
+      password: setupPassword,
+      name: setupName,
+      storeName: setupStoreName,
+    })
+    
+    if (!result.success) {
+      setSetupError(result.message)
+    }
+    setSetupLoading(false)
+  }
+
+  // Loading state
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-100">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#1B198F] border-t-transparent" />
+          <Loader2 className="h-12 w-12 animate-spin text-[#1B198F]" />
           <p className="text-neutral-600">Loading...</p>
         </div>
       </div>
     )
   }
 
-  if (!isSignedIn) {
+  // Setup screen (first time)
+  if (needsSetup) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1B198F] via-blue-600 to-purple-700">
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <Image src="/GibbonLogoEccom.png" alt="Gibbon" width={200} height={60} className="mx-auto mb-4 brightness-0 invert" />
-            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="text-white/70">Sign in to manage your store</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1B198F] via-blue-600 to-purple-700 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+        >
+          <div className="bg-gradient-to-r from-[#1B198F] to-blue-600 p-6 text-center">
+            <Image src="/GibbonLogoEccom.png" alt="Gibbon" width={180} height={50} className="mx-auto mb-4 brightness-0 invert" />
+            <h1 className="text-2xl font-bold text-white">Welcome to Your Store</h1>
+            <p className="text-white/80">Let's set up your admin account</p>
           </div>
-          <SignIn
-            appearance={{
-              elements: {
-                rootBox: 'mx-auto',
-                card: 'bg-white/95 backdrop-blur shadow-2xl',
-              },
-            }}
-            redirectUrl="/admin"
-          />
-        </div>
+
+          <form onSubmit={handleSetup} className="p-6 space-y-4">
+            {setupError && (
+              <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                {setupError}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Your Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  value={setupName}
+                  onChange={(e) => setSetupName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-4 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="email"
+                  value={setupEmail}
+                  onChange={(e) => setSetupEmail(e.target.value)}
+                  placeholder="admin@gibbonnutrition.com"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-4 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={setupPassword}
+                  onChange={(e) => setSetupPassword(e.target.value)}
+                  placeholder="Min 8 characters"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-12 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Store Name</label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  value={setupStoreName}
+                  onChange={(e) => setSetupStoreName(e.target.value)}
+                  placeholder="My Store"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-4 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={setupLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B198F] py-3 font-semibold text-white transition-all hover:bg-[#1B198F]/90 disabled:opacity-50"
+            >
+              {setupLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+              {setupLoading ? 'Setting up...' : 'Create Admin Account'}
+            </button>
+          </form>
+        </motion.div>
       </div>
     )
   }
 
-  // For now, allow any signed-in user (you can enable admin check later)
-  // if (!isAdmin) {
-  //   return (
-  //     <div className="flex min-h-screen items-center justify-center bg-neutral-100">
-  //       <div className="text-center">
-  //         <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-  //         <p className="mt-2 text-neutral-600">You don't have admin privileges.</p>
-  //         <Link href="/" className="mt-4 inline-block text-[#1B198F] hover:underline">Go to Store</Link>
-  //       </div>
-  //     </div>
-  //   )
-  // }
+  // Login screen
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1B198F] via-blue-600 to-purple-700 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+        >
+          <div className="bg-gradient-to-r from-[#1B198F] to-blue-600 p-6 text-center">
+            <Image src="/GibbonLogoEccom.png" alt="Gibbon" width={180} height={50} className="mx-auto mb-4 brightness-0 invert" />
+            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
+            <p className="text-white/80">Sign in to manage your store</p>
+          </div>
 
+          <form onSubmit={handleLogin} className="p-6 space-y-4">
+            {loginError && (
+              <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                {loginError}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="admin@gibbonnutrition.com"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-4 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-12 outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B198F] py-3 font-semibold text-white transition-all hover:bg-[#1B198F]/90 disabled:opacity-50"
+            >
+              {loginLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+              {loginLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+
+            <div className="text-center">
+              <Link href="/" className="text-sm text-[#1B198F] hover:underline">
+                ← Back to Store
+              </Link>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Filter sidebar items based on permissions
+  const visibleSidebarItems = sidebarItems.filter(item => 
+    item.permission === null || hasPermission(item.permission)
+  )
+
+  // Main admin dashboard
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-neutral-900' : 'bg-neutral-50'}`}>
       {/* Mobile Menu Overlay */}
@@ -148,7 +352,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4">
           <ul className="space-y-1">
-            {sidebarItems.map((item) => {
+            {visibleSidebarItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
               return (
                 <li key={item.name}>
@@ -234,12 +438,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-3 border-l border-neutral-200 pl-3 dark:border-neutral-700">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                  {user?.firstName || 'Admin'}
+                  {user?.name || 'Admin'}
                 </p>
-                <p className="text-xs text-neutral-500">Administrator</p>
+                <p className="text-xs text-neutral-500 capitalize">{user?.role}</p>
               </div>
               <button
-                onClick={() => signOut({ redirectUrl: '/' })}
+                onClick={logout}
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30"
                 title="Sign Out"
               >
@@ -253,5 +457,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className="p-4 lg:p-8">{children}</main>
       </div>
     </div>
+  )
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminAuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuthProvider>
   )
 }
