@@ -45,6 +45,7 @@ import {
   Twitter,
 } from 'lucide-react'
 import { useCart } from '@/components/useCartStore'
+import { useAside } from '@/components/aside/aside'
 
 interface ProductImage {
   src: string
