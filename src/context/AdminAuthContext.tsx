@@ -18,11 +18,13 @@ interface AdminAuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   needsSetup: boolean
+  connectionError: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   logout: () => Promise<void>
   setup: (data: { email: string; password: string; name: string; storeName?: string }) => Promise<{ success: boolean; message: string }>
   refreshUser: () => Promise<void>
   hasPermission: (permission: string) => boolean
+  retryConnection: () => Promise<void>
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined)
