@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { useCart } from '@/components/useCartStore'
+import { useAside } from '@/components/aside/aside'
 
 const categories = [
   {
