@@ -100,6 +100,12 @@ export async function DELETE(
 ) {
   try {
     await connectDb()
+    
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ success: false, message: 'Invalid discount ID format' }, { status: 400 })
+    }
+    
     const discount = await PromoCode.findByIdAndDelete(params.id)
     
     if (!discount) {
