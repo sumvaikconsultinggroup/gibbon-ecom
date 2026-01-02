@@ -342,15 +342,19 @@ export default function ProductsPage() {
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                            product.published
+                            product.status === 'active'
                               ? 'bg-green-100 text-green-700'
+                              : product.status === 'draft'
+                              ? 'bg-amber-100 text-amber-700'
                               : 'bg-neutral-100 text-neutral-600'
                           }`}
                         >
-                          {product.published ? (
-                            <><Check className="h-3 w-3" /> Published</>
-                          ) : (
+                          {product.status === 'active' ? (
+                            <><Check className="h-3 w-3" /> Active</>
+                          ) : product.status === 'draft' ? (
                             <><X className="h-3 w-3" /> Draft</>
+                          ) : (
+                            <><Archive className="h-3 w-3" /> Archived</>
                           )}
                         </span>
                       </td>
