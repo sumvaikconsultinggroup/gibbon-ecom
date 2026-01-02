@@ -68,7 +68,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <>
       <MegaHeader />
-      <ProductPageClient product={serializedProduct as any} relatedProducts={serializedRelated as any} />
+      <PremiumProductPage product={serializedProduct as any} relatedProducts={serializedRelated as any} />
       <Footer />
     </>
   )
