@@ -49,7 +49,7 @@ const sidebarItems = [
 ]
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isAuthenticated, needsSetup, login, logout, setup, hasPermission } = useAdminAuth()
+  const { user, isLoading, isAuthenticated, needsSetup, connectionError, login, logout, setup, hasPermission, retryConnection } = useAdminAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
