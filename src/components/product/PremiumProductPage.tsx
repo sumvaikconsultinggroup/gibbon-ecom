@@ -146,6 +146,7 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
   const productInfoRef = useRef<HTMLDivElement>(null)
 
   const { addItem } = useCart()
+  const { open: openCart } = useAside()
 
   const images = product.images || []
   const variants = product.variants || []
