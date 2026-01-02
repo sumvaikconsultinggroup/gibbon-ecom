@@ -22,6 +22,8 @@ class APITester:
         })
         self.test_results = []
         self.created_discount_id = None
+        self.admin_authenticated = False
+        self.admin_user_info = None
 
     def log_test(self, test_name: str, success: bool, message: str, response_data: Optional[Dict] = None):
         """Log test results"""
