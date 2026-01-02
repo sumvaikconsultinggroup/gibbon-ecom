@@ -17,6 +17,7 @@ import {
   AlertCircle,
   MoreHorizontal,
   RefreshCw,
+  Percent,
 } from 'lucide-react'
 
 interface DashboardStats {
