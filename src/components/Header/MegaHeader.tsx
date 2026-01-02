@@ -315,8 +315,8 @@ export default function MegaHeader() {
               </Link>
 
               {/* Cart */}
-              <Link
-                href="/cart"
+              <button
+                onClick={() => openCart('cart')}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 aria-label="Cart"
               >
@@ -326,7 +326,7 @@ export default function MegaHeader() {
                     {cartItemCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Account */}
               <SignedIn>
