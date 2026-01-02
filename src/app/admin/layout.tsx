@@ -119,6 +119,34 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
+  // Connection error state
+  if (connectionError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1B198F] via-blue-600 to-purple-700 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-8 text-center shadow-2xl"
+        >
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="mb-2 text-xl font-bold text-neutral-900">Connection Error</h2>
+          <p className="mb-6 text-neutral-600">Unable to connect to the server. Please check your connection and try again.</p>
+          <button
+            onClick={retryConnection}
+            className="w-full rounded-xl bg-[#1B198F] py-3 font-semibold text-white transition-all hover:bg-[#1B198F]/90"
+          >
+            Try Again
+          </button>
+          <Link href="/" className="mt-4 block text-sm text-[#1B198F] hover:underline">
+            ← Back to Store
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
+
   // Setup screen (first time)
   if (needsSetup) {
     return (
