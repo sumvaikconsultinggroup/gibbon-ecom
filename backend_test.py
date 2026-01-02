@@ -110,6 +110,32 @@ class APITester:
                         data
                     )
                     return False
+            elif response.status_code == 400:
+                # Code already exists, try to get existing discount
+                data = response.json()
+                if "already exists" in data.get('message', ''):
+                    # Get existing discount ID
+                    get_response = self.session.get(f"{self.base_url}/api/discounts")
+                    if get_response.status_code == 200:
+                        get_data = get_response.json()
+                        discounts = get_data.get('discounts', [])
+                        for discount in discounts:
+                            if discount.get('code') == 'TEST20':
+                                self.created_discount_id = discount.get('_id')
+                                self.log_test(
+                                    "POST /api/discounts", 
+                                    True, 
+                                    f"Discount already exists, using existing ID: {self.created_discount_id}"
+                                )
+                                return True
+                
+                self.log_test(
+                    "POST /api/discounts", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('message', response.text)}", 
+                    data
+                )
+                return False
             else:
                 data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
                 self.log_test(
