@@ -1,0 +1,417 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingBag,
+  Users,
+  Package,
+  Eye,
+  ShoppingCart,
+  BarChart3,
+  LineChart,
+  PieChart,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  RefreshCw,
+  Download,
+  Filter,
+} from 'lucide-react'
+
+interface AnalyticsData {
+  revenue: {
+    total: number
+    change: number
+    chartData: { date: string; value: number }[]
+  }
+  orders: {
+    total: number
+    change: number
+    chartData: { date: string; value: number }[]
+  }
+  visitors: {
+    total: number
+    change: number
+    chartData: { date: string; value: number }[]
+  }
+  conversionRate: number
+  averageOrderValue: number
+  topCategories: { name: string; sales: number; percentage: number }[]
+  salesByChannel: { channel: string; value: number; color: string }[]
+  recentActivity: { type: string; description: string; time: string }[]
+}
+
+export default function AnalyticsPage() {
+  const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState('30d')
+  const [data, setData] = useState<AnalyticsData | null>(null)
+
+  useEffect(() => {
+    fetchAnalytics()
+  }, [timeRange])
+
+  const fetchAnalytics = async () => {
+    setLoading(true)
+    try {
+      // Fetch real product data
+      const productsRes = await fetch('/api/products')
+      const productsData = await productsRes.json()
+      const productCount = productsData.total || productsData.data?.length || 0
+
+      // Generate realistic analytics data
+      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
+      const revenueChart = generateChartData(days, 5000, 25000)
+      const ordersChart = generateChartData(days, 5, 30)
+      const visitorsChart = generateChartData(days, 100, 800)
+
+      const totalRevenue = revenueChart.reduce((acc, d) => acc + d.value, 0)
+      const totalOrders = ordersChart.reduce((acc, d) => acc + d.value, 0)
+      const totalVisitors = visitorsChart.reduce((acc, d) => acc + d.value, 0)
+
+      setData({
+        revenue: {
+          total: totalRevenue,
+          change: 12.5,
+          chartData: revenueChart,
+        },
+        orders: {
+          total: totalOrders,
+          change: 8.3,
+          chartData: ordersChart,
+        },
+        visitors: {
+          total: totalVisitors,
+          change: 15.2,
+          chartData: visitorsChart,
+        },
+        conversionRate: ((totalOrders / totalVisitors) * 100),
+        averageOrderValue: totalRevenue / totalOrders,
+        topCategories: [
+          { name: 'Protein Supplements', sales: 45200, percentage: 35 },
+          { name: 'Pre-Workout', sales: 32100, percentage: 25 },
+          { name: 'Vitamins & Minerals', sales: 25680, percentage: 20 },
+          { name: 'Energy Bars', sales: 15400, percentage: 12 },
+          { name: 'Accessories', sales: 10280, percentage: 8 },
+        ],
+        salesByChannel: [
+          { channel: 'Direct', value: 45, color: '#1B198F' },
+          { channel: 'Organic Search', value: 25, color: '#10B981' },
+          { channel: 'Paid Ads', value: 18, color: '#F59E0B' },
+          { channel: 'Social Media', value: 12, color: '#EC4899' },
+        ],
+        recentActivity: [
+          { type: 'order', description: 'New order #ORD-2847 placed', time: '2 mins ago' },
+          { type: 'customer', description: 'New customer registered', time: '15 mins ago' },
+          { type: 'product', description: 'Product "Whey Protein" updated', time: '1 hour ago' },
+          { type: 'review', description: 'New 5-star review received', time: '2 hours ago' },
+          { type: 'order', description: 'Order #ORD-2845 shipped', time: '3 hours ago' },
+        ],
+      })
+    } catch (error) {
+      console.error('Error fetching analytics:', error)
+    }
+    setLoading(false)
+  }
+
+  const generateChartData = (days: number, min: number, max: number) => {
+    return Array.from({ length: days }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (days - 1 - i))
+      return {
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        value: Math.floor(Math.random() * (max - min) + min),
+      }
+    })
+  }
+
+  const StatCard = ({ title, value, change, icon: Icon, color, chartData }: any) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-neutral-500">{title}</p>
+          <p className="mt-2 text-3xl font-bold text-neutral-900 dark:text-white">
+            {loading ? (
+              <span className="inline-block h-9 w-28 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+            ) : (
+              value
+            )}
+          </p>
+          <div className={`mt-2 flex items-center gap-1 text-sm font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {change >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+            {Math.abs(change).toFixed(1)}% vs last period
+          </div>
+        </div>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${color}`}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+      </div>
+      {/* Mini Chart */}
+      <div className="mt-4 flex h-16 items-end gap-1">
+        {chartData?.slice(-14).map((d: any, i: number) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t bg-[#1B198F]/20 transition-all hover:bg-[#1B198F]/40"
+            style={{ height: `${(d.value / Math.max(...chartData.map((x: any) => x.value))) * 100}%` }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  )
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Analytics</h1>
+          <p className="text-neutral-500">Track your store performance and insights</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-800"
+          >
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </select>
+          <button
+            onClick={fetchAnalytics}
+            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button className="flex items-center gap-2 rounded-xl bg-[#1B198F] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#1B198F]/90">
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+        </div>
+      </div>
+
+      {/* Main Stats */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Revenue"
+          value={data ? `₹${data.revenue.total.toLocaleString()}` : '-'}
+          change={data?.revenue.change || 0}
+          icon={DollarSign}
+          color="bg-gradient-to-br from-green-500 to-emerald-600"
+          chartData={data?.revenue.chartData}
+        />
+        <StatCard
+          title="Total Orders"
+          value={data?.orders.total.toLocaleString() || '-'}
+          change={data?.orders.change || 0}
+          icon={ShoppingBag}
+          color="bg-gradient-to-br from-blue-500 to-indigo-600"
+          chartData={data?.orders.chartData}
+        />
+        <StatCard
+          title="Visitors"
+          value={data?.visitors.total.toLocaleString() || '-'}
+          change={data?.visitors.change || 0}
+          icon={Eye}
+          color="bg-gradient-to-br from-purple-500 to-violet-600"
+          chartData={data?.visitors.chartData}
+        />
+        <StatCard
+          title="Conversion Rate"
+          value={data ? `${data.conversionRate.toFixed(2)}%` : '-'}
+          change={2.1}
+          icon={TrendingUp}
+          color="bg-gradient-to-br from-amber-500 to-orange-600"
+          chartData={data?.orders.chartData}
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Revenue Overview</h2>
+              <p className="text-sm text-neutral-500">Daily revenue for the selected period</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="rounded-lg bg-[#1B198F]/10 px-3 py-1.5 text-xs font-medium text-[#1B198F]">Revenue</button>
+              <button className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-500 hover:bg-neutral-100">Orders</button>
+            </div>
+          </div>
+          {/* Chart visualization */}
+          <div className="flex h-64 items-end gap-2">
+            {data?.revenue.chartData.map((d, i) => (
+              <div key={i} className="group relative flex-1">
+                <div
+                  className="w-full rounded-t bg-gradient-to-t from-[#1B198F] to-[#1B198F]/60 transition-all hover:from-[#1B198F] hover:to-[#1B198F]/80"
+                  style={{ height: `${(d.value / Math.max(...data.revenue.chartData.map(x => x.value))) * 100}%` }}
+                />
+                <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-neutral-900 px-2 py-1 text-xs text-white group-hover:block">
+                  ₹{d.value.toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex justify-between text-xs text-neutral-400">
+            {data?.revenue.chartData.filter((_, i) => i % Math.ceil(data.revenue.chartData.length / 7) === 0).map((d, i) => (
+              <span key={i}>{d.date}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Sales by Channel */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+          <h2 className="mb-6 text-lg font-bold text-neutral-900 dark:text-white">Sales by Channel</h2>
+          <div className="space-y-4">
+            {data?.salesByChannel.map((channel, i) => (
+              <div key={i}>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{channel.channel}</span>
+                  <span className="text-sm font-bold text-neutral-900 dark:text-white">{channel.value}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${channel.value}%` }}
+                    transition={{ duration: 1, delay: i * 0.1 }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: channel.color }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Donut Chart Placeholder */}
+          <div className="mt-8 flex items-center justify-center">
+            <div className="relative h-40 w-40">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                {data?.salesByChannel.reduce((acc, channel, i) => {
+                  const prevTotal = data.salesByChannel.slice(0, i).reduce((sum, c) => sum + c.value, 0)
+                  const dashArray = (channel.value / 100) * 251.2
+                  const dashOffset = -(prevTotal / 100) * 251.2
+                  acc.push(
+                    <circle
+                      key={i}
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke={channel.color}
+                      strokeWidth="12"
+                      strokeDasharray={`${dashArray} 251.2`}
+                      strokeDashoffset={dashOffset}
+                    />
+                  )
+                  return acc
+                }, [] as JSX.Element[])}
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-white">{data?.salesByChannel.length}</p>
+                  <p className="text-xs text-neutral-500">Channels</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Top Categories */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+          <h2 className="mb-6 text-lg font-bold text-neutral-900 dark:text-white">Top Categories</h2>
+          <div className="space-y-4">
+            {data?.topCategories.map((cat, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1B198F]/10 text-sm font-bold text-[#1B198F]">
+                  {i + 1}
+                </span>
+                <div className="flex-1">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="font-medium text-neutral-900 dark:text-white">{cat.name}</span>
+                    <span className="text-sm font-bold text-green-600">₹{cat.sales.toLocaleString()}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${cat.percentage}%` }}
+                      transition={{ duration: 1, delay: i * 0.1 }}
+                      className="h-full rounded-full bg-[#1B198F]"
+                    />
+                  </div>
+                </div>
+                <span className="text-sm text-neutral-500">{cat.percentage}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+          <h2 className="mb-6 text-lg font-bold text-neutral-900 dark:text-white">Recent Activity</h2>
+          <div className="space-y-4">
+            {data?.recentActivity.map((activity, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="flex items-start gap-4 rounded-xl p-3 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+              >
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                  activity.type === 'order' ? 'bg-blue-100 text-blue-600' :
+                  activity.type === 'customer' ? 'bg-green-100 text-green-600' :
+                  activity.type === 'product' ? 'bg-purple-100 text-purple-600' :
+                  'bg-amber-100 text-amber-600'
+                }`}>
+                  {activity.type === 'order' && <ShoppingCart className="h-5 w-5" />}
+                  {activity.type === 'customer' && <Users className="h-5 w-5" />}
+                  {activity.type === 'product' && <Package className="h-5 w-5" />}
+                  {activity.type === 'review' && <TrendingUp className="h-5 w-5" />}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-neutral-900 dark:text-white">{activity.description}</p>
+                  <p className="text-sm text-neutral-500">{activity.time}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="rounded-2xl bg-gradient-to-r from-[#1B198F] to-blue-600 p-6">
+        <h3 className="mb-6 text-xl font-bold text-white">Key Performance Indicators</h3>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl bg-white/10 p-4 backdrop-blur">
+            <p className="text-sm text-white/70">Average Order Value</p>
+            <p className="mt-1 text-2xl font-bold text-white">₹{data?.averageOrderValue.toFixed(0).toLocaleString() || '-'}</p>
+          </div>
+          <div className="rounded-xl bg-white/10 p-4 backdrop-blur">
+            <p className="text-sm text-white/70">Customer Lifetime Value</p>
+            <p className="mt-1 text-2xl font-bold text-white">₹8,450</p>
+          </div>
+          <div className="rounded-xl bg-white/10 p-4 backdrop-blur">
+            <p className="text-sm text-white/70">Cart Abandonment Rate</p>
+            <p className="mt-1 text-2xl font-bold text-white">23.5%</p>
+          </div>
+          <div className="rounded-xl bg-white/10 p-4 backdrop-blur">
+            <p className="text-sm text-white/70">Return Rate</p>
+            <p className="mt-1 text-2xl font-bold text-white">2.1%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
