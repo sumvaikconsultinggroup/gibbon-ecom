@@ -107,6 +107,7 @@ export default function MegaHeader() {
   const searchRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { items } = useCart()
+  const { open: openCart } = useAside()
 
   const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
