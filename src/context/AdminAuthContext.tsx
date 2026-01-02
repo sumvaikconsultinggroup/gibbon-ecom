@@ -37,7 +37,16 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       // First check if setup is needed
-      const setupRes = await fetch('/api/admin/auth/setup')
+      const setupRes = await fetch('/api/admin/auth/setup', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      })
+      
+      if (!setupRes.ok) {
+        throw new Error('Failed to check setup status')
+      }
+      
       const setupData = await setupRes.json()
       
       if (setupData.needsSetup) {
@@ -49,7 +58,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       setNeedsSetup(false)
       
       // Check if user is logged in
-      const res = await fetch('/api/admin/auth/me')
+      const res = await fetch('/api/admin/auth/me', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        cache: 'no-store',
+      })
+      
       const data = await res.json()
       
       if (data.success && data.user) {
