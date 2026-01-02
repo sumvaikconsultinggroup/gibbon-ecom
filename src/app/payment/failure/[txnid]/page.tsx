@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 
-const PaymentFailurePage = ({ params }: { params: { txnid: string } }) => {
-  const { txnid } = params;
+const PaymentFailurePage = ({ params }: { params: Promise<{ txnid: string }> }) => {
+  const resolvedParams = use(params);
+  const { txnid } = resolvedParams;
   const [status, setStatus] = useState<"loading" | "verified">("loading");
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
