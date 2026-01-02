@@ -12,15 +12,12 @@ export async function GET(
     await connectDb()
     
     const params = await context.params
-    console.log('Full params object:', params)
-    console.log('Searching for discount with ID:', params.id)
     
     if (!params.id) {
       return NextResponse.json({ success: false, message: 'Discount ID is required' }, { status: 400 })
     }
     
     const discount = await PromoCode.findById(params.id).lean()
-    console.log('Found discount:', discount)
     
     if (!discount) {
       return NextResponse.json({ success: false, message: 'Discount not found' }, { status: 404 })
