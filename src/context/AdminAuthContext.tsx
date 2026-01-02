@@ -161,6 +161,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return user.permissions.includes(permission)
   }
 
+  const retryConnection = async () => {
+    setIsLoading(true)
+    setConnectionError(false)
+    await checkAuth()
+  }
+
   return (
     <AdminAuthContext.Provider
       value={{
@@ -168,11 +174,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         needsSetup,
+        connectionError,
         login,
         logout,
         setup,
         refreshUser,
         hasPermission,
+        retryConnection,
       }}
     >
       {children}
