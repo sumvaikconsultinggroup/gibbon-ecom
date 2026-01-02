@@ -9,8 +9,8 @@ import json
 import sys
 from typing import Dict, Any, Optional
 
-# Base URL from environment
-BASE_URL = "https://gibbon-dashboard.preview.emergentagent.com"
+# Base URL for local testing
+BASE_URL = "http://localhost:3000"
 
 class APITester:
     def __init__(self, base_url: str):
