@@ -79,7 +79,7 @@ export async function PUT(
       params.id,
       { $set: updateData },
       { new: true }
-    ).lean()
+    ).lean() as any
     
     if (!discount) {
       return NextResponse.json({ success: false, message: 'Discount not found' }, { status: 404 })
