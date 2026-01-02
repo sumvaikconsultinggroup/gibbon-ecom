@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
 interface AdminUser {
@@ -18,13 +18,11 @@ interface AdminAuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   needsSetup: boolean
-  connectionError: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   logout: () => Promise<void>
   setup: (data: { email: string; password: string; name: string; storeName?: string }) => Promise<{ success: boolean; message: string }>
   refreshUser: () => Promise<void>
   hasPermission: (permission: string) => boolean
-  retryConnection: () => Promise<void>
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined)
@@ -33,67 +31,59 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(false)
-  const [connectionError, setConnectionError] = useState(false)
   const router = useRouter()
-  const pathname = usePathname()
 
-  const checkAuth = async (retryCount = 0) => {
+  const checkAuth = useCallback(async () => {
     try {
-      setConnectionError(false)
-      
-      // First check if setup is needed
+      // Check if setup is needed
       const setupRes = await fetch('/api/admin/auth/setup', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
       })
       
-      if (!setupRes.ok) {
-        throw new Error('Failed to check setup status')
+      if (setupRes.ok) {
+        const setupData = await setupRes.json()
+        if (setupData.needsSetup) {
+          setNeedsSetup(true)
+          setIsLoading(false)
+          return
+        }
+        setNeedsSetup(false)
+      } else {
+        // If setup check fails, assume login is needed
+        setNeedsSetup(false)
       }
-      
-      const setupData = await setupRes.json()
-      
-      if (setupData.needsSetup) {
-        setNeedsSetup(true)
-        setIsLoading(false)
-        return
-      }
-      
-      setNeedsSetup(false)
       
       // Check if user is logged in
       const res = await fetch('/api/admin/auth/me', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        cache: 'no-store',
       })
       
-      const data = await res.json()
-      
-      if (data.success && data.user) {
-        setUser(data.user)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.user) {
+          setUser(data.user)
+        } else {
+          setUser(null)
+        }
       } else {
         setUser(null)
       }
     } catch (error) {
       console.error('Auth check error:', error)
-      // Retry up to 2 times with delay
-      if (retryCount < 2) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        return checkAuth(retryCount + 1)
-      }
-      setConnectionError(true)
+      // On error, just show login page (don't show connection error)
       setUser(null)
+      setNeedsSetup(false)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     checkAuth()
-  }, [])
+  }, [checkAuth])
 
   const login = async (email: string, password: string) => {
     try {
@@ -114,13 +104,16 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: data.message || 'Login failed' }
     } catch (error) {
       console.error('Login error:', error)
-      return { success: false, message: 'Network error. Please try again.' }
+      return { success: false, message: 'Unable to connect. Please try again.' }
     }
   }
 
   const logout = async () => {
     try {
-      await fetch('/api/admin/auth/logout', { method: 'POST' })
+      await fetch('/api/admin/auth/logout', { 
+        method: 'POST',
+        credentials: 'include',
+      })
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -134,6 +127,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/admin/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       })
       
@@ -147,7 +141,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       
       return { success: false, message: result.message || 'Setup failed' }
     } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' }
+      console.error('Setup error:', error)
+      return { success: false, message: 'Unable to connect. Please try again.' }
     }
   }
 
@@ -161,12 +156,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return user.permissions.includes(permission)
   }
 
-  const retryConnection = async () => {
-    setIsLoading(true)
-    setConnectionError(false)
-    await checkAuth()
-  }
-
   return (
     <AdminAuthContext.Provider
       value={{
@@ -174,13 +163,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         needsSetup,
-        connectionError,
         login,
         logout,
         setup,
         refreshUser,
         hasPermission,
-        retryConnection,
       }}
     >
       {children}
