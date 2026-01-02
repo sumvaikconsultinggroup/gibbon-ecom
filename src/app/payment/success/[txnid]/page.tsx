@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 
-const PaymentSuccessPage = ({ params }: { params: { txnid: string } }) => {
-  const { txnid } = params;
+const PaymentSuccessPage = ({ params }: { params: Promise<{ txnid: string }> }) => {
+  const resolvedParams = use(params);
+  const { txnid } = resolvedParams;
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
   const [error, setError] = useState<string | null>(null);
 
