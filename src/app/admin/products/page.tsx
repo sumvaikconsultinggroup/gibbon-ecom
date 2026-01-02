@@ -24,6 +24,7 @@ import {
   Download,
   Upload,
 } from 'lucide-react'
+import ImportModal from './ImportModal'
 
 interface Product {
   _id: string
