@@ -1,6 +1,7 @@
 import connectDb from '@/lib/mongodb'
 import PromoCode from '@/models/PromoCode'
 import { NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 
 // GET single discount
 export async function GET(
