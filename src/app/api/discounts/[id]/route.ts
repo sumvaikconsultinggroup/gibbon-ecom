@@ -39,6 +39,12 @@ export async function PUT(
 ) {
   try {
     await connectDb()
+    
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ success: false, message: 'Invalid discount ID format' }, { status: 400 })
+    }
+    
     const body = await request.json()
     
     const { code, discountType, discountValue, minOrderAmount, usageLimit, expiresAt, isActive, appliesTo, productIds, categoryNames } = body
