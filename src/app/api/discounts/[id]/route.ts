@@ -39,10 +39,12 @@ export async function GET(
 // PUT update discount
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDb()
+    
+    const params = await context.params
     
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
