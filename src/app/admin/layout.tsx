@@ -39,7 +39,8 @@ import {
 const sidebarItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, permission: null },
   { name: 'Products', href: '/admin/products', icon: Package, permission: 'products.view' },
-  { name: 'Inventory', href: '/admin/inventory', icon: Tag, permission: 'products.view' },
+  { name: 'Collections', href: '/admin/collections', icon: Tag, permission: 'products.view' },
+  { name: 'Inventory', href: '/admin/inventory', icon: BarChart3, permission: 'products.view' },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
   { name: 'Customers', href: '/admin/customers', icon: Users, permission: 'customers.view' },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: 'analytics.view' },
