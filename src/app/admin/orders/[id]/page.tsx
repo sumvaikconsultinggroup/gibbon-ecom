@@ -424,20 +424,75 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setActionLoading(null)
     }
   }
-      user: 'Admin',
-    }, 'Address updated successfully')
-    setShowAddressModal(false)
-  }
 
   // Generate and print invoice
   const handlePrintInvoice = async () => {
     try {
       setActionLoading('print')
-      // First generate invoice if not exists
-      await fetch(`${BASE_URL}/api/admin/orders/${order?.orderId || resolvedParams.id}/invoice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: 'Admin' }),
+      const result = await generateInvoiceAction(order?.orderId || resolvedParams.id)
+      
+      if (result.success && result.invoice) {
+        // Open print window with invoice
+        const printWindow = window.open('', '_blank')
+        if (printWindow) {
+          printWindow.document.write(generateInvoiceHTML(result.invoice))
+          printWindow.document.close()
+          printWindow.print()
+        }
+        toast.success('Invoice opened for printing')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to generate invoice')
+      }
+    } catch (error) {
+      toast.error('Failed to generate invoice')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Send invoice email
+  const handleSendInvoice = async () => {
+    try {
+      setActionLoading('email')
+      const result = await sendOrderEmailAction(order?.orderId || resolvedParams.id, 'invoice')
+      if (result.success) {
+        toast.success('Invoice sent to customer')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to send invoice')
+      }
+    } catch (error) {
+      toast.error('Failed to send invoice')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Send email
+  const handleSendEmail = async () => {
+    try {
+      setActionLoading('email')
+      const result = await sendOrderEmailAction(
+        order?.orderId || resolvedParams.id, 
+        emailType, 
+        emailType === 'custom' ? customEmailMessage : undefined
+      )
+      if (result.success) {
+        toast.success('Email sent successfully')
+        setShowEmailModal(false)
+        setCustomEmailSubject('')
+        setCustomEmailMessage('')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to send email')
+      }
+    } catch (error) {
+      toast.error('Failed to send email')
+    } finally {
+      setActionLoading(null)
+    }
+  }
       })
       
       // Get invoice data
