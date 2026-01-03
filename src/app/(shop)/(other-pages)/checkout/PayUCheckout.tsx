@@ -1,6 +1,6 @@
 
 "use client";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/context/UserAuthContext";
 import React, { useState, useEffect } from "react";
 import PayUForm from "@/components/PayUForm";
 import { useCart, CartItem } from '../../../../components/useCartStore';
