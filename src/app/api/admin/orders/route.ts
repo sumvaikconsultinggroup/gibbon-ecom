@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       statusCountMap[item._id] = item.count
     })
 
-    return NextResponse.json({
+    return createResponse({
       orders: formattedOrders,
       pagination: {
         total,
@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching orders:', error)
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return createResponse({ error: 'Failed to fetch orders' }, 500)
+  }
   }
 }
