@@ -115,8 +115,13 @@ const Page = () => {
       try {
         const res = await fetch('/api/orderHistory')
         if (res.ok) {
-          const data = await res.json()
-          setOrders(data.orders || [])
+          const text = await res.text()
+          try {
+            const data = JSON.parse(text)
+            setOrders(data.orders || [])
+          } catch (e) {
+            console.error('Failed to parse orders response')
+          }
         }
       } catch (error) {
         console.error('Failed to fetch orders', error)
