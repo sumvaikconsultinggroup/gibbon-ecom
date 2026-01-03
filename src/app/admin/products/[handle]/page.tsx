@@ -39,6 +39,13 @@ import {
   getCategories 
 } from '../product-actions'
 
+interface VariantImage {
+  src: string
+  position: number
+  altText?: string
+  isPrimary: boolean
+}
+
 interface ProductVariant {
   option1Value?: string
   option2Value?: string
@@ -53,6 +60,9 @@ interface ProductVariant {
   taxable?: boolean
   weightUnit?: string
   grams?: number
+  image?: string // Legacy single image
+  images?: VariantImage[] // New: Multiple images per variant
+  inventoryManagement?: 'shopify' | 'manual' | 'none'
 }
 
 interface ProductImage {
