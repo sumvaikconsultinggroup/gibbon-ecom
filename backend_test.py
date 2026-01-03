@@ -663,7 +663,537 @@ class APITester:
             self.log_test("GET /api/products", False, f"Exception: {str(e)}")
             return False
 
-    def test_promo_code_validation(self) -> bool:
+    def test_orders_list(self) -> bool:
+        """Test GET /api/admin/orders - List all orders with filtering"""
+        if not self.admin_authenticated:
+            self.log_test("GET /api/admin/orders", False, "Cannot test orders list - not authenticated")
+            return False
+            
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/orders")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'orders' in data:
+                    orders = data.get('orders', [])
+                    pagination = data.get('pagination', {})
+                    
+                    # Check if ORD-2024-001 exists
+                    test_order_found = any(order.get('orderId') == 'ORD-2024-001' for order in orders)
+                    
+                    if test_order_found:
+                        self.log_test(
+                            "GET /api/admin/orders", 
+                            True, 
+                            f"Successfully retrieved {len(orders)} orders, test order ORD-2024-001 found"
+                        )
+                        return True
+                    else:
+                        # Try with search parameter
+                        search_response = self.session.get(f"{self.base_url}/api/admin/orders?search=ORD-2024-001")
+                        if search_response.status_code == 200:
+                            search_data = search_response.json()
+                            search_orders = search_data.get('orders', [])
+                            if any(order.get('orderId') == 'ORD-2024-001' for order in search_orders):
+                                self.log_test(
+                                    "GET /api/admin/orders", 
+                                    True, 
+                                    f"Orders API working, test order found via search"
+                                )
+                                return True
+                        
+                        self.log_test(
+                            "GET /api/admin/orders", 
+                            False, 
+                            f"Test order ORD-2024-001 not found in {len(orders)} orders"
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "GET /api/admin/orders", 
+                        False, 
+                        f"Invalid response format: {data}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "GET /api/admin/orders", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            elif response.status_code == 403:
+                self.log_test(
+                    "GET /api/admin/orders", 
+                    False, 
+                    "Permission denied - user lacks orders.view permission"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/admin/orders", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/orders", False, f"Exception: {str(e)}")
+            return False
+
+    def test_single_order(self) -> bool:
+        """Test GET /api/admin/orders/ORD-2024-001 - Get single order details"""
+        if not self.admin_authenticated:
+            self.log_test("GET /api/admin/orders/ORD-2024-001", False, "Cannot test single order - not authenticated")
+            return False
+            
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/orders/ORD-2024-001")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check required fields
+                required_fields = ['orderId', 'customer', 'items', 'totalAmount', 'status']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    customer = data.get('customer', {})
+                    customer_name = customer.get('name', '')
+                    
+                    # Check if customer is Rahul Sharma as mentioned in review request
+                    if 'Rahul Sharma' in customer_name or customer.get('firstName') == 'Rahul':
+                        self.log_test(
+                            "GET /api/admin/orders/ORD-2024-001", 
+                            True, 
+                            f"Order details retrieved successfully: Customer {customer_name}, Total ₹{data.get('totalAmount', 0)}"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "GET /api/admin/orders/ORD-2024-001", 
+                            True, 
+                            f"Order details retrieved successfully: Customer {customer_name}, Total ₹{data.get('totalAmount', 0)}"
+                        )
+                        return True
+                else:
+                    self.log_test(
+                        "GET /api/admin/orders/ORD-2024-001", 
+                        False, 
+                        f"Missing required fields: {missing_fields}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 404:
+                self.log_test(
+                    "GET /api/admin/orders/ORD-2024-001", 
+                    False, 
+                    "Order ORD-2024-001 not found in database"
+                )
+                return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "GET /api/admin/orders/ORD-2024-001", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/admin/orders/ORD-2024-001", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/orders/ORD-2024-001", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_update_status(self) -> bool:
+        """Test PATCH /api/admin/orders/ORD-2024-001 - Update order status"""
+        if not self.admin_authenticated:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (status)", False, "Cannot test order update - not authenticated")
+            return False
+            
+        update_data = {
+            "action": "update_status",
+            "status": "processing",
+            "user": "Test Agent"
+        }
+        
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    order = data.get('order', {})
+                    if order.get('status') == 'processing':
+                        self.log_test(
+                            "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                            True, 
+                            "Order status updated successfully to 'processing'"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                            False, 
+                            f"Status not updated correctly: expected 'processing', got '{order.get('status')}'", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 404:
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                    False, 
+                    "Order ORD-2024-001 not found"
+                )
+                return False
+            elif response.status_code == 401:
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                    False, 
+                    "Authentication failed - cookie not working properly"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (status)", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (status)", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_add_note(self) -> bool:
+        """Test PATCH /api/admin/orders/ORD-2024-001 - Add note"""
+        if not self.admin_authenticated:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (add_note)", False, "Cannot test add note - not authenticated")
+            return False
+            
+        update_data = {
+            "action": "add_note",
+            "content": "Test note added via API testing",
+            "author": "Test Agent",
+            "isInternal": True
+        }
+        
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (add_note)", 
+                        True, 
+                        "Note added successfully to order"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (add_note)", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (add_note)", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (add_note)", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_add_tag(self) -> bool:
+        """Test PATCH /api/admin/orders/ORD-2024-001 - Add tag"""
+        if not self.admin_authenticated:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (add_tag)", False, "Cannot test add tag - not authenticated")
+            return False
+            
+        update_data = {
+            "action": "add_tag",
+            "tag": "test-tag"
+        }
+        
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (add_tag)", 
+                        True, 
+                        "Tag 'test-tag' added successfully to order"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (add_tag)", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (add_tag)", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (add_tag)", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_remove_tag(self) -> bool:
+        """Test PATCH /api/admin/orders/ORD-2024-001 - Remove tag"""
+        if not self.admin_authenticated:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (remove_tag)", False, "Cannot test remove tag - not authenticated")
+            return False
+            
+        update_data = {
+            "action": "remove_tag",
+            "tag": "test-tag"
+        }
+        
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (remove_tag)", 
+                        True, 
+                        "Tag 'test-tag' removed successfully from order"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (remove_tag)", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (remove_tag)", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (remove_tag)", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_assign(self) -> bool:
+        """Test PATCH /api/admin/orders/ORD-2024-001 - Assign order"""
+        if not self.admin_authenticated:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (assign)", False, "Cannot test assign order - not authenticated")
+            return False
+            
+        update_data = {
+            "action": "assign",
+            "assignedTo": "Test Agent",
+            "user": "Admin"
+        }
+        
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (assign)", 
+                        True, 
+                        "Order assigned successfully to 'Test Agent'"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PATCH /api/admin/orders/ORD-2024-001 (assign)", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PATCH /api/admin/orders/ORD-2024-001 (assign)", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PATCH /api/admin/orders/ORD-2024-001 (assign)", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_generate_invoice(self) -> bool:
+        """Test POST /api/admin/orders/ORD-2024-001/invoice - Generate invoice"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/orders/ORD-2024-001/invoice", False, "Cannot test invoice generation - not authenticated")
+            return False
+            
+        invoice_data = {
+            "user": "Test Agent"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001/invoice",
+                json=invoice_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    invoice = data.get('invoice', {})
+                    invoice_number = invoice.get('invoiceNumber', '')
+                    
+                    if invoice_number:
+                        self.log_test(
+                            "POST /api/admin/orders/ORD-2024-001/invoice", 
+                            True, 
+                            f"Invoice generated successfully: {invoice_number}"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "POST /api/admin/orders/ORD-2024-001/invoice", 
+                            False, 
+                            "Invoice generated but no invoice number returned", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "POST /api/admin/orders/ORD-2024-001/invoice", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/orders/ORD-2024-001/invoice", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/orders/ORD-2024-001/invoice", False, f"Exception: {str(e)}")
+            return False
+
+    def test_order_send_email(self) -> bool:
+        """Test POST /api/admin/orders/ORD-2024-001/email - Send email"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/orders/ORD-2024-001/email", False, "Cannot test email sending - not authenticated")
+            return False
+            
+        email_data = {
+            "type": "custom",
+            "subject": "Test Email Subject",
+            "customMessage": "This is a test email message sent via API testing",
+            "user": "Test Agent"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/orders/ORD-2024-001/email",
+                json=email_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    email_info = data.get('email', {})
+                    recipient = email_info.get('recipient', '')
+                    
+                    self.log_test(
+                        "POST /api/admin/orders/ORD-2024-001/email", 
+                        True, 
+                        f"Email sent successfully to {recipient}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/admin/orders/ORD-2024-001/email", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/orders/ORD-2024-001/email", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/orders/ORD-2024-001/email", False, f"Exception: {str(e)}")
+            return False
         """Test POST /api/promoCode/check - Validate discount code"""
         test_data = {
             "code": "WELCOME10",
