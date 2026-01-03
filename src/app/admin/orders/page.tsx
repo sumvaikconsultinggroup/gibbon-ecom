@@ -23,6 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { getOrdersAction } from './order-actions'
 
 interface Order {
   id: string
