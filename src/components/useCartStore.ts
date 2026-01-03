@@ -176,6 +176,15 @@ export const useCart = create(
         }
         get().validatePromoCode()
 
+        // Track add to cart event for live analytics
+        trackEvent('add_to_cart', {
+          productId: data.productId,
+          productName: data.name,
+          productPrice: data.price,
+          quantity: 1,
+          page: typeof window !== 'undefined' ? window.location.pathname : '',
+        })
+
         // Sync cart with server
         fetch('/api/cart/sync', {
           method: 'POST',
