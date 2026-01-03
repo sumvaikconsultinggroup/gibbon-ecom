@@ -203,13 +203,15 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
   // Check delivery
   const checkDelivery = () => {
     if (pincode.length === 6) {
-      // Simulate delivery check
+      // Simulate delivery check - using deterministic calculation based on pincode
       const date = new Date()
-      date.setDate(date.getDate() + Math.floor(Math.random() * 3) + 3)
+      const pincodeNum = parseInt(pincode, 10)
+      const daysToAdd = (pincodeNum % 3) + 3 // 3-5 days based on pincode
+      date.setDate(date.getDate() + daysToAdd)
       setDeliveryInfo({
         available: true,
         date: date.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' }),
-        cod: Math.random() > 0.3,
+        cod: (pincodeNum % 10) >= 3, // Deterministic COD based on last digit
       })
     }
   }
