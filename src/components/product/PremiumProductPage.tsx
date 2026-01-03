@@ -136,10 +136,11 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
   const [pincode, setPincode] = useState('')
   const [deliveryInfo, setDeliveryInfo] = useState<{available: boolean; date: string; cod: boolean} | null>(null)
   const [showShareMenu, setShowShareMenu] = useState(false)
-  const [liveViewers, setLiveViewers] = useState(Math.floor(Math.random() * 50) + 20)
-  const [recentPurchases, setRecentPurchases] = useState(Math.floor(Math.random() * 100) + 50)
+  const [liveViewers, setLiveViewers] = useState(0) // Initialize with 0, set in useEffect
+  const [recentPurchases, setRecentPurchases] = useState(0) // Initialize with 0, set in useEffect
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
   const [helpfulReviews, setHelpfulReviews] = useState<Set<string>>(new Set())
+  const [isClient, setIsClient] = useState(false)
   
   const imageRef = useRef<HTMLDivElement>(null)
   const addToCartRef = useRef<HTMLButtonElement>(null)
@@ -162,13 +163,21 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
   // Get unique options
   const sizeOptions = [...new Set(variants.map((v) => v.option1Value).filter(Boolean))]
 
+  // Initialize random values after hydration to prevent mismatch
+  useEffect(() => {
+    setIsClient(true)
+    setLiveViewers(Math.floor(Math.random() * 50) + 20)
+    setRecentPurchases(Math.floor(Math.random() * 100) + 50)
+  }, [])
+
   // Simulated live viewers update
   useEffect(() => {
+    if (!isClient) return
     const interval = setInterval(() => {
-      setLiveViewers(prev => prev + Math.floor(Math.random() * 5) - 2)
+      setLiveViewers(prev => Math.max(10, prev + Math.floor(Math.random() * 5) - 2))
     }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [isClient])
 
   // Sticky bar visibility
   useEffect(() => {
