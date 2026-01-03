@@ -318,7 +318,7 @@ export default function OrdersPage() {
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-700"
                         >
                           <Eye className="h-5 w-5" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   )
