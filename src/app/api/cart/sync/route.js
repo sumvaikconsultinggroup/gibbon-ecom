@@ -1,16 +1,29 @@
 import CartNotification from '@/models/CartNotification'
-import { currentUser } from '@clerk/nextjs/server'
 import mongoose from 'mongoose'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
+import User from '@/models/User'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-user-secret-key-change-in-production'
 
 export async function POST(req) {
   try {
-    const clerkUser = await currentUser()
-    if (!clerkUser) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('user_token')?.value
+    
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+    
+    let decoded
+    try {
+      decoded = jwt.verify(token, JWT_SECRET)
+    } catch {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = clerkUser.id
+    const userId = decoded.userId
     const body = await req.json()
     const items = body?.items || []
 
@@ -18,9 +31,11 @@ export async function POST(req) {
       await mongoose.connect(process.env.MONGODB_URI)
     }
 
-    const email = clerkUser.emailAddresses?.[0]?.emailAddress || ''
-    const userName = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
-    const phoneNumber = clerkUser.phoneNumbers?.[0]?.phoneNumber || ''
+    // Get user info from database
+    const user = await User.findById(userId)
+    const email = user?.email || ''
+    const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+    const phoneNumber = user?.phone || ''
 
     const products = items.map((item) => ({
       productId: item.productId,
