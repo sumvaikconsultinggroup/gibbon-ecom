@@ -9,55 +9,60 @@ import Collection from '@/models/collection.model'
 function transformProduct(dbProduct: any) {
   if (!dbProduct) return null
   
-  const firstVariant = dbProduct.variants?.[0]
-  const firstImage = dbProduct.images?.[0]
+  // Convert to plain object if Mongoose document
+  const product = typeof dbProduct.toJSON === 'function' ? dbProduct.toJSON() : dbProduct
+  
+  const firstVariant = product.variants?.[0]
+  const firstImage = product.images?.[0]
   
   return {
-    id: dbProduct._id?.toString() || dbProduct.id,
-    title: dbProduct.title,
-    handle: dbProduct.handle,
-    createdAt: dbProduct.createdAt,
-    vendor: dbProduct.vendor || 'Gibbon Nutrition',
+    id: product._id?.toString() || product.id,
+    title: product.title,
+    handle: product.handle,
+    createdAt: product.createdAt ? new Date(product.createdAt).toISOString() : undefined,
+    vendor: product.vendor || 'Gibbon Nutrition',
     price: firstVariant?.price || 0,
     compareAtPrice: firstVariant?.compareAtPrice,
     featuredImage: firstImage ? {
       src: typeof firstImage === 'string' ? firstImage : (firstImage.src || firstImage.url || ''),
-      width: firstImage.width || 800,
-      height: firstImage.height || 800,
-      alt: firstImage.alt || dbProduct.title,
+      width: 800,
+      height: 800,
+      alt: (typeof firstImage === 'object' ? firstImage.alt : undefined) || product.title,
     } : {
       src: 'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800',
       width: 800,
       height: 800,
-      alt: dbProduct.title,
+      alt: product.title,
     },
-    images: (dbProduct.images || []).map((img: any) => ({
+    images: (product.images || []).map((img: any) => ({
       src: typeof img === 'string' ? img : (img.src || img.url || ''),
-      width: img.width || 800,
-      height: img.height || 800,
-      alt: img.alt || dbProduct.title,
+      width: 800,
+      height: 800,
+      alt: (typeof img === 'object' ? img.alt || img.altText : undefined) || product.title,
     })),
-    reviewNumber: dbProduct.ratingCount || Math.floor(Math.random() * 100) + 10,
-    rating: dbProduct.rating || 4.5,
-    status: dbProduct.status === 'active' ? (dbProduct.createdAt && new Date(dbProduct.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 'New in' : null) : dbProduct.status,
-    options: dbProduct.options || [],
-    variants: dbProduct.variants?.map((v: any) => ({
+    reviewNumber: product.ratingCount || Math.floor(Math.random() * 100) + 10,
+    rating: product.rating || 4.5,
+    status: product.status === 'active' ? (product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 'New in' : null) : product.status,
+    options: (product.options || []).map((opt: any) => ({
+      name: opt.name,
+      values: opt.values || [],
+    })),
+    variants: (product.variants || []).map((v: any) => ({
       id: v._id?.toString() || v.id,
       title: [v.option1Value, v.option2Value, v.option3Value].filter(Boolean).join(' / ') || 'Default',
       price: v.price,
       compareAtPrice: v.compareAtPrice,
       sku: v.sku,
       inventoryQuantity: v.inventoryQty,
-      image: v.image,
       selectedOptions: [
-        v.option1Value && { name: dbProduct.options?.[0]?.name || 'Option 1', value: v.option1Value },
-        v.option2Value && { name: dbProduct.options?.[1]?.name || 'Option 2', value: v.option2Value },
-        v.option3Value && { name: dbProduct.options?.[2]?.name || 'Option 3', value: v.option3Value },
+        v.option1Value && { name: product.options?.[0]?.name || 'Option 1', value: v.option1Value },
+        v.option2Value && { name: product.options?.[1]?.name || 'Option 2', value: v.option2Value },
+        v.option3Value && { name: product.options?.[2]?.name || 'Option 3', value: v.option3Value },
       ].filter(Boolean),
-    })) || [],
-    description: dbProduct.bodyHtml || dbProduct.description || '',
-    category: dbProduct.productCategory,
-    tags: dbProduct.tags || [],
+    })),
+    description: product.bodyHtml || product.description || '',
+    category: product.productCategory,
+    tags: product.tags || [],
   }
 }
 
