@@ -276,12 +276,12 @@ export default function OrdersPage() {
                   return (
                     <tr key={order.id} className="transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
                       <td className="px-4 py-4">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
+                        <Link
+                          href={`/admin/orders/${order.id}`}
                           className="font-medium text-[#1B198F] hover:underline"
                         >
                           {order.orderNumber}
-                        </button>
+                        </Link>
                         <p className="text-sm text-neutral-500">{order.items.length} item(s)</p>
                       </td>
                       <td className="px-4 py-4">
@@ -313,8 +313,8 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
+                        <Link
+                          href={`/admin/orders/${order.id}`}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-700"
                         >
                           <Eye className="h-5 w-5" />
