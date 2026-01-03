@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDb from '@/lib/mongodb'
 import Order from '@/models/Order'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET /api/admin/orders - List all orders with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
