@@ -21,8 +21,9 @@ import {
   Percent,
   Clock,
   MapPin,
+  LogOut,
 } from 'lucide-react'
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { useUser, useAuth } from '@/context/UserAuthContext'
 import { useCart } from '@/components/useCartStore'
 import { useAside } from '@/components/aside/aside'
 
