@@ -64,18 +64,30 @@ export async function createRazorpayOrder(orderId: string, amount: number) {
       return { success: false, message: 'Razorpay is not enabled' }
     }
     
-    const Razorpay = (await import('razorpay')).default
-    const razorpay = new Razorpay({
-      key_id: settings.razorpay.keyId,
-      key_secret: settings.razorpay.keySecret,
+    // Create Razorpay order using API call instead of SDK to avoid Next.js bundling issues
+    const auth = Buffer.from(`${settings.razorpay.keyId}:${settings.razorpay.keySecret}`).toString('base64')
+    
+    const response = await fetch('https://api.razorpay.com/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`,
+      },
+      body: JSON.stringify({
+        amount: Math.round(amount * 100), // Convert to paise
+        currency: settings.defaultCurrency || 'INR',
+        receipt: orderId,
+        payment_capture: settings.razorpay.autoCapture ? 1 : 0,
+      }),
     })
     
-    const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // Convert to paise
-      currency: settings.defaultCurrency || 'INR',
-      receipt: orderId,
-      payment_capture: settings.razorpay.autoCapture ? 1 : 0,
-    })
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error('Razorpay order creation failed:', errorData)
+      return { success: false, message: errorData.error?.description || 'Failed to create order' }
+    }
+    
+    const order = await response.json()
     
     // Create payment record
     const paymentId = `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
