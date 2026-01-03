@@ -51,6 +51,13 @@ const sidebarItems: NavItem[] = [
     permission: null,
   },
   {
+    name: 'Live View',
+    href: '/admin/live',
+    icon: Store,
+    permission: null,
+    badge: 'Live',
+  },
+  {
     name: 'Orders',
     href: '/admin/orders',
     icon: ShoppingCart,
@@ -93,6 +100,7 @@ const sidebarItems: NavItem[] = [
     children: [
       { name: 'Overview', href: '/admin/analytics', icon: BarChart3, permission: 'analytics.view' },
       { name: 'Reports', href: '/admin/reports', icon: FileText, permission: 'analytics.view' },
+      { name: 'Finance', href: '/admin/finance', icon: CreditCard, permission: 'analytics.view' },
     ],
   },
   {
