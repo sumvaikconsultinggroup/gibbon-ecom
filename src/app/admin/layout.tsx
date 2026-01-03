@@ -34,6 +34,8 @@ import {
   Building2,
   AlertCircle,
   Loader2,
+  CreditCard,
+  Truck,
 } from 'lucide-react'
 
 const sidebarItems = [
@@ -42,6 +44,8 @@ const sidebarItems = [
   { name: 'Collections', href: '/admin/collections', icon: Tag, permission: 'products.view' },
   { name: 'Inventory', href: '/admin/inventory', icon: Package, permission: 'products.view' },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
+  { name: 'Payments', href: '/admin/payments', icon: CreditCard, permission: 'orders.view' },
+  { name: 'Shipping', href: '/admin/shipping', icon: Truck, permission: 'orders.view' },
   { name: 'Customers', href: '/admin/customers', icon: Users, permission: 'customers.view' },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: 'analytics.view' },
   { name: 'Reports', href: '/admin/reports', icon: BarChart3, permission: 'analytics.view' },
