@@ -1194,6 +1194,8 @@ class APITester:
         except Exception as e:
             self.log_test("POST /api/admin/orders/ORD-2024-001/email", False, f"Exception: {str(e)}")
             return False
+
+    def test_promo_code_validation(self) -> bool:
         """Test POST /api/promoCode/check - Validate discount code"""
         test_data = {
             "code": "WELCOME10",
