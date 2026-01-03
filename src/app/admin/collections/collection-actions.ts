@@ -8,6 +8,8 @@ interface CollectionQueryParams {
   search?: string
   page?: number
   limit?: number
+  location?: string
+  published?: boolean
 }
 
 interface CollectionResult {
@@ -25,7 +27,7 @@ export async function getCollections(params: CollectionQueryParams = {}): Promis
   try {
     await connectDb()
     
-    const { search, page = 1, limit = 20 } = params
+    const { search, page = 1, limit = 20, location, published } = params
     
     const filter: any = { isDeleted: { $ne: true } }
     
@@ -33,11 +35,19 @@ export async function getCollections(params: CollectionQueryParams = {}): Promis
       filter.title = { $regex: search, $options: 'i' }
     }
     
+    if (location) {
+      filter['displaySettings.locations'] = location
+    }
+    
+    if (published !== undefined) {
+      filter.published = published
+    }
+    
     const total = await Collection.countDocuments(filter)
     const skip = (page - 1) * limit
     
     const collections = await Collection.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ 'displaySettings.priority': -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()
@@ -72,6 +82,60 @@ export async function getCollections(params: CollectionQueryParams = {}): Promis
   } catch (error: any) {
     console.error('Get collections error:', error)
     return { success: false, message: error.message || 'Failed to fetch collections' }
+  }
+}
+
+// Get collections by display location
+export async function getCollectionsByLocation(location: string): Promise<CollectionResult> {
+  try {
+    await connectDb()
+    
+    const collections = await Collection.find({
+      isDeleted: { $ne: true },
+      published: true,
+      'displaySettings.locations': location,
+      $or: [
+        { 'displaySettings.startDate': { $exists: false } },
+        { 'displaySettings.startDate': { $lte: new Date() } },
+      ],
+      $or: [
+        { 'displaySettings.endDate': { $exists: false } },
+        { 'displaySettings.endDate': { $gte: new Date() } },
+      ],
+    })
+      .sort({ 'displaySettings.priority': -1 })
+      .lean()
+    
+    return {
+      success: true,
+      collections: collections.map(col => ({ ...col, _id: col._id?.toString() })),
+    }
+  } catch (error: any) {
+    console.error('Get collections by location error:', error)
+    return { success: false, message: error.message }
+  }
+}
+
+// Get featured collections
+export async function getFeaturedCollections(): Promise<CollectionResult> {
+  try {
+    await connectDb()
+    
+    const collections = await Collection.find({
+      isDeleted: { $ne: true },
+      published: true,
+      isFeatured: true,
+    })
+      .sort({ featuredOrder: 1 })
+      .lean()
+    
+    return {
+      success: true,
+      collections: collections.map(col => ({ ...col, _id: col._id?.toString() })),
+    }
+  } catch (error: any) {
+    console.error('Get featured collections error:', error)
+    return { success: false, message: error.message }
   }
 }
 
