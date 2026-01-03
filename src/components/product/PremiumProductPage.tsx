@@ -46,6 +46,7 @@ import {
 } from 'lucide-react'
 import { useCart } from '@/components/useCartStore'
 import { useAside } from '@/components/aside/aside'
+import ProductBundleOffers from '@/components/ProductBundleOffers'
 
 interface ProductImage {
   src: string
