@@ -784,6 +784,167 @@ export default function CollectionEditPage() {
                 </div>
               </div>
             </div>
+
+            {/* Display Settings - Shopify+ Feature */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Display Settings</h2>
+                <span className="rounded-full bg-[#1B198F]/10 px-2 py-0.5 text-xs font-medium text-[#1B198F]">Shopify+</span>
+              </div>
+              
+              {/* Display Locations */}
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Where to display</p>
+                <div className="max-h-48 space-y-2 overflow-y-auto">
+                  {displayLocationOptions.map(location => (
+                    <label key={location.value} className="flex cursor-pointer items-start gap-3 rounded-lg p-2 hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                      <input
+                        type="checkbox"
+                        checked={formData.displaySettings.locations.includes(location.value)}
+                        onChange={(e) => {
+                          const newLocations = e.target.checked
+                            ? [...formData.displaySettings.locations, location.value]
+                            : formData.displaySettings.locations.filter(l => l !== location.value)
+                          updateField('displaySettings', { ...formData.displaySettings, locations: newLocations })
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-neutral-300 text-[#1B198F] focus:ring-[#1B198F]"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-neutral-900 dark:text-white">{location.label}</span>
+                        <p className="text-xs text-neutral-500">{location.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Layout Style */}
+              <div className="mt-4 space-y-2">
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Layout Style</label>
+                <select
+                  value={formData.displaySettings.layoutStyle}
+                  onChange={(e) => updateField('displaySettings', { ...formData.displaySettings, layoutStyle: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
+                >
+                  {layoutStyleOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Grid Settings */}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-700 dark:text-neutral-300">Items per Row</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={formData.displaySettings.itemsPerRow}
+                    onChange={(e) => updateField('displaySettings', { ...formData.displaySettings, itemsPerRow: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-700 dark:text-neutral-300">Max Items</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={formData.displaySettings.maxItems}
+                    onChange={(e) => updateField('displaySettings', { ...formData.displaySettings, maxItems: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
+                  />
+                </div>
+              </div>
+
+              {/* Priority */}
+              <div className="mt-4">
+                <label className="mb-1 block text-xs font-medium text-neutral-700 dark:text-neutral-300">Display Priority (Higher = First)</label>
+                <input
+                  type="number"
+                  value={formData.displaySettings.priority}
+                  onChange={(e) => updateField('displaySettings', { ...formData.displaySettings, priority: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
+                />
+              </div>
+
+              {/* Visibility Toggles */}
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-2 dark:bg-neutral-900">
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Show on Mobile</span>
+                  <button
+                    type="button"
+                    onClick={() => updateField('displaySettings', { ...formData.displaySettings, showOnMobile: !formData.displaySettings.showOnMobile })}
+                    className={`relative h-5 w-9 rounded-full transition-colors ${formData.displaySettings.showOnMobile ? 'bg-green-500' : 'bg-neutral-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.displaySettings.showOnMobile ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-2 dark:bg-neutral-900">
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Show on Desktop</span>
+                  <button
+                    type="button"
+                    onClick={() => updateField('displaySettings', { ...formData.displaySettings, showOnDesktop: !formData.displaySettings.showOnDesktop })}
+                    className={`relative h-5 w-9 rounded-full transition-colors ${formData.displaySettings.showOnDesktop ? 'bg-green-500' : 'bg-neutral-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.displaySettings.showOnDesktop ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-2 dark:bg-neutral-900">
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Show Title</span>
+                  <button
+                    type="button"
+                    onClick={() => updateField('displaySettings', { ...formData.displaySettings, showTitle: !formData.displaySettings.showTitle })}
+                    className={`relative h-5 w-9 rounded-full transition-colors ${formData.displaySettings.showTitle ? 'bg-green-500' : 'bg-neutral-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.displaySettings.showTitle ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-neutral-50 p-2 dark:bg-neutral-900">
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Show Product Count</span>
+                  <button
+                    type="button"
+                    onClick={() => updateField('displaySettings', { ...formData.displaySettings, showProductCount: !formData.displaySettings.showProductCount })}
+                    className={`relative h-5 w-9 rounded-full transition-colors ${formData.displaySettings.showProductCount ? 'bg-green-500' : 'bg-neutral-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.displaySettings.showProductCount ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Featured Collection */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
+              <h2 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Featured</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-3 dark:bg-neutral-900">
+                  <div>
+                    <p className="font-medium text-neutral-900 dark:text-white">Featured Collection</p>
+                    <p className="text-sm text-neutral-500">Show this collection prominently</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateField('isFeatured', !formData.isFeatured)}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${formData.isFeatured ? 'bg-[#1B198F]' : 'bg-neutral-300'}`}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${formData.isFeatured ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                {formData.isFeatured && (
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Featured Order</label>
+                    <input
+                      type="number"
+                      value={formData.featuredOrder}
+                      onChange={(e) => updateField('featuredOrder', Number(e.target.value))}
+                      className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
+                    />
+                    <p className="mt-1 text-xs text-neutral-500">Lower numbers appear first</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </form>
