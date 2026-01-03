@@ -230,6 +230,14 @@ export const useCart = create(
         const item = get().items.find((i) => i.id === id)
         if (!item) return
 
+        // Track remove from cart event for live analytics
+        trackEvent('remove_from_cart', {
+          productId: item.productId,
+          productName: item.name,
+          productPrice: item.price,
+          quantity: item.quantity,
+        })
+
         fetch('/api/cart/sync/edit', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
