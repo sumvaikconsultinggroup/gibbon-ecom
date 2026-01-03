@@ -1,6 +1,6 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
+import { useUser } from '@/context/UserAuthContext'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 
