@@ -272,82 +272,158 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setActionLoading(null)
     }
   }
-    setNewNote('')
-    setShowNoteModal(false)
-  }
 
   // Create shipment
   const handleCreateShipment = async () => {
-    await handleAction('/shipment', 'POST', {
-      carrier: shipmentData.carrier || 'Manual Shipping',
-      trackingNumber: shipmentData.trackingNumber,
-      shippingMethod: shipmentData.shippingMethod,
-      user: 'Admin',
-    }, 'Shipment created successfully')
-    setShowShipmentModal(false)
-    setShipmentData({ carrier: '', trackingNumber: '', shippingMethod: 'standard' })
+    try {
+      setActionLoading('shipment')
+      const result = await createShipmentAction(order?.orderId || resolvedParams.id, {
+        carrier: shipmentData.carrier || 'Manual Shipping',
+        trackingNumber: shipmentData.trackingNumber,
+        shippingMethod: shipmentData.shippingMethod,
+        user: 'Admin',
+      })
+      if (result.success) {
+        toast.success('Shipment created successfully')
+        setShowShipmentModal(false)
+        setShipmentData({ carrier: '', trackingNumber: '', shippingMethod: 'standard' })
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to create shipment')
+      }
+    } catch (error) {
+      toast.error('Failed to create shipment')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Process refund
   const handleRefund = async () => {
-    const amount = refundAmount ? parseFloat(refundAmount) : order?.totalAmount
-    await handleAction('/refund', 'POST', {
-      amount,
-      reason: refundReason,
-      user: 'Admin',
-    }, 'Refund processed successfully')
-    setShowRefundModal(false)
-    setRefundAmount('')
-    setRefundReason('')
+    try {
+      setActionLoading('refund')
+      const amount = refundAmount ? parseFloat(refundAmount) : order?.totalAmount || 0
+      const result = await processRefundAction(order?.orderId || resolvedParams.id, amount, refundReason)
+      if (result.success) {
+        toast.success('Refund processed successfully')
+        setShowRefundModal(false)
+        setRefundAmount('')
+        setRefundReason('')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to process refund')
+      }
+    } catch (error) {
+      toast.error('Failed to process refund')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Cancel order
   const handleCancelOrder = async () => {
-    await handleAction('', 'PATCH', {
-      action: 'cancel',
-      reason: cancelReason,
-      user: 'Admin',
-    }, 'Order cancelled successfully')
-    setShowCancelModal(false)
-    setCancelReason('')
+    try {
+      setActionLoading('cancel')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'cancel', {
+        reason: cancelReason,
+        user: 'Admin',
+      })
+      if (result.success) {
+        toast.success('Order cancelled successfully')
+        setShowCancelModal(false)
+        setCancelReason('')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to cancel order')
+      }
+    } catch (error) {
+      toast.error('Failed to cancel order')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Reassign order
   const handleReassign = async () => {
     if (!newAssignee.trim()) return
-    await handleAction('', 'PATCH', {
-      action: 'assign',
-      assignedTo: newAssignee,
-      user: 'Admin',
-    }, 'Order reassigned successfully')
-    setShowReassignModal(false)
-    setNewAssignee('')
+    try {
+      setActionLoading('assign')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'assign', {
+        assignedTo: newAssignee,
+        user: 'Admin',
+      })
+      if (result.success) {
+        toast.success('Order reassigned successfully')
+        setShowReassignModal(false)
+        setNewAssignee('')
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to reassign order')
+      }
+    } catch (error) {
+      toast.error('Failed to reassign order')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Add tag
   const handleAddTag = async () => {
     if (!newTag.trim()) return
-    await handleAction('', 'PATCH', {
-      action: 'add_tag',
-      tag: newTag.toLowerCase().replace(/\s+/g, '-'),
-    }, 'Tag added successfully')
-    setNewTag('')
-    setShowTagModal(false)
+    try {
+      setActionLoading('tag')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'add_tag', {
+        tag: newTag.toLowerCase().replace(/\s+/g, '-'),
+      })
+      if (result.success) {
+        toast.success('Tag added successfully')
+        setNewTag('')
+        setShowTagModal(false)
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to add tag')
+      }
+    } catch (error) {
+      toast.error('Failed to add tag')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Remove tag
   const handleRemoveTag = async (tag: string) => {
-    await handleAction('', 'PATCH', {
-      action: 'remove_tag',
-      tag,
-    }, 'Tag removed')
+    try {
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'remove_tag', { tag })
+      if (result.success) {
+        toast.success('Tag removed')
+        await fetchOrder()
+      }
+    } catch (error) {
+      toast.error('Failed to remove tag')
+    }
   }
 
   // Update shipping address
   const handleUpdateAddress = async () => {
-    await handleAction('', 'PATCH', {
-      action: 'update_shipping_address',
-      shippingAddress: editAddress,
+    try {
+      setActionLoading('address')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'update_shipping_address', {
+        shippingAddress: editAddress,
+        user: 'Admin',
+      })
+      if (result.success) {
+        toast.success('Address updated successfully')
+        setShowAddressModal(false)
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to update address')
+      }
+    } catch (error) {
+      toast.error('Failed to update address')
+    } finally {
+      setActionLoading(null)
+    }
+  }
       user: 'Admin',
     }, 'Address updated successfully')
     setShowAddressModal(false)
