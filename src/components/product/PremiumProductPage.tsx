@@ -306,13 +306,13 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
             transition={{ duration: 2, repeat: Infinity }}
           >
             <Eye className="h-4 w-4 text-orange-500" />
-            <span className="font-semibold text-orange-700 dark:text-orange-400">{liveViewers} people</span>
+            <span className="font-semibold text-orange-700 dark:text-orange-400">{isClient ? liveViewers : '--'} people</span>
             <span className="text-orange-600 dark:text-orange-500">viewing this right now</span>
           </motion.div>
           <div className="hidden h-4 w-px bg-orange-200 dark:bg-orange-800 sm:block" />
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-green-500" />
-            <span className="font-semibold text-green-700 dark:text-green-400">{recentPurchases}+ sold</span>
+            <span className="font-semibold text-green-700 dark:text-green-400">{isClient ? recentPurchases : '--'}+ sold</span>
             <span className="text-green-600 dark:text-green-500">in last 7 days</span>
           </div>
         </div>
