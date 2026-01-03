@@ -342,30 +342,7 @@ export default function MegaHeader() {
               </button>
 
               {/* Account */}
-              <SignedIn>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: 'h-10 w-10',
-                    },
-                  }}
-                />
-              </SignedIn>
-              <SignedOut>
-                <Link
-                  href="/sign-in"
-                  className="hidden items-center gap-2 rounded-full bg-[#1B198F] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#1B198F]/90 sm:flex"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-in"
-                  className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 sm:hidden dark:hover:bg-neutral-800"
-                  aria-label="Sign In"
-                >
-                  <User className="h-5 w-5" />
-                </Link>
-              </SignedOut>
+              <UserAccountButton />
             </div>
           </div>
         </div>
