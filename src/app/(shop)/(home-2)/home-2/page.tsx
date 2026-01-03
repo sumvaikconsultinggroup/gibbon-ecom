@@ -11,9 +11,13 @@ import SectionPromo3 from '@/components/SectionPromo3'
 import SectionSliderLargeProduct from '@/components/SectionSliderLargeProduct'
 import SectionSliderProductCard from '@/components/SectionSliderProductCard'
 import SectionMagazine5 from '@/components/blog/SectionMagazine5'
-import { getBlogPosts, getCollections, getGroupCollections, getProducts } from '@/data/data'
+import { getBlogPosts } from '@/data/data'
+import { getProductsFromDB, getCollectionsFromDB, getGroupCollectionsFromDB } from '@/data/dbData'
 import ButtonSecondary from '@/shared/Button/ButtonSecondary'
 import { Metadata } from 'next'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Gibbon Nutrition | Premium Sports Nutrition',
@@ -23,14 +27,18 @@ export const metadata: Metadata = {
 }
 
 async function PageHome2() {
-  const allCollections = await getCollections()
-  const featuredCollections = allCollections.slice(7, 11)
-  const groupCollections = await getGroupCollections()
-  const products = await getProducts()
+  // Fetch data from database
+  const [allCollections, products, groupCollections, blogPosts] = await Promise.all([
+    getCollectionsFromDB({ includeProducts: true, limit: 20 }),
+    getProductsFromDB({ limit: 20, sortBy: 'newest' }),
+    getGroupCollectionsFromDB(),
+    getBlogPosts(),
+  ])
+  
+  const featuredCollections = allCollections.filter((c: any) => c.handle !== 'best-sellers').slice(0, 4)
   const carouselProducts1 = products.slice(0, 5)
-  const carouselProducts2 = products.slice(3, 10)
-  const carouselProducts3 = products.slice(2, 6)
-  const blogPosts = await getBlogPosts()
+  const carouselProducts2 = products.slice(0, 10)
+  const carouselProducts3 = products.slice(0, 6)
 
   return (
     <div className="nc-PageHome2 relative">
