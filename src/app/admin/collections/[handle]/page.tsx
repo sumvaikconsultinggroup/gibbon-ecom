@@ -34,11 +34,41 @@ import {
 } from '../collection-actions'
 import { getProducts } from '../../products/product-actions'
 
+type DisplayLocation = 
+  | 'homepage_hero' 
+  | 'homepage_featured' 
+  | 'homepage_grid' 
+  | 'navigation_menu' 
+  | 'sidebar' 
+  | 'footer' 
+  | 'category_page' 
+  | 'search_filters'
+  | 'product_recommendations'
+  | 'checkout_upsell'
+
+interface DisplaySettings {
+  locations: DisplayLocation[]
+  priority: number
+  showOnMobile: boolean
+  showOnDesktop: boolean
+  layoutStyle: 'grid' | 'carousel' | 'list' | 'banner' | 'featured'
+  itemsPerRow: number
+  maxItems: number
+  showTitle: boolean
+  showDescription: boolean
+  showProductCount: boolean
+  backgroundColor?: string
+  textColor?: string
+}
+
 interface CollectionFormData {
   title: string
   handle: string
   description: string
   image: string
+  bannerImage: string
+  mobileImage: string
+  thumbnailImage: string
   seo: {
     title?: string
     description?: string
@@ -52,6 +82,9 @@ interface CollectionFormData {
   }[]
   conditionMatch: 'all' | 'any'
   productHandles: string[]
+  displaySettings: DisplaySettings
+  isFeatured: boolean
+  featuredOrder: number
   published: boolean
 }
 
