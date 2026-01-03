@@ -1,6 +1,5 @@
 import { getCollections } from '@/data/data'
 import { getCurrencies, getHeaderDropdownCategories, getLanguages, getNavMegaMenu } from '@/data/navigation'
-import { SignedIn, SignedOut } from '@clerk/nextjs'
 import clsx from 'clsx'
 import Image from 'next/image'
 import AllProductMegaMenu from '../AllProductMegaMenu'
@@ -11,6 +10,7 @@ import HamburgerBtnMenu from './HamburgerBtnMenu'
 import SearchBtnPopover from './SearchBtnPopover'
 import WishlistBtn from './WishlistBtn'
 import AccountDropdown from './AccountDropdown'
+import HeaderAuthButton from './HeaderAuthButton'
 
 const Header = async ({ hasBorderBottom = true }) => {
   const megamenu = await getNavMegaMenu()
@@ -68,38 +68,7 @@ const Header = async ({ hasBorderBottom = true }) => {
             </div>
 
             {/* Account */}
-            <SignedIn>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                <AccountDropdown />
-              </div>
-            </SignedIn>
-            <SignedOut>
-              <Link
-                href="/sign-in"
-                className="ml-2 hidden items-center justify-center rounded-full bg-[#1B198F] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#1B198F]/90 sm:flex"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/sign-in"
-                className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-neutral-100 sm:hidden dark:hover:bg-neutral-800"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-neutral-700 dark:text-neutral-200"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </Link>
-            </SignedOut>
+            <HeaderAuthButton />
           </div>
         </div>
       </div>
