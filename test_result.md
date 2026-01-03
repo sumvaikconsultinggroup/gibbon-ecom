@@ -12,7 +12,7 @@
 7. Shipping Integration (Shiprocket) settings
 
 ### Admin Credentials
-- URL: https://ecommerce-control-1.preview.emergentagent.com/admin
+- URL: https://nextcommerce-8.preview.emergentagent.com/admin
 - Email: admin@gibbonnutrition.com
 - Password: gibbonsecret
 
@@ -66,7 +66,7 @@
    - Status: WORKING
 
 ### Technical Implementation Notes
-- Frontend URL: https://ecommerce-control-1.preview.emergentagent.com
+- Frontend URL: https://nextcommerce-8.preview.emergentagent.com
 - All admin routes use Next.js server actions
 - Payment gateway integrations properly configured
 - Shopify+ features implemented with appropriate UI indicators

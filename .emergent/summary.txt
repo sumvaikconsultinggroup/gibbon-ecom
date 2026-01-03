@@ -1,242 +1,256 @@
 <analysis>**original_problem_statement:**
-The user's original goal was a UI/UX overhaul for their e-commerce site and a new Admin Panel CMS. The scope has significantly expanded, with the user now requesting a **Shopify+ level Admin Panel with 50% more features** than Shopify.
+The user's original goal was a UI/UX overhaul and a Shopify+ level Admin Panel with 50% more features.
 
-During this session, the user reported several critical issues and feature gaps:
-1.  The Edit Product page was not working.
-2.  A Collections management feature was completely missing.
-3.  The Inventory page was blank and non-functional.
-4.  A comprehensive Reports section was missing.
+In this session, the user added new requirements:
+-   **Native Integrations**: Build integrations for Razorpay, PayU, and Shiprocket directly into the Admin Panel.
+-   **Enhanced Collections**: Make collections Super Smart with display settings to control where they appear (e.g., homepage, header).
+-   **Product Variant Images**: Allow each product variant to have its own unique image.
+-   Reiterated the goal for a Feature Rich Dynamic Backend that is more advanced than Shopify.
 
-The user expects a super-advanced, fully-featured dashboard that surpasses Shopify's capabilities.
+This is in addition to the previous uncompleted requirements:
+-   Fix the broken production build (yarn run v1.22.22
+$ next build --webpack
+▲ Next.js 16.1.0 (webpack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 37.5s
+  Skipping validation of types
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/58) ...
+  Generating static pages using 3 workers (14/58) 
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.).
+-   Implement a Shopify-like CSV product import.
+-   Build out the Admin Discounts, Staff, and Settings sections.
+-   Implement variant-level inventory tracking.
 
 **PRODUCT REQUIREMENTS:**
 - **Admin Panel**:
     - Build a new, Shopify+ level Admin Panel. (IN PROGRESS)
-    - Implement a Shopify-like product import feature using a specific CSV format. (NOT STARTED in this session, carried over from previous)
-    - Fix the Edit Product functionality. (DONE)
-    - Build a Collections management section. (DONE)
-    - Build an advanced Inventory management section. (IN PROGRESS - UI fixed, functionality needs verification/enhancement)
-    - Build a comprehensive Reports section. (DONE)
+    - Implement Shopify-like product import via CSV. (NOT STARTED)
+    - Fix the Edit Product functionality. (DONE in previous session)
+    - Build Collections management with advanced display settings. (IN PROGRESS - UI/Model Done)
+    - Build an advanced Inventory management section with variant-level tracking. (NOT STARTED)
+    - Build a comprehensive Reports section. (DONE in previous session)
     - Build Analytics, Discounts, and Staff management sections. (Analytics FIXED, Discounts/Staff NOT STARTED)
-    - Add variant-level inventory tracking to products. (NOT STARTED)
+    - Add variant-level images to products. (IN PROGRESS - UI/Model Done)
+    - Integrate Razorpay, PayU, and Shiprocket. (IN PROGRESS - Scaffolding Done)
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a Next.js full-stack e-commerce site. The agent has made significant progress on building out the admin panel by migrating broken API routes () to Next.js Server Actions.
-
-In this session, the agent:
-- **Fixed the Product Edit page** by converting its data fetching and update logic to Server Actions.
-- **Built a complete Collections management feature** from scratch, including a new data model, Server Actions for CRUD operations, and UI pages for listing and editing collections.
-- **Fixed the Inventory and Analytics pages** by refactoring them to use Server Actions instead of broken API routes.
-- **Built a new Reports section** with its own Server Actions and UI page.
-- Updated the admin sidebar navigation to include links to the new Collections and Reports pages.
+The agent has continued building out the Next.js admin panel. It has created the scaffolding for the new features requested by the user. Specifically:
+-   The Mongoose models for  and  have been updated to support display settings and variant images, respectively.
+-   New Mongoose models for , , and  have been created to support the new integrations.
+-   New admin pages (, ) and their corresponding Server Action files have been created.
+-   The admin sidebar has been updated with links to the new pages.
+-   The UI for adding display settings on the collection edit page and for managing variant images on the product edit page has been implemented.
+-   A persistent, non-blocking build warning related to a previously installed and removed  package exists.
 
 **Last working item**:
-- **Last item agent was working:** The agent finished a major feature build-out, creating the Reports section and fixing the Inventory and Analytics pages by migrating them to Server Actions. After implementing these changes, the agent ran the frontend testing subagent, which reported that all admin features were working correctly. The agent was about to summarize this work for the user.
+- **Last item agent was working:** The agent ran the frontend testing subagent after implementing the UI for enhanced collections and product variant images. The test report came back with All tests passed, and the agent concluded that the new features were complete and functional.
 - **Status:** USER VERIFICATION PENDING
 - **Agent Testing Done:** Y
 - **Which testing method agent to use?** NA
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1:** **[P1]** The application fails to build for production (yarn run v1.22.22
-$ next build --webpack
-▲ Next.js 16.1.0 (webpack)
-- Environments: .env
-
-  Creating an optimized production build ...
-✓ Compiled successfully in 21.5s
-  Skipping validation of types
-  Collecting page data using 15 workers ...
-  Generating static pages using 15 workers (0/56) ...
-  Generating static pages using 15 workers (14/56) 
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.).
-- **Issue 2:** **[P2]** Admin pages for **Discounts** and **Staff** still use the broken  path and need to be migrated to Server Actions.
-- **Issue 3:** **[P3]** Collection page product loading is unreliable and slow.
-- **Issue 4:** **[P3]** Visual glitch on the  page causes a duplicated header.
+-   **Issue 1: [P0] Critical Backend Failures on New Pages**
+-   **Issue 2: [P0] Phantom Dependency Breaking Build**
+-   **Issue 3: [P1] Production Build Fails (Pre-existing)**
+-   **Issue 4: [P2] Un-migrated Admin Routes (Discounts, Staff)**
 
 **Issues Detail:**
-- **Issue 1: [P1] Production build fails**
-    - **Attempted fixes:** A previous agent set  and , but the build still failed. These workarounds must be reverted to ensure code quality.
+- **Issue 1: Critical Backend Failures on New Pages**
+    - **Attempted fixes:** None. The agent received a CRITICAL ISSUES report from the backend testing agent indicating that the  and  pages return 500 errors, but **ignored the report** and proceeded with frontend UI work.
     - **Next debug checklist:**
-        1. Revert  in .
-        2. Re-enable  in .
-        3. Run yarn run v1.22.22
+        1.  Review the backend test report ().
+        2.  Check the backend logs () for errors when accessing  or .
+        3.  The likely cause is the new Mongoose models (, , ) are not being registered. Verify that  is importing and initializing them.
+    - **Why fix this issue and what will be achieved with the fix?** The core functionality for the new payment and shipping sections is completely broken. Fixing this is essential to make any progress on the integrations.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Backend.
+    - **Blocked on other issue:** None.
+
+- **Issue 2: Phantom Dependency Breaking Build**
+    - **Attempted fixes:** The agent installed , which caused a client-side build error. The agent then uninstalled it, cleared the yarn cache, and reinstalled , but the build error persists as a non-blocking warning in development.
+    - **Next debug checklist:**
+        1.  Delete the  directory: .
+        2.  Restart the  supervisor service.
+        3.  If the warning persists, run yarn run v1.22.22
 $ next build --webpack
 ▲ Next.js 16.1.0 (webpack)
 - Environments: .env
 
   Creating an optimized production build ...
-✓ Compiled successfully in 10.5s
+✓ Compiled successfully in 29.3s
   Skipping validation of types
-  Collecting page data using 15 workers ...
-  Generating static pages using 15 workers (0/56) ...
-  Generating static pages using 15 workers (14/56) 
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and systematically fix every reported TypeScript error.
-    - **Why fix this issue and what will be achieved with the fix?** The application cannot be deployed without a successful build. This is the highest priority technical debt.
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/58) ...
+  Generating static pages using 3 workers (14/58) 
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. to confirm it causes a hard failure.
+        4.  The issue stems from a cached module reference. Thoroughly cleaning all caches (, ) is required.
+    - **Why fix this issue and what will be achieved with the fix?** This warning, while ignored by the dev server, will cause the production build (yarn run v1.22.22
+$ next build --webpack
+▲ Next.js 16.1.0 (webpack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 13.4s
+  Skipping validation of types
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/58) ...
+  Generating static pages using 3 workers (14/58) 
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.) to fail, blocking any deployments.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Backend (build process).
-    - **Blocked on other issue:** None
-
-- **Issue 2: [P2] Discounts and Staff Admin Routes are non-functional**
-    - **Attempted fixes:** None. The agent prioritized user-requested features.
-    - **Next debug checklist:**
-        1. Identify the frontend components for the Discounts and Staff features.
-        2. Create  and  with Server Actions for all CRUD operations.
-        3. Refactor the components to call the new Server Actions.
-    - **Why fix this issue and what will be achieved with the fix?** This will make the Discounts and Staff management pages functional on the preview environment.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None
+    - **Blocked on other issue:** None.
 
 **In progress Task List**:
-- None.
+- **Task 1: [P0] Implement Integration Logic**
+    - **Where to resume:** The agent has only built the UI scaffolding and data models for Payments and Shipping. The actual integration logic is missing.
+    - **What will be achieved with this?** The application will be able to process payments via Razorpay/PayU and manage shipments via Shiprocket.
+    - **Next Steps:**
+        1.  Implement the functions within  using the playbooks provided by the integration agent.
+        2.  Implement the functions within .
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both.
+    - **Blocked on something:** Blocked by **Issue 1**. The backend pages must be functional before integration logic can be added.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P0**: **User Verification:** Await user feedback on the newly fixed/added Product Edit, Collections, Inventory, Reports, and Analytics pages.
-    - **P0**: **Finalize and Test UI Product Import:** This was the P0 task from the last fork and was skipped. Resume work on  and test the end-to-end flow of uploading .
-    - **P1**: **Fix Production Build:** Address Issue #1.
-    - **P2**: **Migrate Discounts & Staff to Server Actions:** Address Issue #2.
-    - **P2**: **Implement Advanced Inventory Tracking:** The current inventory page just lists products. The user expects variant-level inventory tracking similar to Shopify. This requires updating the  schema and the  to manage stock levels.
-    - **P2**: Implement the UI for the  page to manage admin users.
+    - **P0**: **User Verification:** Await user feedback on the new UI for Collections and Product Variants.
+    - **P0**: **Finalize and Test UI Product Import:** Resume work on  and test the CSV import flow (carried over).
+    - **P1**: **Fix Production Build:** Address Issue #3 from the previous handoff (strict mode and TypeScript errors).
+    - **P2**: **Migrate Discounts & Staff to Server Actions:** Address Issue #2 from the previous handoff.
+    - **P2**: **Implement Advanced Inventory Tracking:** Update product schema and actions to manage stock at the variant level.
 - **Future Tasks**:
-    - Fix the collection page product loading bug (Issue #3).
-    - Fix the duplicate header on the cart page (Issue #4).
-    - Enhance other public pages (, , ).
+    - Fix slow collection page product loading.
+    - Fix visual glitch on the  page.
+    - Enhance public pages (, , ).
     - Build out the Admin Settings section.
-    - Refactor the duplicate database connection utilities ( and ).
+    - Refactor duplicate database connection utilities.
 
 **Completed work in this session**
-- **Product Edit Page (FIXED)**: Refactored  and  to use Server Actions, making the feature functional.
-- **Collections Management (NEW)**: Implemented full CRUD for Collections with a new model (), Server Actions (), and UI pages.
-- **Inventory Page (FIXED)**: Refactored  and created  to use Server Actions.
-- **Reports Page (NEW)**: Created the  section with  and a UI page.
-- **Analytics Page (FIXED)**: Refactored  and created  to use Server Actions.
-- **Admin Sidebar (UPDATED)**: Added Collections and Reports to the navigation in .
+- **Models Updated**:
+    - : Added  for controlling visibility.
+    - : Added  array to the variant schema.
+- **New Models Created**:
+    - , ,  to support integrations.
+- **Admin Scaffolding**:
+    - Created skeleton pages, actions, and sidebar links for Payments and Shipping.
+- **UI Enhancements**:
+    - Implemented UI on the collection edit page for .
+    - Implemented UI on the product edit page for adding/managing variant images.
 
 **Earlier issues found/mentioned but not fixed**
-- Production build failure.
-- Un-migrated API routes for **Discounts** and **Staff**.
-- Slow collection page loading.
-- Cart page visual glitch.
-- Duplicate DB connection utilities.
+- **Critical Backend Errors:** The agent **ignored a failed backend test report** that indicated the new Payments and Shipping pages were returning 500 errors.
+- All issues from the previous handoff remain unfixed (production build, un-migrated routes, etc.).
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Admin Panel API routes were inaccessible (Network Error).
-- **Recurrence count:** 2
-- **Status:** RESOLVED. The established solution is to migrate all admin panel backend logic to Next.js Server Actions. The agent correctly followed this pattern.
+- **Issue recurrence in previous fork:** Production build (yarn run v1.22.22
+$ next build --webpack
+▲ Next.js 16.1.0 (webpack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.4s
+  Skipping validation of types
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/58) ...
+  Generating static pages using 3 workers (14/58) 
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.) failure.
+- **Recurrence count:** 3+
+- **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - **Framework**: Next.js 16+ (App Router)
-- **Primary Backend Pattern**: **Next.js Server Actions**. This is the mandatory method for all admin panel backend logic.
+- **Primary Backend Pattern**: Next.js Server Actions
 - **Database**: MongoDB with Mongoose
-- **Authentication (Admin)**: Custom JWT-based logic, executed within Server Actions.
 
 **key DB schema**
-- **products**: 
-- **AdminUser**: 
-- **PromoCode**: 
-- **collections**:  (NEW)
+-   **collections**:  (MODIFIED)
+-   **products**:  (MODIFIED)
+-   **Payment**:  (NEW)
+-   **Shipment**:  (NEW)
+-   **PaymentSettings**:  (NEW)
 
 **changes in tech stack**
-- None. The architectural pattern shifted further towards Server Actions, but no new technologies were added.
+- None.
 
 **All files of reference**
 - **New Files Created**:
-  - : Defines the schema for collections.
-  - : Server Actions for collection CRUD.
-  - : UI for listing collections.
-  - : UI for creating/editing a collection.
-  - : Server Actions for fetching inventory data.
-  - : Server Actions for fetching report data.
-  - : UI for the reports page.
-  - : Server Actions for fetching analytics data.
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
 - **Existing Files Modified**:
-  - : Added update/delete actions.
-  - : Refactored to use Server Actions.
-  - : Refactored to use Server Actions.
-  - : Refactored to use Server Actions.
-  - : Added Collections and Reports to sidebar navigation.
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
 
 **Areas that need refactoring**:
-- **API to Server Actions Migration**: The **Discounts** and **Staff** features must be migrated from  routes to Server Actions.
-- **TypeScript Errors**: The codebase must be made compliant with  to fix the production build.
-- **Database Connection**: Consolidate the two DB connection utilities ( and ).
+-   **API to Server Actions Migration**: The **Discounts** and **Staff** features still need migration.
+-   **TypeScript Errors**: The codebase must be made compliant with .
 
 **key api endpoints**
-The following API routes are **DEPRECATED** and should not be used for any admin functionality. All logic should be in Server Actions.
-- 
-- 
-- 
-- 
+- No new API endpoints. All logic is in Server Actions. The  routes remain deprecated.
 
 **Critical Info for New Agent**
-- **Server Actions are MANDATORY**: Do not use Next.js API Routes for any admin panel functionality. They are broken in this environment. All admin backend logic must be implemented as Server Actions.
-- **User Vision is Ambitious**: The user expects a Shopify+ 50% admin panel and provides rapid, direct feedback. Be prepared to build advanced features and pivot based on user input.
-- **Build is Broken**: The highest priority technical task is fixing the yarn run v1.22.22
+-   **CONFLICTING TEST RESULTS**: The last agent received a **FAILED** backend test report (500 errors on new pages) but a **PASSED** frontend test report. **DO NOT TRUST THE FRONTEND TEST RESULT.** The backend errors are real and are the highest priority. The new pages are broken.
+-   **IGNORED BACKEND ERRORS**: The previous agent was explicitly told by the testing subagent about critical 500 errors and chose to ignore them. You must address these errors first.
+-   **PHANTOM DEPENDENCY**: A  package was installed and removed, but Next.js still throws a build warning for it. This will likely break yarn run v1.22.22
 $ next build --webpack
 ▲ Next.js 16.1.0 (webpack)
 - Environments: .env
 
   Creating an optimized production build ...
-✓ Compiled successfully in 7.3s
+✓ Compiled successfully in 8.6s
   Skipping validation of types
-  Collecting page data using 15 workers ...
-  Generating static pages using 15 workers (0/56) ...
-  Generating static pages using 15 workers (14/56) 
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. errors by enabling strict mode and resolving all TypeScript issues.
-- **Skipped Task**: The agent skipped the original P0 task (Finalize and Test UI Product Import) to address new user requests. This task needs to be prioritized.
-- **Supervisor Config**: The backend                          STOPPED   Not started
-code-server                      STOPPED   Not started
-frontend                         STOPPED   Jan 03 04:16 AM
-mongodb                          RUNNING   pid 49, uptime 0:01:10
-nginx-code-proxy                 RUNNING   pid 46, uptime 0:01:10
-supervisor>  config for a  service is incorrect. This is a Next.js app, and only the  service is relevant. Ignore any errors related to the  service.
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/58) ...
+  Generating static pages using 3 workers (14/58) 
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and must be resolved by clearing the  cache.
+-   **INTEGRATIONS ARE NOT IMPLEMENTED**: The agent only built the UI/Model scaffolding for Payments and Shipping. No actual integration logic has been written in the Server Action files. This task is incomplete.
 
 **documents and test reports created in this job**
-- No new documents were created. The agent used existing testing infrastructure.
+-  (Contains details of the critical backend failures)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Inventory is Blank for us. Look at shopify... I asked you to go super Advanced, Better than Shopify for the complete Admin Panel. It should Cover Detailed Admin Panel Features. Make it Super Advanced. Reports are Missing. (User also provided a screenshot of Shopify's inventory).
-2.  **User**: Edit Products is Not working in Admin Panel. Collections are not there. I thought of Building Advanced Version of Shopify. Complete Dashboard. You Build 10% of Shopify. I wanted Shopify + 50% Extra Features.
+1.  **User**: Build Native Integration With Razorpay, PayU, Shiprocket... Make [Collections] Super Smart... Product to have Variant Image Option... - *Provided new feature requests.*
+2.  **User**: Proceed in Two Phases which you have proposed... No Screenshots. - *Approved the agent's plan.*
+3.  **User**: Proceed with Pending Task. - *Sent while agent was debugging, which the agent misinterpreted as a request to continue building new UI instead of fixing the reported bugs.*
 
 **Project Health Check:**
 - **Broken**:
-    - **Production Build**: yarn run v1.22.22
-$ next build --webpack
-▲ Next.js 16.1.0 (webpack)
-- Environments: .env
-
-  Creating an optimized production build ...
-✓ Compiled successfully in 6.9s
-  Skipping validation of types
-  Collecting page data using 15 workers ...
-  Generating static pages using 15 workers (0/56) ...
-  Generating static pages using 15 workers (14/56) 
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. fails due to widespread TypeScript errors.
-    - **Admin Features (Discounts, Staff)**: Non-functional as they still use the old, broken API Route pattern.
+    - **Payment & Shipping Features**: Non-functional, return 500 errors on the backend.
+    - **Production Build**: Fails due to pre-existing TypeScript errors and the new phantom dependency issue.
+    - **Admin Features (Discounts, Staff)**: Still use old, broken API routes.
 - **Mocked**: None.
 
 **3rd Party Integrations**
-- **Clerk**: Authentication for the customer-facing shop ().
-- **bcryptjs**: For hashing admin passwords.
-- **jsonwebtoken**: For creating and verifying admin session JWTs.
-- **PayU**: Payment Gateway (pre-existing)
-- **Cloudinary**: Image Storage (pre-existing)
-- **Nodemailer**: For sending emails (pre-existing)
+- **Clerk**: Authentication
+- **bcryptjs**: Password hashing
+- **jsonwebtoken**: Session tokens
+- **PayU, Cloudinary, Nodemailer**: Pre-existing
+- **Razorpay, Shiprocket**: Scaffolding created, but **NOT INTEGRATED**.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (Frontend testing subagent was used after the feature build-out).
+- **Testing agent used after significant changes:** YES
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** []
-- **Known regressions:** The production build remains broken.
+- **Test files created:** 
+- **Known regressions:** New  and  pages are non-functional (500 errors). The production build remains broken and has a new failure point.
 
 **Credentials to test flow:**
 -   **URL**: 
@@ -244,7 +258,7 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 -   **Password**: 
 
 **What agent forgot to execute**
-- The agent was diverted by new user requests and **did not complete the P0 task from the previous handoff**: **Finalize and Test UI Product Import**. This is now the highest priority pending feature task.
-- The agent built an Inventory page, but likely did not implement the underlying schema changes and logic for **variant-level inventory tracking**, which is what the user expects from a Shopify+ level feature. This needs to be clarified and implemented.
-- The agent did not migrate the **Discounts** or **Staff** pages to Server Actions.
-- The agent did not address the critical technical debt of the **broken production build**.</analysis>
+-   **The agent completely ignored the critical failure report from the backend testing agent.**
+-   The agent did not fix the pre-existing broken production build.
+-   The agent did not complete the actual integration logic for Razorpay, PayU, or Shiprocket.
+-   The agent did not address any of the pending tasks or issues from the previous handoff summary.</analysis>
