@@ -67,13 +67,21 @@ const sidebarItems: NavItem[] = [
     permission: 'orders.view',
   },
   {
+    name: 'Storefront',
+    icon: PanelTop,
+    permission: 'settings.view',
+    children: [
+      { name: 'Homepage Builder', href: '/admin/homepage', icon: Home, permission: 'settings.view', badge: 'New' },
+      { name: 'Navigation', href: '/admin/navigation', icon: Menu, permission: 'settings.view' },
+    ],
+  },
+  {
     name: 'Catalog',
     icon: Package,
     permission: 'products.view',
     children: [
       { name: 'Products', href: '/admin/products', icon: Package, permission: 'products.view' },
       { name: 'Collections', href: '/admin/collections', icon: FolderOpen, permission: 'products.view' },
-      { name: 'Navigation', href: '/admin/navigation', icon: Menu, permission: 'settings.view', badge: 'New' },
     ],
   },
   {
