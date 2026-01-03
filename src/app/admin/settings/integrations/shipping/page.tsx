@@ -25,6 +25,11 @@ import {
   Navigation,
   RotateCcw,
   ExternalLink,
+  ArrowLeft,
+  ChevronRight,
+  Zap,
+  BarChart3,
+  Route,
 } from 'lucide-react'
 import {
   getShippingSettings,
