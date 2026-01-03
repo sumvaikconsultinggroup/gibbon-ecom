@@ -341,7 +341,7 @@ export default function LiveViewPage() {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={fetchStats}
+            onClick={fetchLiveData}
             className="flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700"
           >
             <RefreshCw className="h-4 w-4" /> Refresh
