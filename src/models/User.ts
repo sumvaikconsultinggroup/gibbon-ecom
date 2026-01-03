@@ -54,7 +54,12 @@ export interface IWallet {
 }
 
 export interface IUser extends Document {
-  clerkId: string
+  firstName?: string
+  lastName?: string
+  imageUrl?: string
+  phone?: string
+  password?: string
+  role?: string
   billing_fullname: string
   email: string
   billing_phone: string
