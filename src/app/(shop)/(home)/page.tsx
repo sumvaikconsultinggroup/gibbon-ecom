@@ -18,6 +18,17 @@ import BrandPromise from '@/components/homepage/BrandPromise'
 import connectDb from '@/lib/mongodb'
 import Product from '@/models/product.model'
 
+// Deep serialize MongoDB documents to avoid ObjectId issues
+const deepSerialize = (obj: any) => JSON.parse(JSON.stringify(obj, (key, value) => {
+  if (value && typeof value === 'object' && value._bsontype === 'ObjectId') {
+    return value.toString()
+  }
+  if (key === '_id' && value) {
+    return value.toString ? value.toString() : String(value)
+  }
+  return value
+}))
+
 async function getProducts() {
   try {
     await connectDb()
@@ -25,10 +36,7 @@ async function getProducts() {
       .sort({ createdAt: -1 })
       .limit(20)
       .lean()
-    return products.map((product: any) => ({
-      ...product,
-      _id: product._id.toString(),
-    }))
+    return products.map((product: any) => deepSerialize(product))
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
@@ -46,10 +54,7 @@ async function getBestSellers() {
       .sort({ 'reviews.length': -1 })
       .limit(8)
       .lean()
-    return products.map((product: any) => ({
-      ...product,
-      _id: product._id.toString(),
-    }))
+    return products.map((product: any) => deepSerialize(product))
   } catch (error) {
     return []
   }
@@ -69,10 +74,7 @@ async function getNewArrivals() {
       .sort({ createdAt: -1 })
       .limit(8)
       .lean()
-    return products.map((product: any) => ({
-      ...product,
-      _id: product._id.toString(),
-    }))
+    return products.map((product: any) => deepSerialize(product))
   } catch (error) {
     return []
   }
