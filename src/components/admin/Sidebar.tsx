@@ -32,6 +32,7 @@ import {
   FileText,
   Heart,
   X,
+  Menu,
 } from 'lucide-react'
 
 interface NavItem {
