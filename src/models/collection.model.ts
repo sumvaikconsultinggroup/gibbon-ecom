@@ -1,10 +1,46 @@
 import { Document, Schema, model, models } from 'mongoose'
 
+// Display location types for where collections can appear
+export type DisplayLocation = 
+  | 'homepage_hero' 
+  | 'homepage_featured' 
+  | 'homepage_grid' 
+  | 'navigation_menu' 
+  | 'sidebar' 
+  | 'footer' 
+  | 'category_page' 
+  | 'search_filters'
+  | 'product_recommendations'
+  | 'checkout_upsell'
+
+export interface IDisplaySettings {
+  locations: DisplayLocation[]
+  priority: number // Higher = shows first
+  showOnMobile: boolean
+  showOnDesktop: boolean
+  startDate?: Date
+  endDate?: Date
+  customCss?: string
+  layoutStyle: 'grid' | 'carousel' | 'list' | 'banner' | 'featured'
+  itemsPerRow: number
+  maxItems: number
+  showTitle: boolean
+  showDescription: boolean
+  showProductCount: boolean
+  backgroundColor?: string
+  textColor?: string
+  linkText?: string
+  linkUrl?: string
+}
+
 export interface ICollection extends Document {
   handle: string
   title: string
   description?: string
   image?: string
+  bannerImage?: string
+  mobileImage?: string
+  thumbnailImage?: string
   seo?: {
     title?: string
     description?: string
@@ -20,6 +56,13 @@ export interface ICollection extends Document {
   conditionMatch: 'all' | 'any'
   // Manual product selection
   productHandles?: string[]
+  // Enhanced Display Settings
+  displaySettings: IDisplaySettings
+  // Linked pages for sync
+  linkedPages?: string[]
+  // Feature flags
+  isFeatured: boolean
+  featuredOrder: number
   // Display settings
   published: boolean
   publishedAt?: Date
@@ -29,6 +72,33 @@ export interface ICollection extends Document {
   createdAt: Date
   updatedAt: Date
 }
+
+const DisplaySettingsSchema = new Schema({
+  locations: [{
+    type: String,
+    enum: ['homepage_hero', 'homepage_featured', 'homepage_grid', 'navigation_menu', 'sidebar', 'footer', 'category_page', 'search_filters', 'product_recommendations', 'checkout_upsell']
+  }],
+  priority: { type: Number, default: 0 },
+  showOnMobile: { type: Boolean, default: true },
+  showOnDesktop: { type: Boolean, default: true },
+  startDate: Date,
+  endDate: Date,
+  customCss: String,
+  layoutStyle: { 
+    type: String, 
+    enum: ['grid', 'carousel', 'list', 'banner', 'featured'],
+    default: 'grid'
+  },
+  itemsPerRow: { type: Number, default: 4, min: 1, max: 6 },
+  maxItems: { type: Number, default: 12, min: 1, max: 50 },
+  showTitle: { type: Boolean, default: true },
+  showDescription: { type: Boolean, default: false },
+  showProductCount: { type: Boolean, default: true },
+  backgroundColor: String,
+  textColor: String,
+  linkText: String,
+  linkUrl: String,
+}, { _id: false })
 
 const CollectionSchema = new Schema<ICollection>(
   {
@@ -47,6 +117,9 @@ const CollectionSchema = new Schema<ICollection>(
     },
     description: String,
     image: String,
+    bannerImage: String,
+    mobileImage: String,
+    thumbnailImage: String,
     seo: {
       title: String,
       description: String,
@@ -78,6 +151,27 @@ const CollectionSchema = new Schema<ICollection>(
       default: 'all'
     },
     productHandles: [String],
+    // Enhanced Display Settings
+    displaySettings: {
+      type: DisplaySettingsSchema,
+      default: () => ({
+        locations: [],
+        priority: 0,
+        showOnMobile: true,
+        showOnDesktop: true,
+        layoutStyle: 'grid',
+        itemsPerRow: 4,
+        maxItems: 12,
+        showTitle: true,
+        showDescription: false,
+        showProductCount: true,
+      })
+    },
+    // Linked pages for sync
+    linkedPages: [String],
+    // Feature flags
+    isFeatured: { type: Boolean, default: false },
+    featuredOrder: { type: Number, default: 0 },
     published: { type: Boolean, default: false },
     publishedAt: Date,
     template: String,
@@ -89,6 +183,9 @@ const CollectionSchema = new Schema<ICollection>(
 // Indexes
 CollectionSchema.index({ published: 1 })
 CollectionSchema.index({ 'productHandles': 1 })
+CollectionSchema.index({ 'displaySettings.locations': 1 })
+CollectionSchema.index({ isFeatured: 1, featuredOrder: 1 })
+CollectionSchema.index({ 'displaySettings.priority': -1 })
 
 const Collection = models?.Collection || model<ICollection>('Collection', CollectionSchema)
 
