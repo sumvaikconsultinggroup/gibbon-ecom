@@ -114,7 +114,9 @@ export default function DashboardPage() {
         params.set('endDate', customEndDate)
       }
       
-      const res = await fetch(`/api/admin/dashboard?${params.toString()}`)
+      const res = await fetch(`/api/admin/dashboard?${params.toString()}`, {
+        credentials: 'include'
+      })
       const result = await res.json()
       
       if (result.success) {
