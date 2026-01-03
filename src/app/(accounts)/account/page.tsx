@@ -7,7 +7,7 @@ import { Input, InputGroup } from '@/shared/input'
 import { Select } from '@/shared/select'
 import { Calendar01Icon, Mail01Icon, MapsLocation01Icon, SmartPhone01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useAuth, useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@/context/UserAuthContext'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import axios from 'axios'
@@ -40,8 +40,8 @@ const userSchema = z.object({
 type UserFormData = z.infer<typeof userSchema>
 
 const Page = () => {
-  const { isSignedIn, userId, isLoaded } = useAuth()
-  const { user } = useUser()
+  const { user, isSignedIn, isLoaded } = useUser()
+  const { signOut } = useAuth()
   const router = useRouter()
 
   const {
