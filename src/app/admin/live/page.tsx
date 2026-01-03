@@ -99,8 +99,7 @@ export default function LiveViewPage() {
   const [connected, setConnected] = useState(false)
   const [selectedVisitor, setSelectedVisitor] = useState<LiveVisitor | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const eventSourceRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Use polling instead of SSE for better proxy compatibility
   const fetchLiveData = useCallback(async () => {
