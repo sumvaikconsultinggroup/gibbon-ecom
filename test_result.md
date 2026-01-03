@@ -97,8 +97,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Order Detail Page UI"
+  stuck_tasks:
+    - "Order Detail Page UI"
   test_all: false
   test_priority: "high_first"
 
@@ -107,3 +109,5 @@ agent_communication:
     message: "Order Detail Page and APIs have been implemented. Testing required for all backend APIs."
   - agent: "testing"
     message: "✅ COMPREHENSIVE TESTING COMPLETE: All Order APIs working perfectly! Order ORD-2024-001 found with customer Rahul Sharma (₹6,297). All CRUD operations, status updates, notes, tags, assignment, invoice generation, and email sending working correctly. No mocked data - all real database interactions."
+  - agent: "testing"
+    message: "❌ CRITICAL INFRASTRUCTURE ISSUE: Order Detail Page UI testing reveals HTTP 520 errors blocking all API requests from browser. Frontend implementation is correct, but Cloudflare/proxy configuration prevents external API access. API works on localhost:3000 but fails via domain. This blocks ALL admin functionality including orders list and detail pages. URGENT: Fix proxy/CDN configuration to allow API requests."
