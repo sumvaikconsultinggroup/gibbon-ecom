@@ -2,6 +2,34 @@ import { toast } from 'react-hot-toast'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
+// Live tracking helper
+const trackEvent = async (type: string, data: any) => {
+  try {
+    const sessionData = typeof window !== 'undefined' ? sessionStorage.getItem('_sid_data') : null
+    const visitorId = typeof window !== 'undefined' ? localStorage.getItem('_vid') : null
+    
+    if (sessionData) {
+      const { sessionId } = JSON.parse(sessionData)
+      await fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          visitorId,
+          type,
+          data: {
+            ...data,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+        keepalive: true,
+      })
+    }
+  } catch (e) {
+    // Silently fail tracking
+  }
+}
+
 export interface PromoCode {
   code: string
   discountType: 'percentage' | 'fixed'
