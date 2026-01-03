@@ -128,6 +128,27 @@ const sortOptions = [
   { value: 'date-desc', label: 'Date, new to old' },
 ]
 
+const displayLocationOptions: { value: DisplayLocation; label: string; description: string }[] = [
+  { value: 'homepage_hero', label: 'Homepage Hero', description: 'Featured banner at the top of homepage' },
+  { value: 'homepage_featured', label: 'Homepage Featured', description: 'Featured section on homepage' },
+  { value: 'homepage_grid', label: 'Homepage Grid', description: 'Product grid on homepage' },
+  { value: 'navigation_menu', label: 'Navigation Menu', description: 'Show in main navigation' },
+  { value: 'sidebar', label: 'Sidebar', description: 'Show in page sidebars' },
+  { value: 'footer', label: 'Footer', description: 'Display in footer links' },
+  { value: 'category_page', label: 'Category Page', description: 'Show on category pages' },
+  { value: 'search_filters', label: 'Search Filters', description: 'Available as search filter' },
+  { value: 'product_recommendations', label: 'Product Recommendations', description: 'Show in product recommendations' },
+  { value: 'checkout_upsell', label: 'Checkout Upsell', description: 'Display during checkout' },
+]
+
+const layoutStyleOptions = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'carousel', label: 'Carousel' },
+  { value: 'list', label: 'List' },
+  { value: 'banner', label: 'Banner' },
+  { value: 'featured', label: 'Featured' },
+]
+
 export default function CollectionEditPage() {
   const router = useRouter()
   const params = useParams()
