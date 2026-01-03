@@ -3,6 +3,7 @@ import connectDb from '@/lib/mongodb'
 import LiveSession from '@/models/LiveSession'
 import LiveEvent from '@/models/LiveEvent'
 import LiveStats from '@/models/LiveStats'
+import { getGeoFromIP } from '@/lib/geolocation'
 
 // Detect device from user agent
 function detectDevice(userAgent: string): 'desktop' | 'mobile' | 'tablet' {
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
     let session = await LiveSession.findOne({ sessionId })
     
     if (!session) {
+      // Get geolocation from IP
+      const geo = await getGeoFromIP(ip)
+      
       // Create new session
       session = new LiveSession({
         sessionId,
@@ -56,11 +60,12 @@ export async function POST(request: NextRequest) {
         utmSource: data?.utmSource,
         utmMedium: data?.utmMedium,
         utmCampaign: data?.utmCampaign,
-        // Default location - in production, use IP geolocation service
-        city: 'Mumbai',
-        country: 'India',
-        latitude: 19.076,
-        longitude: 72.877,
+        // Geolocation data
+        city: geo.city,
+        region: geo.region,
+        country: geo.country,
+        latitude: geo.lat,
+        longitude: geo.lng,
       })
       await session.save()
       
