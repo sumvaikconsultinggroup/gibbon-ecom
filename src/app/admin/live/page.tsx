@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Globe,
@@ -23,6 +23,10 @@ import {
   User,
   Timer,
   IndianRupee,
+  Wifi,
+  WifiOff,
+  Search,
+  ExternalLink,
 } from 'lucide-react'
 
 interface LiveVisitor {
@@ -33,105 +37,181 @@ interface LiveVisitor {
   duration: number
   cartItems: number
   cartValue: number
-  status: 'browsing' | 'cart' | 'checkout' | 'purchased'
+  status: 'browsing' | 'cart' | 'checkout' | 'purchased' | 'abandoned'
+  pageViews?: number
 }
 
 interface LiveEvent {
   id: string
-  type: 'page_view' | 'add_to_cart' | 'remove_from_cart' | 'checkout_start' | 'purchase' | 'cart_abandon'
+  type: string
   visitor: string
   data: any
-  timestamp: Date
+  timestamp: string | Date
+}
+
+interface LiveStats {
+  activeVisitors: number
+  activeCarts: number
+  activeCartValue: number
+  inCheckout: number
+  todayRevenue: number
+  todayOrders: number
+  abandonedCarts: number
+  abandonedValue: number
+  conversionRate: number
+  revenueChange: string
+  deviceBreakdown: { desktop: number; mobile: number; tablet: number }
+  topCities: { city: string; count: number }[]
+}
+
+// India city coordinates for map
+const INDIA_CITIES: Record<string, { lat: number; lng: number }> = {
+  'Mumbai': { lat: 19.076, lng: 72.877 },
+  'Delhi': { lat: 28.613, lng: 77.209 },
+  'Bangalore': { lat: 12.971, lng: 77.594 },
+  'Chennai': { lat: 13.082, lng: 80.270 },
+  'Hyderabad': { lat: 17.385, lng: 78.486 },
+  'Pune': { lat: 18.520, lng: 73.856 },
+  'Kolkata': { lat: 22.572, lng: 88.363 },
+  'Ahmedabad': { lat: 23.022, lng: 72.571 },
+  'Jaipur': { lat: 26.912, lng: 75.787 },
+  'Lucknow': { lat: 26.846, lng: 80.946 },
+  'Unknown': { lat: 20.593, lng: 78.962 }, // Center of India
 }
 
 export default function LiveViewPage() {
   const [visitors, setVisitors] = useState<LiveVisitor[]>([])
   const [events, setEvents] = useState<LiveEvent[]>([])
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<LiveStats>({
     activeVisitors: 0,
     activeCarts: 0,
-    abandonedCarts: 0,
+    activeCartValue: 0,
+    inCheckout: 0,
     todayRevenue: 0,
+    todayOrders: 0,
+    abandonedCarts: 0,
+    abandonedValue: 0,
     conversionRate: 0,
+    revenueChange: '0',
+    deviceBreakdown: { desktop: 0, mobile: 0, tablet: 0 },
+    topCities: [],
   })
+  const [connected, setConnected] = useState(false)
   const [selectedVisitor, setSelectedVisitor] = useState<LiveVisitor | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const eventSourceRef = useRef<EventSource | null>(null)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Simulated real-time data
-  useEffect(() => {
-    // Initialize with mock visitors
-    const initialVisitors: LiveVisitor[] = [
-      { id: 'v1', location: { city: 'Mumbai', country: 'India', lat: 19.076, lng: 72.877 }, currentPage: '/products/bcaa', device: 'mobile', duration: 245, cartItems: 2, cartValue: 4998, status: 'cart' },
-      { id: 'v2', location: { city: 'Delhi', country: 'India', lat: 28.613, lng: 77.209 }, currentPage: '/checkout', device: 'desktop', duration: 180, cartItems: 1, cartValue: 2999, status: 'checkout' },
-      { id: 'v3', location: { city: 'Bangalore', country: 'India', lat: 12.971, lng: 77.594 }, currentPage: '/', device: 'mobile', duration: 45, cartItems: 0, cartValue: 0, status: 'browsing' },
-      { id: 'v4', location: { city: 'Chennai', country: 'India', lat: 13.082, lng: 80.270 }, currentPage: '/collections/protein', device: 'desktop', duration: 120, cartItems: 3, cartValue: 7497, status: 'cart' },
-      { id: 'v5', location: { city: 'Hyderabad', country: 'India', lat: 17.385, lng: 78.486 }, currentPage: '/products/whey-protein', device: 'tablet', duration: 90, cartItems: 0, cartValue: 0, status: 'browsing' },
-      { id: 'v6', location: { city: 'Pune', country: 'India', lat: 18.520, lng: 73.856 }, currentPage: '/cart', device: 'mobile', duration: 300, cartItems: 4, cartValue: 12996, status: 'cart' },
-      { id: 'v7', location: { city: 'Kolkata', country: 'India', lat: 22.572, lng: 88.363 }, currentPage: '/', device: 'desktop', duration: 15, cartItems: 0, cartValue: 0, status: 'browsing' },
-    ]
-    setVisitors(initialVisitors)
+  // Connect to SSE stream
+  const connectSSE = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
+    }
 
-    // Update stats
-    setStats({
-      activeVisitors: initialVisitors.length,
-      activeCarts: initialVisitors.filter(v => v.cartItems > 0).length,
-      abandonedCarts: 3,
-      todayRevenue: 45800,
-      conversionRate: 4.2,
-    })
+    const eventSource = new EventSource('/api/live/stream')
+    eventSourceRef.current = eventSource
 
-    // Initial events
-    const initialEvents: LiveEvent[] = [
-      { id: 'e1', type: 'add_to_cart', visitor: 'Mumbai', data: { product: 'BCAA 4:1:1', price: 2999 }, timestamp: new Date(Date.now() - 5000) },
-      { id: 'e2', type: 'page_view', visitor: 'Delhi', data: { page: '/checkout' }, timestamp: new Date(Date.now() - 15000) },
-      { id: 'e3', type: 'checkout_start', visitor: 'Delhi', data: { cartValue: 2999 }, timestamp: new Date(Date.now() - 20000) },
-      { id: 'e4', type: 'page_view', visitor: 'Bangalore', data: { page: '/' }, timestamp: new Date(Date.now() - 30000) },
-    ]
-    setEvents(initialEvents)
+    eventSource.onopen = () => {
+      setConnected(true)
+      console.log('Live stream connected')
+    }
 
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      // Random event generation
-      const eventTypes: LiveEvent['type'][] = ['page_view', 'add_to_cart', 'remove_from_cart', 'checkout_start', 'purchase']
-      const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur']
-      const products = ['BCAA 4:1:1', 'Whey Protein', 'Pre-Workout', 'Creatine', 'Mass Gainer']
-      const pages = ['/', '/products/bcaa', '/products/whey-protein', '/collections/protein', '/cart', '/checkout']
-
-      const newEvent: LiveEvent = {
-        id: `e${Date.now()}`,
-        type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-        visitor: cities[Math.floor(Math.random() * cities.length)],
-        data: {
-          product: products[Math.floor(Math.random() * products.length)],
-          page: pages[Math.floor(Math.random() * pages.length)],
-          price: Math.floor(Math.random() * 5000) + 999,
-        },
-        timestamp: new Date(),
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        
+        if (data.type === 'update') {
+          // Update visitors
+          if (data.visitors) {
+            setVisitors(data.visitors.map((v: any) => ({
+              ...v,
+              location: {
+                ...v.location,
+                lat: INDIA_CITIES[v.location?.city]?.lat || v.location?.lat || 20.593,
+                lng: INDIA_CITIES[v.location?.city]?.lng || v.location?.lng || 78.962,
+              }
+            })))
+          }
+          
+          // Update stats
+          if (data.stats) {
+            setStats(prev => ({
+              ...prev,
+              activeVisitors: data.stats.activeVisitors || 0,
+              activeCarts: data.stats.activeCarts || 0,
+              activeCartValue: data.stats.activeCartValue || 0,
+              inCheckout: data.stats.inCheckout || 0,
+            }))
+          }
+          
+          // Update events (append new, keep last 20)
+          if (data.events && data.events.length > 0) {
+            setEvents(prev => {
+              const newEvents = data.events.filter(
+                (e: LiveEvent) => !prev.some(pe => pe.id === e.id)
+              )
+              return [...newEvents, ...prev].slice(0, 20)
+            })
+          }
+        }
+      } catch (error) {
+        console.error('SSE parse error:', error)
       }
+    }
 
-      setEvents(prev => [newEvent, ...prev].slice(0, 20))
-
-      // Update visitor count randomly
-      setStats(prev => ({
-        ...prev,
-        activeVisitors: Math.max(1, prev.activeVisitors + (Math.random() > 0.5 ? 1 : -1)),
-        activeCarts: Math.max(0, prev.activeCarts + (Math.random() > 0.7 ? 1 : Math.random() > 0.3 ? 0 : -1)),
-      }))
-
-      // Update visitor durations
-      setVisitors(prev => prev.map(v => ({ ...v, duration: v.duration + 5 })))
-    }, 5000)
-
-    return () => clearInterval(interval)
+    eventSource.onerror = () => {
+      setConnected(false)
+      eventSource.close()
+      
+      // Reconnect after 5 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connectSSE()
+      }, 5000)
+    }
   }, [])
 
-  // Draw 3D-like map
+  // Fetch initial stats
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/live/stats')
+      const data = await response.json()
+      setStats(prev => ({
+        ...prev,
+        ...data,
+      }))
+    } catch (error) {
+      console.error('Stats fetch error:', error)
+    }
+  }, [])
+
+  // Fetch initial data and connect SSE
+  useEffect(() => {
+    fetchStats()
+    connectSSE()
+
+    // Refresh full stats every 30 seconds
+    const statsInterval = setInterval(fetchStats, 30000)
+
+    return () => {
+      clearInterval(statsInterval)
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+    }
+  }, [connectSSE, fetchStats])
+
+  // Draw map
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+
+    let animationId: number
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -143,7 +223,7 @@ export default function LiveViewPage() {
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Draw grid lines for 3D effect
+      // Draw grid lines
       ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)'
       ctx.lineWidth = 1
       for (let i = 0; i < canvas.width; i += 40) {
@@ -163,7 +243,6 @@ export default function LiveViewPage() {
       ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'
       ctx.lineWidth = 2
       ctx.beginPath()
-      // Simplified India shape
       ctx.moveTo(canvas.width * 0.3, canvas.height * 0.2)
       ctx.lineTo(canvas.width * 0.7, canvas.height * 0.15)
       ctx.lineTo(canvas.width * 0.75, canvas.height * 0.4)
@@ -173,9 +252,8 @@ export default function LiveViewPage() {
       ctx.closePath()
       ctx.stroke()
 
-      // Draw visitor dots with pulse animation
+      // Draw visitor dots
       visitors.forEach((visitor, index) => {
-        // Map lat/lng to canvas coordinates (simplified for India)
         const x = ((visitor.location.lng - 68) / 30) * canvas.width
         const y = ((35 - visitor.location.lat) / 25) * canvas.height
 
@@ -184,8 +262,14 @@ export default function LiveViewPage() {
         const pulse = Math.sin(time * 2 + index) * 0.5 + 0.5
 
         // Outer glow
+        const glowColor = visitor.status === 'checkout' 
+          ? 'rgba(34, 197, 94, 0.4)' 
+          : visitor.cartItems > 0 
+            ? 'rgba(251, 191, 36, 0.4)' 
+            : 'rgba(59, 130, 246, 0.4)'
+        
         const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 20 + pulse * 10)
-        glowGradient.addColorStop(0, visitor.status === 'checkout' ? 'rgba(34, 197, 94, 0.4)' : visitor.cartItems > 0 ? 'rgba(251, 191, 36, 0.4)' : 'rgba(59, 130, 246, 0.4)')
+        glowGradient.addColorStop(0, glowColor)
         glowGradient.addColorStop(1, 'transparent')
         ctx.fillStyle = glowGradient
         ctx.beginPath()
@@ -193,7 +277,11 @@ export default function LiveViewPage() {
         ctx.fill()
 
         // Inner dot
-        ctx.fillStyle = visitor.status === 'checkout' ? '#22c55e' : visitor.cartItems > 0 ? '#fbbf24' : '#3b82f6'
+        ctx.fillStyle = visitor.status === 'checkout' 
+          ? '#22c55e' 
+          : visitor.cartItems > 0 
+            ? '#fbbf24' 
+            : '#3b82f6'
         ctx.beginPath()
         ctx.arc(x, y, 6, 0, Math.PI * 2)
         ctx.fill()
@@ -203,22 +291,28 @@ export default function LiveViewPage() {
         ctx.font = '10px sans-serif'
         ctx.fillText(visitor.location.city, x + 10, y + 4)
       })
+
+      animationId = requestAnimationFrame(draw)
     }
 
     draw()
-    const animationFrame = setInterval(draw, 50)
 
-    return () => clearInterval(animationFrame)
+    return () => {
+      cancelAnimationFrame(animationId)
+    }
   }, [visitors])
 
   const getEventIcon = (type: string) => {
     switch (type) {
       case 'page_view': return <Eye className="h-4 w-4 text-blue-500" />
+      case 'product_view': return <Eye className="h-4 w-4 text-purple-500" />
       case 'add_to_cart': return <ShoppingCart className="h-4 w-4 text-green-500" />
       case 'remove_from_cart': return <ShoppingCart className="h-4 w-4 text-red-500" />
       case 'checkout_start': return <CreditCard className="h-4 w-4 text-purple-500" />
       case 'purchase': return <Package className="h-4 w-4 text-green-600" />
       case 'cart_abandon': return <AlertCircle className="h-4 w-4 text-orange-500" />
+      case 'session_start': return <User className="h-4 w-4 text-blue-400" />
+      case 'search': return <Search className="h-4 w-4 text-indigo-500" />
       default: return <Activity className="h-4 w-4" />
     }
   }
@@ -226,12 +320,15 @@ export default function LiveViewPage() {
   const getEventLabel = (type: string) => {
     switch (type) {
       case 'page_view': return 'Viewed page'
+      case 'product_view': return 'Viewed product'
       case 'add_to_cart': return 'Added to cart'
       case 'remove_from_cart': return 'Removed from cart'
       case 'checkout_start': return 'Started checkout'
       case 'purchase': return 'Completed purchase'
       case 'cart_abandon': return 'Abandoned cart'
-      default: return type
+      case 'session_start': return 'Started session'
+      case 'search': return 'Searched'
+      default: return type.replace(/_/g, ' ')
     }
   }
 
@@ -247,8 +344,16 @@ export default function LiveViewPage() {
       case 'cart': return 'bg-yellow-100 text-yellow-700'
       case 'checkout': return 'bg-green-100 text-green-700'
       case 'purchased': return 'bg-purple-100 text-purple-700'
+      case 'abandoned': return 'bg-red-100 text-red-700'
       default: return 'bg-neutral-100 text-neutral-700'
     }
+  }
+
+  const formatTimeAgo = (timestamp: string | Date) => {
+    const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000)
+    if (seconds < 60) return `${seconds}s ago`
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+    return `${Math.floor(seconds / 3600)}h ago`
   }
 
   return (
@@ -259,19 +364,36 @@ export default function LiveViewPage() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Globe className="h-6 w-6 text-[#1B198F]" />
-              <span className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-green-500" />
-              <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-green-500" />
+              {connected && (
+                <>
+                  <span className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-green-500" />
+                  <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-green-500" />
+                </>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Live View</h1>
-            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-              Live
+            <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+              connected 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {connected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+              {connected ? 'Connected' : 'Reconnecting...'}
             </span>
           </div>
           <p className="text-neutral-500">Real-time visitor activity on your store</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-[#1B198F] px-4 py-2 text-sm font-medium text-white">
-          <Maximize2 className="h-4 w-4" /> Full Screen
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={fetchStats}
+            className="flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700"
+          >
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </button>
+          <button className="flex items-center gap-2 rounded-xl bg-[#1B198F] px-4 py-2 text-sm font-medium text-white">
+            <Maximize2 className="h-4 w-4" /> Full Screen
+          </button>
+        </div>
       </div>
 
       {/* Live Stats */}
@@ -306,7 +428,9 @@ export default function LiveViewPage() {
             </div>
             <ShoppingCart className="h-8 w-8 opacity-50" />
           </div>
-          <p className="mt-2 text-sm text-yellow-100">₹{(stats.activeCarts * 3500).toLocaleString()} potential</p>
+          <p className="mt-2 text-sm text-yellow-100">
+            ₹{stats.activeCartValue.toLocaleString()} value
+          </p>
         </motion.div>
 
         <motion.div
@@ -322,7 +446,9 @@ export default function LiveViewPage() {
             </div>
             <AlertCircle className="h-8 w-8 opacity-50" />
           </div>
-          <p className="mt-2 text-sm text-red-100">₹12,500 lost revenue</p>
+          <p className="mt-2 text-sm text-red-100">
+            ₹{stats.abandonedValue.toLocaleString()} lost
+          </p>
         </motion.div>
 
         <motion.div
@@ -338,7 +464,9 @@ export default function LiveViewPage() {
             </div>
             <IndianRupee className="h-8 w-8 opacity-50" />
           </div>
-          <p className="mt-2 text-sm text-green-100">+18% vs yesterday</p>
+          <p className="mt-2 text-sm text-green-100">
+            {parseFloat(stats.revenueChange) >= 0 ? '+' : ''}{stats.revenueChange}% vs yesterday
+          </p>
         </motion.div>
 
         <motion.div
@@ -354,13 +482,15 @@ export default function LiveViewPage() {
             </div>
             <TrendingUp className="h-8 w-8 opacity-50" />
           </div>
-          <p className="mt-2 text-sm text-purple-100">+0.5% this hour</p>
+          <p className="mt-2 text-sm text-purple-100">
+            {stats.todayOrders} orders today
+          </p>
         </motion.div>
       </div>
 
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* 3D Map */}
+        {/* Map */}
         <div className="rounded-2xl bg-slate-900 p-1 shadow-xl lg:col-span-2">
           <div className="relative overflow-hidden rounded-xl">
             <canvas
@@ -392,6 +522,16 @@ export default function LiveViewPage() {
               <p className="text-2xl font-bold text-white">{visitors.length}</p>
               <p className="text-xs text-neutral-400">Active on site</p>
             </div>
+            {/* No visitors message */}
+            {visitors.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <Users className="mx-auto h-12 w-12 text-neutral-500" />
+                  <p className="mt-2 text-neutral-400">No active visitors</p>
+                  <p className="text-sm text-neutral-500">Visitors will appear here in real-time</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -406,36 +546,46 @@ export default function LiveViewPage() {
             </div>
           </div>
           <div className="max-h-[420px] overflow-y-auto p-4">
-            <div className="space-y-3">
-              <AnimatePresence initial={false}>
-                {events.map((event, index) => (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-900"
-                  >
-                    <div className="mt-0.5">{getEventIcon(event.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                        {getEventLabel(event.type)}
-                      </p>
-                      <p className="truncate text-xs text-neutral-500">
-                        {event.visitor} • {event.data.product || event.data.page}
-                      </p>
-                      <p className="text-xs text-neutral-400">
-                        {Math.round((Date.now() - event.timestamp.getTime()) / 1000)}s ago
-                      </p>
-                    </div>
-                    {event.data.price && (
-                      <p className="text-sm font-semibold text-green-600">₹{event.data.price}</p>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+            {events.length === 0 ? (
+              <div className="py-8 text-center">
+                <Activity className="mx-auto h-8 w-8 text-neutral-300" />
+                <p className="mt-2 text-sm text-neutral-500">No recent activity</p>
+                <p className="text-xs text-neutral-400">Events will appear here in real-time</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {events.map((event) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-900"
+                    >
+                      <div className="mt-0.5">{getEventIcon(event.type)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                          {getEventLabel(event.type)}
+                        </p>
+                        <p className="truncate text-xs text-neutral-500">
+                          {event.visitor} • {event.data?.productName || event.data?.page || event.data?.searchQuery || ''}
+                        </p>
+                        <p className="text-xs text-neutral-400">
+                          {formatTimeAgo(event.timestamp)}
+                        </p>
+                      </div>
+                      {event.data?.productPrice && (
+                        <p className="text-sm font-semibold text-green-600">
+                          ₹{event.data.productPrice}
+                        </p>
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -443,65 +593,82 @@ export default function LiveViewPage() {
       {/* Active Visitors Table */}
       <div className="rounded-2xl bg-white shadow-sm dark:bg-neutral-800">
         <div className="border-b border-neutral-200 p-4 dark:border-neutral-700">
-          <h3 className="font-semibold text-neutral-900 dark:text-white">Active Visitors ({visitors.length})</h3>
+          <h3 className="font-semibold text-neutral-900 dark:text-white">
+            Active Visitors ({visitors.length})
+          </h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Location</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Current Page</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Device</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Duration</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Cart</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
-              {visitors.map((visitor) => (
-                <tr
-                  key={visitor.id}
-                  className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                  onClick={() => setSelectedVisitor(visitor)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-neutral-400" />
-                      <span className="font-medium">{visitor.location.city}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-neutral-500">{visitor.currentPage}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs capitalize dark:bg-neutral-700">
-                      {visitor.device}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Timer className="h-4 w-4 text-neutral-400" />
-                      {formatDuration(visitor.duration)}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {visitor.cartItems > 0 ? (
-                      <div className="text-sm">
-                        <span className="font-medium">{visitor.cartItems} items</span>
-                        <span className="text-neutral-500"> • ₹{visitor.cartValue.toLocaleString()}</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-neutral-400">Empty</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${getStatusColor(visitor.status)}`}>
-                      {visitor.status}
-                    </span>
-                  </td>
+        {visitors.length === 0 ? (
+          <div className="py-12 text-center">
+            <Users className="mx-auto h-12 w-12 text-neutral-300" />
+            <p className="mt-4 text-lg font-medium text-neutral-900 dark:text-white">No active visitors</p>
+            <p className="mt-1 text-neutral-500">
+              When users visit your store, they'll appear here in real-time
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Location</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Current Page</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Device</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Duration</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Cart</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-neutral-500">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                {visitors.map((visitor) => (
+                  <tr
+                    key={visitor.id}
+                    className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                    onClick={() => setSelectedVisitor(visitor)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-neutral-400" />
+                        <span className="font-medium">{visitor.location.city}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 text-sm text-neutral-500">
+                        {visitor.currentPage}
+                        <ExternalLink className="h-3 w-3" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs capitalize dark:bg-neutral-700">
+                        {visitor.device}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 text-sm">
+                        <Timer className="h-4 w-4 text-neutral-400" />
+                        {formatDuration(visitor.duration)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {visitor.cartItems > 0 ? (
+                        <div className="text-sm">
+                          <span className="font-medium">{visitor.cartItems} items</span>
+                          <span className="text-neutral-500"> • ₹{visitor.cartValue.toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-neutral-400">Empty</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${getStatusColor(visitor.status)}`}>
+                        {visitor.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
