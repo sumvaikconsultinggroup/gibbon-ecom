@@ -12,9 +12,37 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Information from './Information'
 import OrderSummary from './OrderSummary'
+
+// Track checkout event for live analytics
+const trackCheckoutEvent = async (type: string, data: any) => {
+  try {
+    const sessionData = typeof window !== 'undefined' ? sessionStorage.getItem('_sid_data') : null
+    const visitorId = typeof window !== 'undefined' ? localStorage.getItem('_vid') : null
+    
+    if (sessionData) {
+      const { sessionId } = JSON.parse(sessionData)
+      await fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          visitorId,
+          type,
+          data: {
+            ...data,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+        keepalive: true,
+      })
+    }
+  } catch (e) {
+    // Silently fail tracking
+  }
+}
 
 const CheckoutPage = () => {
   const router = useRouter()
@@ -30,6 +58,20 @@ const CheckoutPage = () => {
     setPaymentMethod,
   } = useCart()
   const [isFormValid, setIsFormValid] = useState(false)
+  const trackedRef = useRef(false)
+
+  // Track checkout start when page loads
+  useEffect(() => {
+    if (!trackedRef.current && cartItems.length > 0) {
+      trackedRef.current = true
+      const cartValue = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      trackCheckoutEvent('checkout_start', {
+        cartItems: cartItems.length,
+        cartValue,
+        page: '/checkout',
+      })
+    }
+  }, [cartItems])
 
   console.log('try to fix shit v1', userInfo)
 
