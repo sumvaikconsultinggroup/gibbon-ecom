@@ -1,12 +1,12 @@
 'use client'
 
-import { useAuth } from '@clerk/nextjs'
+import { useUser } from '@/context/UserAuthContext'
 import axios from 'axios'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
 const WishlistBtn = () => {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useUser()
   const [count, setCount] = useState(0)
   const [mounted, setMounted] = useState(false)
 
@@ -50,7 +50,7 @@ const WishlistBtn = () => {
 
   return (
     <Link
-      href="/account-wishlists"
+      href="/wishlist"
       className="relative flex h-10 w-10 font-bold items-center justify-center rounded-full text-black hover:bg-neutral-100 transition-colors dark:text-neutral-300 dark:hover:bg-neutral-800"
     >
       <svg
