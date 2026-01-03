@@ -184,9 +184,9 @@ export default function DynamicMegaHeader() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
   
-  const { cartCount } = useCart()
+  const { items } = useCart()
   const { open: openCart } = useAside()
-  const cartItemCount = cartCount()
+  const cartItemCount = items.length
 
   // Fetch navigation from API
   useEffect(() => {
