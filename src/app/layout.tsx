@@ -1,5 +1,6 @@
 import Aside from '@/components/aside'
 import { AppProvider } from '@/context/AppContext'
+import { UserAuthProvider } from '@/context/UserAuthContext'
 import '@/styles/tailwind.css'
 import { Metadata } from 'next'
 import { Antonio, Poppins, Roboto } from 'next/font/google'
@@ -10,8 +11,6 @@ import AsideProductQuickView from '@/components/aside-product-quickview'
 import LiveTracker from '@/components/LiveTracker'
 import { TrackerProvider } from '@/components/TrackerProvider'
 import { Suspense } from 'react'
-
-import { ClerkProvider } from '@clerk/nextjs'
 
 const poppins = Poppins({
   subsets: ['latin'],
