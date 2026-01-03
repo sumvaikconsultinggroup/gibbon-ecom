@@ -3,7 +3,6 @@ import connectDb from '@/lib/mongodb'
 import HomeBanner from '@/models/HomeBanner'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
-import mongoose from 'mongoose'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-admin-secret-ad5f7eaf7fc29d4d02762686eecdabc3'
 
@@ -23,12 +22,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDb()
     const { id } = await params
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, error: 'Invalid ID' }, { status: 400 })
-    }
+    await connectDb()
     
     const banner = await HomeBanner.findById(id).lean()
     
@@ -38,9 +33,10 @@ export async function GET(
     
     return NextResponse.json({
       success: true,
-      data: { ...banner, _id: (banner as any)._id.toString() }
+      data: { ...(banner as any), _id: (banner as any)._id.toString() }
     })
   } catch (error: any) {
+    console.error('Error fetching banner:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
@@ -55,15 +51,15 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     
-    await connectDb()
     const { id } = await params
+    await connectDb()
     const body = await request.json()
     
     const banner = await HomeBanner.findByIdAndUpdate(
       id,
       { $set: body },
       { new: true, runValidators: true }
-    )
+    ).lean()
     
     if (!banner) {
       return NextResponse.json({ success: false, error: 'Banner not found' }, { status: 404 })
@@ -71,9 +67,10 @@ export async function PUT(
     
     return NextResponse.json({
       success: true,
-      data: { ...banner.toObject(), _id: banner._id.toString() }
+      data: { ...(banner as any), _id: (banner as any)._id.toString() }
     })
   } catch (error: any) {
+    console.error('Error updating banner:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
@@ -88,13 +85,18 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     
-    await connectDb()
     const { id } = await params
+    await connectDb()
     
-    await HomeBanner.findByIdAndDelete(id)
+    const banner = await HomeBanner.findByIdAndDelete(id)
+    
+    if (!banner) {
+      return NextResponse.json({ success: false, error: 'Banner not found' }, { status: 404 })
+    }
     
     return NextResponse.json({ success: true, message: 'Banner deleted' })
   } catch (error: any) {
+    console.error('Error deleting banner:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

@@ -3,7 +3,6 @@ import connectDb from '@/lib/mongodb'
 import HomeSection from '@/models/HomeSection'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
-import mongoose from 'mongoose'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-admin-secret-ad5f7eaf7fc29d4d02762686eecdabc3'
 
@@ -23,12 +22,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDb()
     const { id } = await params
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, error: 'Invalid ID' }, { status: 400 })
-    }
+    await connectDb()
     
     const section = await HomeSection.findById(id)
       .populate('products', 'title handle images variants')
@@ -40,9 +35,17 @@ export async function GET(
     
     return NextResponse.json({
       success: true,
-      data: { ...section, _id: (section as any)._id.toString() }
+      data: {
+        ...(section as any),
+        _id: (section as any)._id.toString(),
+        products: (section as any).products?.map((p: any) => ({
+          ...p,
+          _id: p._id.toString()
+        }))
+      }
     })
   } catch (error: any) {
+    console.error('Error fetching section:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
@@ -57,15 +60,15 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     
-    await connectDb()
     const { id } = await params
+    await connectDb()
     const body = await request.json()
     
     const section = await HomeSection.findByIdAndUpdate(
       id,
       { $set: body },
       { new: true, runValidators: true }
-    ).populate('products', 'title handle images variants')
+    ).populate('products', 'title handle images variants').lean()
     
     if (!section) {
       return NextResponse.json({ success: false, error: 'Section not found' }, { status: 404 })
@@ -73,9 +76,17 @@ export async function PUT(
     
     return NextResponse.json({
       success: true,
-      data: { ...section.toObject(), _id: section._id.toString() }
+      data: {
+        ...(section as any),
+        _id: (section as any)._id.toString(),
+        products: (section as any).products?.map((p: any) => ({
+          ...p,
+          _id: p._id.toString()
+        }))
+      }
     })
   } catch (error: any) {
+    console.error('Error updating section:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
@@ -90,13 +101,18 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     
-    await connectDb()
     const { id } = await params
+    await connectDb()
     
-    await HomeSection.findByIdAndDelete(id)
+    const section = await HomeSection.findByIdAndDelete(id)
+    
+    if (!section) {
+      return NextResponse.json({ success: false, error: 'Section not found' }, { status: 404 })
+    }
     
     return NextResponse.json({ success: true, message: 'Section deleted' })
   } catch (error: any) {
+    console.error('Error deleting section:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

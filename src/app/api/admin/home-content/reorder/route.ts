@@ -18,7 +18,6 @@ async function verifyAdmin() {
   }
 }
 
-// Reorder banners
 export async function POST(request: Request) {
   try {
     const admin = await verifyAdmin()
@@ -27,21 +26,23 @@ export async function POST(request: Request) {
     }
     
     await connectDb()
-    const { type, items } = await request.json()
+    const body = await request.json()
+    const { type, items } = body
     
-    if (!Array.isArray(items)) {
-      return NextResponse.json({ success: false, error: 'Items must be an array' }, { status: 400 })
+    if (!type || !items || !Array.isArray(items)) {
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     
     const Model = type === 'banners' ? HomeBanner : HomeSection
     
-    const updatePromises = items.map((item: { id: string, order: number }) => 
-      Model.findByIdAndUpdate(item.id, { order: item.order })
+    // Update all items in parallel
+    await Promise.all(
+      items.map((item: { id: string; order: number }) =>
+        Model.findByIdAndUpdate(item.id, { order: item.order })
+      )
     )
     
-    await Promise.all(updatePromises)
-    
-    return NextResponse.json({ success: true, message: 'Items reordered' })
+    return NextResponse.json({ success: true, message: 'Order updated' })
   } catch (error: any) {
     console.error('Error reordering:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
