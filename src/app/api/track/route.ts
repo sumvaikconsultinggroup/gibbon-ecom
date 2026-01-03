@@ -40,47 +40,70 @@ export async function POST(request: NextRequest) {
                request.headers.get('x-real-ip') || 
                'unknown'
     
-    // Get or create session
+    // Get or create session using findOneAndUpdate to prevent race conditions
     let session = await LiveSession.findOne({ sessionId })
+    let isNewSession = false
     
     if (!session) {
-      // Get geolocation from IP
-      const geo = await getGeoFromIP(ip)
+      // Get geolocation from IP (handle errors gracefully)
+      let geo = { city: 'Unknown', region: 'Unknown', country: 'Unknown', lat: 0, lng: 0 }
+      try {
+        geo = await getGeoFromIP(ip)
+      } catch (geoError) {
+        console.log('Geo lookup failed, using defaults')
+      }
       
-      // Create new session
-      session = new LiveSession({
-        sessionId,
-        visitorId,
-        ip,
-        device: detectDevice(userAgent),
-        browser: detectBrowser(userAgent),
-        userAgent,
-        currentPage: data?.page || '/',
-        referrer: data?.referrer,
-        utmSource: data?.utmSource,
-        utmMedium: data?.utmMedium,
-        utmCampaign: data?.utmCampaign,
-        // Geolocation data
-        city: geo.city,
-        region: geo.region,
-        country: geo.country,
-        latitude: geo.lat,
-        longitude: geo.lng,
-      })
-      await session.save()
+      // Use findOneAndUpdate with upsert to prevent duplicate key errors
+      try {
+        session = await LiveSession.findOneAndUpdate(
+          { sessionId },
+          {
+            $setOnInsert: {
+              sessionId,
+              visitorId,
+              ip,
+              device: detectDevice(userAgent),
+              browser: detectBrowser(userAgent),
+              userAgent,
+              currentPage: data?.page || '/',
+              referrer: data?.referrer,
+              utmSource: data?.utmSource,
+              utmMedium: data?.utmMedium,
+              utmCampaign: data?.utmCampaign,
+              city: geo.city,
+              region: geo.region,
+              country: geo.country,
+              latitude: geo.lat,
+              longitude: geo.lng,
+              createdAt: new Date(),
+            }
+          },
+          { upsert: true, new: true }
+        )
+        isNewSession = true
+      } catch (upsertError: any) {
+        // If duplicate key error, just fetch the existing session
+        if (upsertError?.code === 11000) {
+          session = await LiveSession.findOne({ sessionId })
+        } else {
+          throw upsertError
+        }
+      }
       
-      // Update daily stats
-      const today = new Date().toISOString().split('T')[0]
-      await LiveStats.findOneAndUpdate(
-        { date: today },
-        { 
-          $inc: { 
-            totalVisitors: 1,
-            [`devices.${session.device}`]: 1,
-          } 
-        },
-        { upsert: true }
-      )
+      // Update daily stats only for new sessions
+      if (isNewSession && session) {
+        const today = new Date().toISOString().split('T')[0]
+        await LiveStats.findOneAndUpdate(
+          { date: today },
+          { 
+            $inc: { 
+              totalVisitors: 1,
+              [`devices.${session.device}`]: 1,
+            } 
+          },
+          { upsert: true }
+        )
+      }
     }
     
     // Update session based on event type
