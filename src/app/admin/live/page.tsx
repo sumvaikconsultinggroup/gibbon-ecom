@@ -108,7 +108,11 @@ export default function LiveViewPage() {
       eventSourceRef.current.close()
     }
 
-    const eventSource = new EventSource('/api/live/stream')
+    // Use relative URL for SSE
+    const sseUrl = '/api/live/stream'
+    console.log('Connecting to SSE:', sseUrl)
+    
+    const eventSource = new EventSource(sseUrl)
     eventSourceRef.current = eventSource
 
     eventSource.onopen = () => {
@@ -119,6 +123,7 @@ export default function LiveViewPage() {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+        console.log('SSE data received:', data.stats)
         
         if (data.type === 'update') {
           // Update visitors
@@ -159,12 +164,14 @@ export default function LiveViewPage() {
       }
     }
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error)
       setConnected(false)
       eventSource.close()
       
       // Reconnect after 5 seconds
       reconnectTimeoutRef.current = setTimeout(() => {
+        console.log('Attempting SSE reconnect...')
         connectSSE()
       }, 5000)
     }
