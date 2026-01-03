@@ -901,30 +901,20 @@ export default function HomepageBuilderPage() {
                   </div>
 
                   {/* Images */}
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">Desktop Image URL *</label>
-                    <input
-                      type="text"
+                  <div className="grid grid-cols-2 gap-4">
+                    <ImageUpload
+                      label="Desktop Image *"
                       value={bannerForm.desktopImage}
-                      onChange={(e) => setBannerForm({ ...bannerForm, desktopImage: e.target.value })}
-                      className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 outline-none focus:border-[#1B198F] dark:border-neutral-600 dark:bg-neutral-700"
-                      placeholder="https://..."
+                      onChange={(url) => setBannerForm({ ...bannerForm, desktopImage: url })}
+                      aspectRatio="banner"
+                      hint="Recommended: 1920x640px"
                     />
-                    {bannerForm.desktopImage && (
-                      <div className="relative mt-3 aspect-[3/1] overflow-hidden rounded-lg border">
-                        <Image src={bannerForm.desktopImage} alt="Preview" fill className="object-cover" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">Mobile Image URL (optional)</label>
-                    <input
-                      type="text"
+                    <ImageUpload
+                      label="Mobile Image (optional)"
                       value={bannerForm.mobileImage}
-                      onChange={(e) => setBannerForm({ ...bannerForm, mobileImage: e.target.value })}
-                      className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 outline-none focus:border-[#1B198F] dark:border-neutral-600 dark:bg-neutral-700"
-                      placeholder="https://..."
+                      onChange={(url) => setBannerForm({ ...bannerForm, mobileImage: url })}
+                      aspectRatio="square"
+                      hint="Recommended: 800x800px"
                     />
                   </div>
 
