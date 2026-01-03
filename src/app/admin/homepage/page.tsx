@@ -12,6 +12,7 @@ import {
   Columns, MoveUp, MoveDown, Copy, Settings2, Palette, Link2, Play
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import ImageUpload from '@/components/ui/ImageUpload'
 
 interface Banner {
   _id: string
