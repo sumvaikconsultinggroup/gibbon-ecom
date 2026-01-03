@@ -1,50 +1,19 @@
 // Database-backed data fetching utilities
-// These functions fetch data from the API/database instead of using hardcoded data
+// These functions fetch directly from MongoDB for server-side rendering
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
-
-// Cache for server-side fetches
-const cache = new Map<string, { data: unknown; timestamp: number }>()
-const CACHE_TTL = 60000 // 1 minute cache
-
-async function fetchWithCache<T>(url: string, options?: RequestInit): Promise<T> {
-  const cacheKey = url
-  const cached = cache.get(cacheKey)
-  
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data as T
-  }
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      next: { revalidate: 60 }, // ISR revalidation
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.status}`)
-    }
-
-    const data = await response.json()
-    cache.set(cacheKey, { data, timestamp: Date.now() })
-    return data
-  } catch (error) {
-    console.error('Fetch error:', error)
-    // Return cached data if available, even if stale
-    if (cached) {
-      return cached.data as T
-    }
-    throw error
-  }
-}
+import connectDb from '@/lib/mongodb'
+import Product from '@/models/product.model'
+import Collection from '@/models/collection.model'
 
 // Transform database product to frontend format
 function transformProduct(dbProduct: any) {
+  if (!dbProduct) return null
+  
   const firstVariant = dbProduct.variants?.[0]
   const firstImage = dbProduct.images?.[0]
   
   return {
-    id: dbProduct.id || dbProduct._id?.toString(),
+    id: dbProduct._id?.toString() || dbProduct.id,
     title: dbProduct.title,
     handle: dbProduct.handle,
     createdAt: dbProduct.createdAt,
@@ -52,7 +21,7 @@ function transformProduct(dbProduct: any) {
     price: firstVariant?.price || 0,
     compareAtPrice: firstVariant?.compareAtPrice,
     featuredImage: firstImage ? {
-      src: firstImage.src || firstImage.url || firstImage,
+      src: typeof firstImage === 'string' ? firstImage : (firstImage.src || firstImage.url || ''),
       width: firstImage.width || 800,
       height: firstImage.height || 800,
       alt: firstImage.alt || dbProduct.title,
@@ -63,7 +32,7 @@ function transformProduct(dbProduct: any) {
       alt: dbProduct.title,
     },
     images: (dbProduct.images || []).map((img: any) => ({
-      src: img.src || img.url || img,
+      src: typeof img === 'string' ? img : (img.src || img.url || ''),
       width: img.width || 800,
       height: img.height || 800,
       alt: img.alt || dbProduct.title,
@@ -93,15 +62,17 @@ function transformProduct(dbProduct: any) {
 }
 
 // Transform database collection to frontend format  
-function transformCollection(dbCollection: any) {
+function transformCollection(dbCollection: any, products?: any[]) {
+  if (!dbCollection) return null
+  
   return {
-    id: dbCollection.id || dbCollection._id?.toString(),
+    id: dbCollection._id?.toString() || dbCollection.id,
     title: dbCollection.title,
     handle: dbCollection.handle,
-    description: dbCollection.description,
+    description: dbCollection.description || '',
     sortDescription: dbCollection.sortDescription || 'Shop now',
     color: 'bg-indigo-50',
-    count: dbCollection.productCount || dbCollection.products?.length || 0,
+    count: products?.length || dbCollection.productCount || 0,
     image: dbCollection.image ? {
       src: dbCollection.image,
       width: 800,
@@ -113,11 +84,11 @@ function transformCollection(dbCollection: any) {
       height: 600,
       alt: dbCollection.title,
     },
-    products: (dbCollection.products || []).map(transformProduct),
+    products: products?.map(transformProduct).filter(Boolean) || [],
   }
 }
 
-// Fetch products from database
+// Fetch products from database (server-side)
 export async function getProductsFromDB(options?: {
   limit?: number
   category?: string
@@ -125,17 +96,33 @@ export async function getProductsFromDB(options?: {
   sortBy?: string
 }) {
   try {
-    const params = new URLSearchParams()
-    if (options?.limit) params.set('limit', options.limit.toString())
-    if (options?.category) params.set('category', options.category)
-    if (options?.search) params.set('search', options.search)
-    if (options?.sortBy) params.set('sortBy', options.sortBy)
-    params.set('published', 'true')
+    await connectDb()
     
-    const url = `${BASE_URL}/api/products?${params}`
-    const data = await fetchWithCache<any>(url)
+    const filter: any = { isDeleted: { $ne: true }, published: true }
     
-    return (data.products || data.data || []).map(transformProduct)
+    if (options?.category) {
+      filter.productCategory = { $regex: options.category, $options: 'i' }
+    }
+    
+    if (options?.search) {
+      filter.$or = [
+        { title: { $regex: options.search, $options: 'i' } },
+        { tags: { $in: [options.search.toLowerCase()] } },
+      ]
+    }
+    
+    let sort: any = { createdAt: -1 }
+    if (options?.sortBy === 'price-asc') sort = { 'variants.0.price': 1 }
+    if (options?.sortBy === 'price-desc') sort = { 'variants.0.price': -1 }
+    if (options?.sortBy === 'title-asc') sort = { title: 1 }
+    if (options?.sortBy === 'title-desc') sort = { title: -1 }
+    
+    const products = await Product.find(filter)
+      .sort(sort)
+      .limit(options?.limit || 50)
+      .lean()
+    
+    return products.map(transformProduct).filter(Boolean)
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
@@ -145,21 +132,21 @@ export async function getProductsFromDB(options?: {
 // Fetch single product from database
 export async function getProductFromDB(handle: string) {
   try {
-    const url = `${BASE_URL}/api/products/${handle}`
-    const data = await fetchWithCache<any>(url)
+    await connectDb()
     
-    if (data.success === false || !data.data) {
-      return null
-    }
+    const product = await Product.findOne({ 
+      handle, 
+      isDeleted: { $ne: true } 
+    }).lean()
     
-    return transformProduct(data.data || data)
+    return transformProduct(product)
   } catch (error) {
     console.error('Error fetching product:', error)
     return null
   }
 }
 
-// Fetch collections from database
+// Fetch collections from database (server-side)
 export async function getCollectionsFromDB(options?: {
   featured?: boolean
   location?: string
@@ -167,17 +154,75 @@ export async function getCollectionsFromDB(options?: {
   limit?: number
 }) {
   try {
-    const params = new URLSearchParams()
-    if (options?.featured) params.set('featured', 'true')
-    if (options?.location) params.set('location', options.location)
-    if (options?.includeProducts) params.set('includeProducts', 'true')
-    if (options?.limit) params.set('limit', options.limit.toString())
-    params.set('published', 'true')
+    await connectDb()
     
-    const url = `${BASE_URL}/api/collections?${params}`
-    const data = await fetchWithCache<any>(url)
+    const filter: any = { isDeleted: { $ne: true }, published: true }
     
-    return (data.collections || []).map(transformCollection)
+    if (options?.featured) {
+      filter.isFeatured = true
+    }
+    
+    if (options?.location) {
+      filter['displaySettings.locations'] = options.location
+    }
+    
+    const collections = await Collection.find(filter)
+      .sort({ 'displaySettings.priority': -1, featuredOrder: 1, createdAt: -1 })
+      .limit(options?.limit || 20)
+      .lean()
+    
+    // If includeProducts, populate products for each collection
+    if (options?.includeProducts) {
+      const result = await Promise.all(
+        collections.map(async (collection: any) => {
+          let products: any[] = []
+          
+          if (collection.collectionType === 'manual' && collection.productHandles?.length > 0) {
+            products = await Product.find({
+              handle: { $in: collection.productHandles },
+              isDeleted: { $ne: true },
+              published: true,
+            })
+              .limit(collection.displaySettings?.maxItems || 12)
+              .lean()
+          } else if (collection.collectionType === 'automated' && collection.conditions?.length > 0) {
+            const productQuery: any = { isDeleted: { $ne: true }, published: true }
+            
+            for (const condition of collection.conditions || []) {
+              switch (condition.field) {
+                case 'category':
+                  productQuery.productCategory = { $regex: condition.value, $options: 'i' }
+                  break
+                case 'tag':
+                  productQuery.tags = condition.value
+                  break
+                case 'vendor':
+                  productQuery.vendor = condition.value
+                  break
+                case 'type':
+                  productQuery.type = condition.value
+                  break
+                case 'title':
+                  if (condition.operator === 'contains') {
+                    productQuery.title = { $regex: condition.value, $options: 'i' }
+                  }
+                  break
+              }
+            }
+            
+            products = await Product.find(productQuery)
+              .limit(collection.displaySettings?.maxItems || 12)
+              .lean()
+          }
+          
+          return transformCollection(collection, products)
+        })
+      )
+      
+      return result.filter(Boolean)
+    }
+    
+    return collections.map((c: any) => transformCollection(c)).filter(Boolean)
   } catch (error) {
     console.error('Error fetching collections:', error)
     return []
@@ -187,14 +232,42 @@ export async function getCollectionsFromDB(options?: {
 // Fetch single collection from database
 export async function getCollectionFromDB(handle: string) {
   try {
-    const url = `${BASE_URL}/api/collections/${handle}?includeProducts=true`
-    const data = await fetchWithCache<any>(url)
+    await connectDb()
     
-    if (data.error) {
-      return null
+    const collection = await Collection.findOne({ 
+      handle, 
+      isDeleted: { $ne: true } 
+    }).lean()
+    
+    if (!collection) return null
+    
+    // Get products for this collection
+    let products: any[] = []
+    
+    if (collection.collectionType === 'manual' && collection.productHandles?.length > 0) {
+      products = await Product.find({
+        handle: { $in: collection.productHandles },
+        isDeleted: { $ne: true },
+        published: true,
+      }).lean()
+    } else if (collection.collectionType === 'automated' && collection.conditions?.length > 0) {
+      const productQuery: any = { isDeleted: { $ne: true }, published: true }
+      
+      for (const condition of collection.conditions || []) {
+        switch (condition.field) {
+          case 'category':
+            productQuery.productCategory = { $regex: condition.value, $options: 'i' }
+            break
+          case 'tag':
+            productQuery.tags = condition.value
+            break
+        }
+      }
+      
+      products = await Product.find(productQuery).lean()
     }
     
-    return transformCollection(data)
+    return transformCollection(collection, products)
   } catch (error) {
     console.error('Error fetching collection:', error)
     return null
@@ -206,17 +279,11 @@ export async function getFeaturedCollections() {
   return getCollectionsFromDB({ featured: true, includeProducts: true, limit: 10 })
 }
 
-// Fetch homepage collections (for different sections)
-export async function getHomepageCollections(location: string) {
-  return getCollectionsFromDB({ location, includeProducts: true, limit: 6 })
-}
-
 // Group collections by category for mega menu
 export async function getGroupCollectionsFromDB() {
   try {
     const collections = await getCollectionsFromDB({ includeProducts: false, limit: 50 })
     
-    // Group by first word of title or by specific categories
     const groups: Record<string, typeof collections> = {
       'Supplements': [],
       'Accessories': [],
@@ -224,14 +291,19 @@ export async function getGroupCollectionsFromDB() {
     }
     
     for (const collection of collections) {
-      if (collection.title.toLowerCase().includes('protein') || 
-          collection.title.toLowerCase().includes('bcaa') ||
-          collection.title.toLowerCase().includes('vitamin') ||
-          collection.title.toLowerCase().includes('pre-workout')) {
+      if (!collection) continue
+      
+      const title = collection.title.toLowerCase()
+      if (title.includes('protein') || 
+          title.includes('bcaa') ||
+          title.includes('vitamin') ||
+          title.includes('pre-workout') ||
+          title.includes('amino')) {
         groups['Supplements'].push(collection)
-      } else if (collection.title.toLowerCase().includes('accessor') ||
-                 collection.title.toLowerCase().includes('gear') ||
-                 collection.title.toLowerCase().includes('shaker')) {
+      } else if (title.includes('accessor') ||
+                 title.includes('gear') ||
+                 title.includes('shaker') ||
+                 title.includes('fitness')) {
         groups['Accessories'].push(collection)
       } else {
         groups['Featured'].push(collection)
@@ -251,5 +323,5 @@ export async function getGroupCollectionsFromDB() {
 }
 
 // Export types
-export type TProductFromDB = Awaited<ReturnType<typeof getProductsFromDB>>[number]
-export type TCollectionFromDB = Awaited<ReturnType<typeof getCollectionsFromDB>>[number]
+export type TProductFromDB = NonNullable<Awaited<ReturnType<typeof getProductsFromDB>>[number]>
+export type TCollectionFromDB = NonNullable<Awaited<ReturnType<typeof getCollectionsFromDB>>[number]>
