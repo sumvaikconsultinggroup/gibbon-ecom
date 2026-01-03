@@ -1,17 +1,29 @@
 import CartNotification from '@/models/CartNotification'
-import { currentUser } from '@clerk/nextjs/server'
 import mongoose from 'mongoose'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-user-secret-key-change-in-production'
 
 export async function PATCH(req) {
   try {
-    const clerkUser = await currentUser()
-    if (!clerkUser) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('user_token')?.value
+    
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+    
+    let decoded
+    try {
+      decoded = jwt.verify(token, JWT_SECRET)
+    } catch {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
     const { action, item } = await req.json()
-    const userId = clerkUser.id
+    const userId = decoded.userId
 
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGODB_URI)
