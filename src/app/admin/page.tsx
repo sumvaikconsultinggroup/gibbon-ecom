@@ -74,18 +74,14 @@ export default function DashboardPage() {
     else setLoading(true)
     
     try {
-      const params = new URLSearchParams({ period })
-      if (period === 'custom' && customStartDate && customEndDate) {
-        params.set('startDate', customStartDate)
-        params.set('endDate', customEndDate)
-      }
+      // Use server action instead of fetch to avoid cookie issues
+      const result = await fetchDashboardData(
+        period,
+        period === 'custom' ? customStartDate : undefined,
+        period === 'custom' ? customEndDate : undefined
+      )
       
-      const res = await fetch(`/api/admin/dashboard?${params.toString()}`, {
-        credentials: 'include'
-      })
-      const result = await res.json()
-      
-      if (result.success) {
+      if (result.success && result.data) {
         setData(result.data)
       } else {
         toast.error(result.error || 'Failed to load dashboard')
