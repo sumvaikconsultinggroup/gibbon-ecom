@@ -92,21 +92,21 @@ export default function OrdersPage() {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20',
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }),
+      const result = await getOrdersAction({
+        page: currentPage,
+        limit: 20,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        search: searchQuery || undefined,
       })
-
-      const response = await fetch(`/api/admin/orders?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch orders')
-
-      const data = await response.json()
-      setOrders(data.orders || [])
-      setTotalPages(data.pagination?.pages || 1)
-      setTotalOrders(data.pagination?.total || 0)
-      setStatusCounts(data.statusCounts || {})
+      
+      if (result.success) {
+        setOrders(result.orders || [])
+        setTotalPages(result.pagination?.pages || 1)
+        setTotalOrders(result.pagination?.total || 0)
+        setStatusCounts(result.statusCounts || {})
+      } else {
+        toast.error(result.error || 'Failed to load orders')
+      }
     } catch (error) {
       console.error('Error fetching orders:', error)
       toast.error('Failed to load orders')
