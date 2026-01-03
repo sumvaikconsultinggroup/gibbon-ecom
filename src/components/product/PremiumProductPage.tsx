@@ -748,6 +748,12 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
                   </motion.div>
                 ))}
               </div>
+
+              {/* Bundle Offers Section */}
+              <ProductBundleOffers 
+                productId={product._id} 
+                currentProductPrice={price}
+              />
             </div>
           </div>
         </div>
