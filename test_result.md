@@ -77,15 +77,18 @@ backend:
 frontend:
   - task: "Order Detail Page UI"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/src/app/admin/orders/[orderId]/page.tsx"
-    stuck_count: 0
-    priority: "medium"
+    stuck_count: 1
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Order detail page UI implemented - frontend testing not required per system limitations"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Order Detail Page UI cannot function due to API connectivity issues. Frontend code is correctly implemented but API requests return HTTP 520 errors (Cloudflare proxy issue). Order ORD-2024-001 exists in database and API works on localhost:3000, but browser requests fail. Login successful, UI elements present, but no data loads. Root cause: Infrastructure/proxy configuration blocking external API access."
 
 metadata:
   created_by: "testing_agent"
