@@ -23,41 +23,6 @@ import { format, formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { fetchDashboardData, DashboardData } from './dashboard-actions'
 
-interface DashboardData {
-  period: { start: string; end: string }
-  summary: {
-    totalRevenue: number
-    totalOrders: number
-    avgOrderValue: number
-    totalCustomers: number
-    newCustomers: number
-    trends: { revenue: number; orders: number; aov: number }
-  }
-  charts: {
-    revenueOverTime: { date: string; revenue: number; orders: number }[]
-    orderStatus: { status: string; count: number }[]
-    topProducts: { name: string; revenue: number; quantity: number }[]
-    paymentMethods: { method: string; revenue: number }[]
-  }
-  recentOrders: {
-    _id: string
-    orderNumber: string
-    customer: string
-    email: string
-    total: number
-    status: string
-    paymentStatus: string
-    createdAt: string
-  }[]
-  lowStockProducts: {
-    _id: string
-    title: string
-    handle: string
-    image?: string
-    inventory: number
-  }[]
-}
-
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Today', shortLabel: 'Today' },
   { value: 'yesterday', label: 'Yesterday', shortLabel: 'Yesterday' },
