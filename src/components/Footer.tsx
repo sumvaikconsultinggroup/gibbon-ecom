@@ -52,7 +52,7 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div className="grid gap-8 lg:grid-cols-5 lg:gap-12">
+        <div className="grid gap-8 lg:grid-cols-6 lg:gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link href="/" className="mb-6 inline-block">
@@ -110,7 +110,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links & Policies */}
           <div>
             <h3 className="mb-4 font-[family-name:var(--font-family-antonio)] text-sm font-bold uppercase tracking-wider">
               Quick Links
@@ -146,15 +146,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="tel:+919056013132"
-                  className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white"
-                >
-                  <Phone className="h-4 w-4" />
-                  +91 90560 13132
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="mailto:info@gibbonnutrition.com"
                   className="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white"
                 >
@@ -167,6 +158,11 @@ export default function Footer() {
                 <span>Mon - Sat: 9AM - 7PM IST</span>
               </li>
             </ul>
+          </div>
+
+          {/* Blog Section */}
+          <div className="lg:col-span-1">
+            <FooterBlogSection />
           </div>
         </div>
       </div>
