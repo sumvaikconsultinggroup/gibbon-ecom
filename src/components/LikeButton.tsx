@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/nextjs'
+import { useUser } from '@/context/UserAuthContext'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
@@ -21,7 +21,7 @@ const LikeButton: React.FC<Props> = ({
 }) => {
   const [isLiked, setIsLiked] = useState(liked)
   const [isLoading, setIsLoading] = useState(false)
-  const { userId, isSignedIn } = useAuth()
+  const { user, isSignedIn } = useUser()
   const router = useRouter()
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -32,7 +32,7 @@ const LikeButton: React.FC<Props> = ({
     // Require login
     if (!isSignedIn) {
       toast('Please login to add items to your wishlist.')
-      router.push('/sign-in') // Clerk's default sign-in route
+      router.push('/login')
       return
     }
 
