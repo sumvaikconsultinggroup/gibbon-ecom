@@ -35,6 +35,7 @@ import {
   Menu,
   Home,
   PanelTop,
+  Newspaper,
 } from 'lucide-react'
 
 interface NavItem {
