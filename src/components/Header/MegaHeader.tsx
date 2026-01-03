@@ -138,10 +138,22 @@ export default function MegaHeader() {
       const timer = setTimeout(async () => {
         try {
           const res = await fetch(`/api/products?search=${searchQuery}&limit=5`)
-          const data = await res.json()
-          setSearchResults(data.products || [])
+          if (!res.ok) {
+            console.error('Search failed:', res.status)
+            setSearchResults([])
+            return
+          }
+          const text = await res.text()
+          try {
+            const data = JSON.parse(text)
+            setSearchResults(data.products || data.data || [])
+          } catch (e) {
+            console.error('Failed to parse search response')
+            setSearchResults([])
+          }
         } catch (err) {
           console.error('Search error:', err)
+          setSearchResults([])
         }
       }, 300)
       return () => clearTimeout(timer)

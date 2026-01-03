@@ -37,11 +37,19 @@ interface Product {
       try {
         setLoading(true)
         const response = await fetch('/api/products?all=true')
-        const data = await response.json()
-        
-        if (data.success) {
-          setProducts(data.data)
-          setFilteredProducts(data.data)
+        if (!response.ok) {
+          console.error('Failed to fetch products:', response.status)
+          return
+        }
+        const text = await response.text()
+        try {
+          const data = JSON.parse(text)
+          if (data.success && data.data) {
+            setProducts(data.data)
+            setFilteredProducts(data.data)
+          }
+        } catch (e) {
+          console.error('Failed to parse products response:', e)
         }
       } catch (error) {
         console.error('Error fetching products:', error)

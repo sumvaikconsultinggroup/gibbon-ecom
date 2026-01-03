@@ -153,8 +153,17 @@ export default function CollectionPageClient({
         }
 
         const res = await fetch(`/api/products?${params.toString()}`)
-        const data = await res.json()
-        setProducts(data.products || [])
+        if (!res.ok) {
+          console.error('Failed to fetch products:', res.status)
+          return
+        }
+        const text = await res.text()
+        try {
+          const data = JSON.parse(text)
+          setProducts(data.products || data.data || [])
+        } catch (e) {
+          console.error('Failed to parse products response:', e)
+        }
       } catch (err) {
         console.error('Error fetching products:', err)
       } finally {

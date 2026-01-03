@@ -74,10 +74,16 @@ export default async function CollectionPage({ params, searchParams }: Props) {
   const products = await Product.find(query).sort(sort).limit(50).lean()
   const totalCount = await Product.countDocuments(query)
 
-  const serializedProducts = products.map((p: any) => ({
-    ...p,
-    _id: p._id.toString(),
-  }))
+  // Deep serialize all MongoDB ObjectIds to strings
+  const serializedProducts = products.map((p: any) => JSON.parse(JSON.stringify(p, (key, value) => {
+    if (value && typeof value === 'object' && value._bsontype === 'ObjectId') {
+      return value.toString()
+    }
+    if (key === '_id' && value) {
+      return value.toString ? value.toString() : String(value)
+    }
+    return value
+  })))
 
   return (
     <>
