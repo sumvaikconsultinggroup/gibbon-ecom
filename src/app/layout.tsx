@@ -41,9 +41,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`${poppins.className} ${antonio.variable} ${roboto.variable}`}>
-        <body className="text-neutral-900 dark:bg-neutral-900 dark:text-neutral-200">
+    <html lang="en" className={`${poppins.className} ${antonio.variable} ${roboto.variable}`}>
+      <body className="text-neutral-900 dark:bg-neutral-900 dark:text-neutral-200">
+        <UserAuthProvider>
           <AppProvider>
             <TrackerProvider>
               <Aside.Provider>
@@ -64,8 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Aside.Provider>
             </TrackerProvider>
           </AppProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </UserAuthProvider>
+      </body>
+    </html>
   )
 }
