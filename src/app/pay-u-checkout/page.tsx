@@ -2,7 +2,7 @@
 
 import { useCart } from '@/components/useCartStore';
 import ButtonPrimary from '@/shared/Button/ButtonPrimary';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@/context/UserAuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
