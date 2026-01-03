@@ -158,7 +158,12 @@ const AddressSchema = new Schema(
 
 const UserSchema = new Schema(
   {
-    clerkId: { type: String, required: false, unique: true },
+    firstName: { type: String, required: false, trim: true },
+    lastName: { type: String, required: false, trim: true },
+    imageUrl: { type: String, required: false },
+    phone: { type: String, required: false, trim: true },
+    password: { type: String, required: false },
+    role: { type: String, default: 'customer' },
     billing_fullname: { type: String, required: false, trim: true },
     email: { type: String, required: false, unique: true, trim: true, lowercase: true },
     billing_customer_dob: { type: Date },
@@ -167,7 +172,6 @@ const UserSchema = new Schema(
     billing_address: {
       type: [AddressSchema],
       default: [],
-      // validate: (val: IAddress[]) => val.length > 0,
     },
     wishlist: [WishlistItemSchema],
     orders: [OrderItemSchema],
