@@ -42,7 +42,7 @@ import {
 type TabType = 'transactions' | 'settings'
 
 export default function PaymentsPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('transactions')
+  const [activeTab, setActiveTab] = useState<TabType>('settings')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
