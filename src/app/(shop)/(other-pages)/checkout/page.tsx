@@ -126,6 +126,17 @@ const CheckoutPage = () => {
           const data = await response.json()
 
           if (data.success) {
+            // Track successful purchase for live analytics
+            trackCheckoutEvent('purchase', {
+              orderId: orderId,
+              orderTotal: orderSummary.total,
+              items: cartItems.map((item) => ({
+                productId: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+              })),
+            })
             router.push('/order-successful')
           } else {
             alert(data.message || 'Failed to place order')
