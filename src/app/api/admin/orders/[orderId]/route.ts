@@ -4,6 +4,10 @@ import Order from '@/models/Order'
 import Shipment from '@/models/Shipment'
 import User from '@/models/User'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET /api/admin/orders/[orderId] - Get single order with full details
 export async function GET(
   request: NextRequest,
