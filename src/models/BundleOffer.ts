@@ -243,7 +243,6 @@ const BundleOfferSchema = new Schema<IBundleOffer>(
 BundleOfferSchema.index({ isActive: 1, startDate: 1, endDate: 1 })
 BundleOfferSchema.index({ targetProductIds: 1 })
 BundleOfferSchema.index({ priority: -1 })
-BundleOfferSchema.index({ internalName: 1 }, { unique: true })
 BundleOfferSchema.index({ code: 1 }, { sparse: true })
 
 export default mongoose.models.BundleOffer || mongoose.model<IBundleOffer>('BundleOffer', BundleOfferSchema)
