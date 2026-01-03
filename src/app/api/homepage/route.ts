@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import connectDb from '@/lib/mongodb'
 import HomeBanner from '@/models/HomeBanner'
 import HomeSection from '@/models/HomeSection'
-import { Product } from '@/models/product.model'
+import Product from '@/models/product.model'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
