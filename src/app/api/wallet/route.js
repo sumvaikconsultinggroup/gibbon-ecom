@@ -14,8 +14,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    // Find user by Mongo _id or clerkId
-    const query = mongoose.Types.ObjectId.isValid(userId) ? { _id: userId } : { clerkId: userId }
+    // Find user by Mongo _id
+    const query = mongoose.Types.ObjectId.isValid(userId) ? { _id: userId } : { email: userId }
 
     const user = await User.findOne(query).select('wallet')
 
@@ -45,7 +45,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid transaction type' }, { status: 400 })
     }
 
-    const query = mongoose.Types.ObjectId.isValid(userId) ? { _id: userId } : { clerkId: userId }
+    const query = mongoose.Types.ObjectId.isValid(userId) ? { _id: userId } : { email: userId }
 
     const user = await User.findOne(query)
 
