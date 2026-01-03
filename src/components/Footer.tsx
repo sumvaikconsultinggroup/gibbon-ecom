@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Instagram, Mail, Phone, Youtube, MapPin, Clock, Shield, Truck, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
+import FooterBlogSection from './Footer/FooterBlogSection'
 
 const footerLinks = {
   categories: [
