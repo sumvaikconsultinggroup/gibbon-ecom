@@ -128,5 +128,4 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching orders:', error)
     return createResponse({ error: 'Failed to fetch orders' }, 500)
   }
-  }
 }
