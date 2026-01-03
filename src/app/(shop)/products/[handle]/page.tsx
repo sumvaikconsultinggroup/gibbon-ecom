@@ -50,20 +50,19 @@ export default async function ProductPage({ params }: Props) {
     .limit(4)
     .lean()
 
-  // Serialize for client component
-  const serializedProduct = {
-    ...product,
-    _id: (product as any)._id.toString(),
-    reviews: ((product as any).reviews || []).map((r: any) => ({
-      ...r,
-      _id: r._id?.toString() || '',
-    })),
-  }
-
-  const serializedRelated = relatedProducts.map((p: any) => ({
-    ...p,
-    _id: p._id.toString(),
+  // Deep serialize all MongoDB ObjectIds to strings to avoid Server/Client component issues
+  const deepSerialize = (obj: any) => JSON.parse(JSON.stringify(obj, (key, value) => {
+    if (value && typeof value === 'object' && value._bsontype === 'ObjectId') {
+      return value.toString()
+    }
+    if (key === '_id' && value) {
+      return value.toString ? value.toString() : String(value)
+    }
+    return value
   }))
+
+  const serializedProduct = deepSerialize(product)
+  const serializedRelated = relatedProducts.map((p: any) => deepSerialize(p))
 
   return (
     <>
