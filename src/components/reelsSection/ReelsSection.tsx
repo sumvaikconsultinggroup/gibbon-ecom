@@ -300,14 +300,22 @@ export function VideoProductsSection({ className, showHeading = true }: VideoPro
     const fetchProducts = async () => {
       try {
         const response = await fetch('/api/products?limit=10')
-        const data = await response.json()
-
-        if (data.success) {
-          const productsMap: Record<string, Product> = {}
-          data.data.forEach((product: Product) => {
-            productsMap[product.handle] = product
-          })
-          setProducts(productsMap)
+        if (!response.ok) {
+          console.error('Failed to fetch products:', response.status)
+          return
+        }
+        const text = await response.text()
+        try {
+          const data = JSON.parse(text)
+          if (data.success && data.data) {
+            const productsMap: Record<string, Product> = {}
+            data.data.forEach((product: Product) => {
+              productsMap[product.handle] = product
+            })
+            setProducts(productsMap)
+          }
+        } catch (e) {
+          console.error('Failed to parse products response')
         }
       } catch (error) {
         console.error('Error fetching products:', error)
