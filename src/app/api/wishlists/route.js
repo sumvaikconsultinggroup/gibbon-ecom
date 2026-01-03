@@ -1,19 +1,36 @@
-import { currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { connectToDB } from '@/utils/db'
 import User from '../../../models/User'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-user-secret-key-change-in-production'
+
+async function getUserFromToken() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('user_token')?.value
+  
+  if (!token) return null
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET)
+    return decoded
+  } catch {
+    return null
+  }
+}
 
 export async function GET() {
   try {
-    const clerkUser = await currentUser()
+    const authUser = await getUserFromToken()
 
-    if (!clerkUser) {
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connectToDB()
 
-    const user = await User.findOne({ clerkId: clerkUser.id })
+    const user = await User.findById(authUser.userId)
 
     if (!user) {
       // If user doesn't exist in our DB, they have no wishlist
@@ -31,9 +48,9 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const clerkUser = await currentUser()
+    const authUser = await getUserFromToken()
 
-    if (!clerkUser) {
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -50,20 +67,17 @@ export async function POST(request) {
     // Create wishlist item with just productId (matching LikeButton expectation)
     const wishlistItem = { productId }
 
-    const updatedUser = await User.findOneAndUpdate(
-      { clerkId: clerkUser.id },
+    const updatedUser = await User.findByIdAndUpdate(
+      authUser.userId,
       {
         $addToSet: { wishlist: wishlistItem },
-        $setOnInsert: {
-          clerkId: clerkUser.id,
-          email: clerkUser.emailAddresses[0]?.emailAddress,
-          imageUrl: clerkUser.imageUrl,
-          firstName: clerkUser.firstName,
-          lastName: clerkUser.lastName,
-        },
       },
-      { upsert: true, new: true }
+      { new: true }
     )
+
+    if (!updatedUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     return NextResponse.json({ 
       success: true,
@@ -78,9 +92,9 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const clerkUser = await currentUser()
+    const authUser = await getUserFromToken()
 
-    if (!clerkUser) {
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -94,8 +108,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
     }
 
-    const updatedUser = await User.findOneAndUpdate(
-      { clerkId: clerkUser.id },
+    const updatedUser = await User.findByIdAndUpdate(
+      authUser.userId,
       { $pull: { wishlist: { productId: productId } } },
       { new: true }
     )
