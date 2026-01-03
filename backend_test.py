@@ -9,8 +9,8 @@ import json
 import sys
 from typing import Dict, Any, Optional
 
-# Base URL for testing - using production URL from review request
-BASE_URL = "https://merchant-dashboard-7.preview.emergentagent.com"
+# Base URL for testing - using localhost since production URL returns 520 errors
+BASE_URL = "http://localhost:3000"
 
 class APITester:
     def __init__(self, base_url: str):
