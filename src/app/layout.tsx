@@ -7,6 +7,9 @@ import GlobalClient from './GlobalClient'
 import PremiumCartDrawer from '@/components/PremiumCartDrawer'
 import AsideSidebarNavigation from '@/components/aside-sidebar-navigation'
 import AsideProductQuickView from '@/components/aside-product-quickview'
+import LiveTracker from '@/components/LiveTracker'
+import { TrackerProvider } from '@/components/TrackerProvider'
+import { Suspense } from 'react'
 
 import { ClerkProvider } from '@clerk/nextjs'
 
@@ -43,17 +46,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="en" className={`${poppins.className} ${antonio.variable} ${roboto.variable}`}>
         <body className="text-neutral-900 dark:bg-neutral-900 dark:text-neutral-200">
           <AppProvider>
-            <Aside.Provider>
-              {children}
+            <TrackerProvider>
+              <Aside.Provider>
+                {children}
 
-              {/* Global Aside Components */}
-              <PremiumCartDrawer />
-              <AsideSidebarNavigation />
-              <AsideProductQuickView />
+                {/* Global Aside Components */}
+                <PremiumCartDrawer />
+                <AsideSidebarNavigation />
+                <AsideProductQuickView />
 
-              {/* Client component: Toaster, ... */}
-              <GlobalClient />
-            </Aside.Provider>
+                {/* Live Analytics Tracker */}
+                <Suspense fallback={null}>
+                  <LiveTracker />
+                </Suspense>
+
+                {/* Client component: Toaster, ... */}
+                <GlobalClient />
+              </Aside.Provider>
+            </TrackerProvider>
           </AppProvider>
         </body>
       </html>
