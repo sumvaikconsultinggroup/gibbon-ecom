@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -27,67 +27,66 @@ import { useUser, useAuth } from '@/context/UserAuthContext'
 import { useCart } from '@/components/useCartStore'
 import { useAside } from '@/components/aside/aside'
 
-const categories = [
+interface NavItem {
+  id: string
+  name: string
+  href: string
+  type: 'category' | 'subcategory' | 'link' | 'megamenu'
+  icon?: string
+  badge?: string
+  badgeColor?: string
+  description?: string
+  image?: { src: string; alt: string }
+  showInMobile?: boolean
+  openInNewTab?: boolean
+  children?: NavItem[]
+  featuredProducts?: {
+    id: string
+    title: string
+    handle: string
+    image?: string
+    price?: number
+  }[]
+}
+
+// Fallback categories if API fails
+const fallbackCategories: NavItem[] = [
   {
+    id: '1',
     name: 'Protein',
     href: '/collections/protein',
-    featured: true,
-    subcategories: [
-      { name: 'Whey Protein', href: '/collections/whey-protein', badge: 'Bestseller' },
-      { name: 'Whey Isolate', href: '/collections/whey-isolate', badge: 'Premium' },
-      { name: 'Plant Protein', href: '/collections/plant-protein', badge: 'Vegan' },
-      { name: 'Casein Protein', href: '/collections/casein' },
-      { name: 'Protein Blends', href: '/collections/protein-blends' },
-    ],
-    image: '/GibbonBanner-1.png',
+    type: 'megamenu',
     description: 'Premium protein for maximum muscle growth',
+    image: { src: '/GibbonBanner-1.png', alt: 'Protein' },
+    children: [
+      { id: '1-1', name: 'Whey Protein', href: '/collections/whey-protein', type: 'subcategory', badge: 'Bestseller' },
+      { id: '1-2', name: 'Whey Isolate', href: '/collections/whey-isolate', type: 'subcategory', badge: 'Premium' },
+      { id: '1-3', name: 'Plant Protein', href: '/collections/plant-protein', type: 'subcategory', badge: 'Vegan' },
+      { id: '1-4', name: 'Casein Protein', href: '/collections/casein', type: 'subcategory' },
+    ],
   },
   {
+    id: '2',
     name: 'Pre-Workout',
     href: '/collections/pre-workout',
-    subcategories: [
-      { name: 'JOLT Pre-Workout', href: '/products/jolt', badge: 'New' },
-      { name: 'Caffeine Free', href: '/collections/caffeine-free' },
-      { name: 'Pump Formulas', href: '/collections/pump' },
-    ],
-    image: '/GibbonBanner-2.png',
+    type: 'megamenu',
     description: 'Explosive energy for intense workouts',
-  },
-  {
-    name: 'Mass Gainer',
-    href: '/collections/mass-gainer',
-    subcategories: [
-      { name: 'High Calorie', href: '/collections/high-calorie' },
-      { name: 'Lean Mass', href: '/collections/lean-mass' },
-    ],
-    image: '/GibbonBanner-3.png',
-    description: 'Calorie-dense formulas for serious gains',
-  },
-  {
-    name: 'Amino Acids',
-    href: '/collections/amino-acids',
-    subcategories: [
-      { name: 'BCAAs', href: '/collections/bcaa' },
-      { name: 'EAAs', href: '/collections/eaa' },
-      { name: 'Glutamine', href: '/collections/glutamine' },
+    image: { src: '/GibbonBanner-2.png', alt: 'Pre-Workout' },
+    children: [
+      { id: '2-1', name: 'Stimulant Pre-Workout', href: '/collections/stimulant-pre-workout', type: 'subcategory' },
+      { id: '2-2', name: 'Pump Formulas', href: '/collections/pump', type: 'subcategory' },
+      { id: '2-3', name: 'Caffeine Free', href: '/collections/caffeine-free', type: 'subcategory' },
     ],
   },
   {
-    name: 'Creatine',
-    href: '/collections/creatine',
-    subcategories: [
-      { name: 'Creatine Monohydrate', href: '/collections/creatine-mono' },
-      { name: 'Creatine HCL', href: '/collections/creatine-hcl' },
-    ],
-  },
-  {
+    id: '3',
     name: 'Vitamins & Health',
     href: '/collections/vitamins',
-    subcategories: [
-      { name: 'Multivitamins', href: '/collections/multivitamins' },
-      { name: 'Omega 3', href: '/collections/omega' },
-      { name: 'Vitamin D', href: '/collections/vitamin-d' },
-      { name: 'ZMA', href: '/collections/zma' },
+    type: 'category',
+    children: [
+      { id: '3-1', name: 'Multivitamins', href: '/collections/multivitamins', type: 'subcategory' },
+      { id: '3-2', name: 'Omega 3', href: '/collections/omega-3', type: 'subcategory' },
+      { id: '3-3', name: 'Vitamin D', href: '/collections/vitamin-d', type: 'subcategory' },
     ],
   },
 ]
@@ -174,110 +173,139 @@ function UserAccountButton() {
   )
 }
 
-export default function MegaHeader() {
-  const [isScrolled, setIsScrolled] = useState(false)
+export default function DynamicMegaHeader() {
+  const [categories, setCategories] = useState<NavItem[]>(fallbackCategories)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
-  const searchRef = useRef<HTMLDivElement>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
-  const { items } = useCart()
+  
+  const { cartCount } = useCart()
   const { open: openCart } = useAside()
+  const cartItemCount = cartCount()
 
-  const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0)
-
+  // Fetch navigation from API
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50)
+    const fetchNavigation = async () => {
+      try {
+        const res = await fetch('/api/navigation')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success && data.data && data.data.length > 0) {
+            setCategories(data.data)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching navigation:', error)
+        // Use fallback categories
+      }
+    }
+    
+    fetchNavigation()
+  }, [])
+
+  // Search products
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (searchQuery.length < 2) {
+        setSearchResults([])
+        return
+      }
+
+      try {
+        const res = await fetch(`/api/products?search=${searchQuery}&limit=5`)
+        if (!res.ok) {
+          console.error('Search failed:', res.status)
+          setSearchResults([])
+          return
+        }
+        const text = await res.text()
+        try {
+          const data = JSON.parse(text)
+          setSearchResults(data.products || data.data || [])
+        } catch (e) {
+          console.error('Failed to parse search response')
+          setSearchResults([])
+        }
+      } catch (err) {
+        console.error('Search error:', err)
+        setSearchResults([])
+      }
+    }
+
+    const debounce = setTimeout(searchProducts, 300)
+    return () => clearTimeout(debounce)
+  }, [searchQuery])
+
+  // Handle scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false)
     setActiveCategory(null)
   }, [pathname])
 
+  // Focus search input when opened
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setIsSearchOpen(false)
-      }
+    if (isSearchOpen) {
+      searchInputRef.current?.focus()
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Search functionality
-  useEffect(() => {
-    if (searchQuery.length > 2) {
-      const timer = setTimeout(async () => {
-        try {
-          const res = await fetch(`/api/products?search=${searchQuery}&limit=5`)
-          if (!res.ok) {
-            console.error('Search failed:', res.status)
-            setSearchResults([])
-            return
-          }
-          const text = await res.text()
-          try {
-            const data = JSON.parse(text)
-            setSearchResults(data.products || data.data || [])
-          } catch (e) {
-            console.error('Failed to parse search response')
-            setSearchResults([])
-          }
-        } catch (err) {
-          console.error('Search error:', err)
-          setSearchResults([])
-        }
-      }, 300)
-      return () => clearTimeout(timer)
-    } else {
-      setSearchResults([])
-    }
-  }, [searchQuery])
+  }, [isSearchOpen])
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="bg-neutral-900 text-white">
-        <div className="container mx-auto flex items-center justify-between px-4 py-2 text-xs">
-          <div className="hidden items-center gap-6 sm:flex">
-            <a href="tel:+917717495954" className="flex items-center gap-1.5 hover:text-[#12C6FF]">
-              <Phone className="h-3 w-3" /> +91 77174 95954
-            </a>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-3 w-3" /> Pan India Delivery
-            </span>
-          </div>
-          <div className="flex w-full items-center justify-center gap-4 sm:w-auto sm:justify-end">
-            <span className="flex items-center gap-1.5">
-              <Truck className="h-3 w-3 text-green-400" /> Free Shipping ₹999+
-            </span>
-            <span className="hidden items-center gap-1.5 sm:flex">
-              <Shield className="h-3 w-3 text-blue-400" /> 100% Authentic
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/95 shadow-lg backdrop-blur-md dark:bg-neutral-900/95'
+            ? 'bg-white/95 shadow-md backdrop-blur-lg dark:bg-neutral-900/95'
             : 'bg-white dark:bg-neutral-900'
         }`}
       >
+        {/* Top Bar */}
+        <div className="hidden border-b border-neutral-100 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950 lg:block">
+          <div className="container mx-auto flex items-center justify-between px-4 py-2 text-xs">
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
+                <Phone className="h-3.5 w-3.5" />
+                +91 98765 43210
+              </span>
+              <span className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
+                <MapPin className="h-3.5 w-3.5" />
+                Pan India Delivery
+              </span>
+            </div>
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5 text-green-600">
+                <Truck className="h-3.5 w-3.5" />
+                Free shipping on orders above ₹999
+              </span>
+              <span className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
+                <Shield className="h-3.5 w-3.5" />
+                100% Authentic Products
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Header */}
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 lg:hidden dark:hover:bg-neutral-800"
-              aria-label="Open menu"
+              aria-label="Open Menu"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -287,54 +315,56 @@ export default function MegaHeader() {
               <Image
                 src="/GibbonLogoEccom.png"
                 alt="Gibbon Nutrition"
-                width={140}
-                height={42}
+                width={160}
+                height={48}
                 className="h-10 w-auto lg:h-12"
                 priority
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden flex-1 items-center justify-center lg:flex">
-              <ul className="flex items-center gap-1">
-                {categories.map((category) => (
-                  <li
-                    key={category.name}
-                    onMouseEnter={() => setActiveCategory(category.name)}
-                    onMouseLeave={() => setActiveCategory(null)}
-                    className="relative"
+            <nav className="hidden lg:flex lg:items-center lg:gap-1">
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className="relative"
+                  onMouseEnter={() => setActiveCategory(category.name)}
+                  onMouseLeave={() => setActiveCategory(null)}
+                >
+                  <Link
+                    href={category.href}
+                    className={`flex items-center gap-1 px-4 py-2 text-sm font-medium transition-colors ${
+                      activeCategory === category.name
+                        ? 'text-[#1B198F]'
+                        : 'text-neutral-700 hover:text-[#1B198F] dark:text-neutral-200'
+                    }`}
                   >
-                    <Link
-                      href={category.href}
-                      className={`flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                        activeCategory === category.name
-                          ? 'bg-[#1B198F] text-white'
-                          : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800'
-                      }`}
-                    >
-                      {category.name}
+                    {category.name}
+                    {category.children && category.children.length > 0 && (
                       <ChevronDown className={`h-4 w-4 transition-transform ${activeCategory === category.name ? 'rotate-180' : ''}`} />
-                    </Link>
-                  </li>
-                ))}
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                    >
-                      <link.icon className="h-4 w-4 text-[#1B198F]" />
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                    )}
+                  </Link>
+                </div>
+              ))}
+
+              {/* Quick Links */}
+              <div className="mx-2 h-6 w-px bg-neutral-200 dark:bg-neutral-700" />
+              {quickLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:text-[#1B198F] dark:text-neutral-200"
+                >
+                  <link.icon className="h-4 w-4" />
+                  {link.name}
+                </Link>
+              ))}
             </nav>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-1">
+            {/* Actions */}
+            <div className="flex items-center gap-2">
               {/* Search */}
-              <div ref={searchRef} className="relative">
+              <div className="relative">
                 <button
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
                   className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -343,38 +373,48 @@ export default function MegaHeader() {
                   <Search className="h-5 w-5" />
                 </button>
 
+                {/* Search Dropdown */}
                 <AnimatePresence>
                   {isSearchOpen && (
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl sm:w-96 dark:border-neutral-700 dark:bg-neutral-900"
+                      className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl sm:w-96 dark:border-neutral-700 dark:bg-neutral-800"
                     >
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                         <input
+                          ref={searchInputRef}
                           type="text"
+                          placeholder="Search products..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search products..."
-                          className="w-full rounded-full border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20 dark:border-neutral-700 dark:bg-neutral-800"
-                          autoFocus
+                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20 dark:border-neutral-600 dark:bg-neutral-700"
                         />
                       </div>
 
+                      {/* Search Results */}
                       {searchResults.length > 0 && (
-                        <div className="mt-4 space-y-2">
+                        <div className="mt-4 max-h-80 space-y-2 overflow-y-auto">
                           {searchResults.map((product: any) => (
                             <Link
-                              key={product._id}
+                              key={product._id || product.handle}
                               href={`/products/${product.handle}`}
-                              onClick={() => setIsSearchOpen(false)}
-                              className="flex items-center gap-3 rounded-lg p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                              onClick={() => {
+                                setIsSearchOpen(false)
+                                setSearchQuery('')
+                              }}
+                              className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
                             >
                               <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-neutral-100">
                                 {product.images?.[0]?.src && (
-                                  <Image src={product.images[0].src} alt={product.title} fill className="object-cover" />
+                                  <Image
+                                    src={product.images[0].src}
+                                    alt={product.title}
+                                    fill
+                                    className="object-cover"
+                                  />
                                 )}
                               </div>
                               <div className="flex-1">
@@ -439,24 +479,30 @@ export default function MegaHeader() {
                 {categories
                   .filter((c) => c.name === activeCategory)
                   .map((category) => (
-                    <div key={category.name} className="grid grid-cols-4 gap-8">
+                    <div key={category.id} className="grid grid-cols-4 gap-8">
                       {/* Subcategories */}
                       <div className="col-span-2">
                         <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-neutral-500">
                           Shop {category.name}
                         </h3>
                         <div className="grid grid-cols-2 gap-2">
-                          {category.subcategories.map((sub) => (
+                          {category.children?.map((sub) => (
                             <Link
-                              key={sub.name}
+                              key={sub.id}
                               href={sub.href}
                               className="group flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
                             >
                               <span className="font-medium text-neutral-700 group-hover:text-[#1B198F] dark:text-neutral-200">
                                 {sub.name}
                               </span>
-                              {'badge' in sub && sub.badge && (
-                                <span className="rounded-full bg-[#1B198F]/10 px-2 py-0.5 text-xs font-semibold text-[#1B198F]">
+                              {sub.badge && (
+                                <span 
+                                  className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                                  style={{ 
+                                    backgroundColor: `${sub.badgeColor || '#1B198F'}20`, 
+                                    color: sub.badgeColor || '#1B198F' 
+                                  }}
+                                >
                                   {sub.badge}
                                 </span>
                               )}
@@ -478,8 +524,8 @@ export default function MegaHeader() {
                           <Link href={category.href} className="group relative block overflow-hidden rounded-2xl">
                             <div className="relative aspect-[2/1]">
                               <Image
-                                src={category.image}
-                                alt={category.name}
+                                src={category.image.src}
+                                alt={category.image.alt || category.name}
                                 fill
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                               />
@@ -490,6 +536,41 @@ export default function MegaHeader() {
                               </div>
                             </div>
                           </Link>
+                        </div>
+                      )}
+
+                      {/* Featured Products */}
+                      {category.featuredProducts && category.featuredProducts.length > 0 && (
+                        <div className="col-span-4 mt-6 border-t border-neutral-100 pt-6 dark:border-neutral-800">
+                          <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-neutral-500">
+                            Featured Products
+                          </h4>
+                          <div className="grid grid-cols-4 gap-4">
+                            {category.featuredProducts.slice(0, 4).map((product) => (
+                              <Link
+                                key={product.id}
+                                href={`/products/${product.handle}`}
+                                className="group rounded-xl border border-neutral-100 p-3 transition-all hover:border-[#1B198F]/30 hover:shadow-lg dark:border-neutral-800"
+                              >
+                                {product.image && (
+                                  <div className="relative mb-3 aspect-square overflow-hidden rounded-lg bg-neutral-100">
+                                    <Image
+                                      src={product.image}
+                                      alt={product.title}
+                                      fill
+                                      className="object-cover transition-transform group-hover:scale-105"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-sm font-medium text-neutral-900 line-clamp-2 dark:text-white">
+                                  {product.title}
+                                </p>
+                                {product.price && (
+                                  <p className="mt-1 text-sm font-bold text-[#1B198F]">₹{product.price}</p>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -527,25 +608,40 @@ export default function MegaHeader() {
 
               <div className="p-4">
                 {categories.map((category) => (
-                  <div key={category.name} className="border-b border-neutral-100 py-3 dark:border-neutral-800">
+                  <div key={category.id} className="border-b border-neutral-100 py-3 dark:border-neutral-800">
                     <Link
                       href={category.href}
                       className="flex items-center justify-between py-2 font-semibold text-neutral-900 dark:text-white"
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {category.name}
                       <ChevronRight className="h-5 w-5 text-neutral-400" />
                     </Link>
-                    <div className="mt-2 space-y-1 pl-4">
-                      {category.subcategories.slice(0, 3).map((sub) => (
-                        <Link
-                          key={sub.name}
-                          href={sub.href}
-                          className="block py-1.5 text-sm text-neutral-600 dark:text-neutral-400"
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
+                    {category.children && category.children.length > 0 && (
+                      <div className="mt-2 space-y-1 pl-4">
+                        {category.children.slice(0, 4).map((sub) => (
+                          <Link
+                            key={sub.id}
+                            href={sub.href}
+                            className="flex items-center justify-between py-1.5 text-sm text-neutral-600 dark:text-neutral-400"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {sub.name}
+                            {sub.badge && (
+                              <span 
+                                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                                style={{ 
+                                  backgroundColor: `${sub.badgeColor || '#1B198F'}20`, 
+                                  color: sub.badgeColor || '#1B198F' 
+                                }}
+                              >
+                                {sub.badge}
+                              </span>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -555,6 +651,7 @@ export default function MegaHeader() {
                       key={link.name}
                       href={link.href}
                       className="flex items-center gap-3 rounded-lg bg-neutral-100 p-3 font-semibold dark:bg-neutral-800"
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <link.icon className="h-5 w-5 text-[#1B198F]" />
                       {link.name}
@@ -563,10 +660,18 @@ export default function MegaHeader() {
                 </div>
 
                 <div className="mt-6 space-y-3">
-                  <Link href="/wishlist" className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300">
+                  <Link 
+                    href="/wishlist" 
+                    className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <Heart className="h-5 w-5" /> Wishlist
                   </Link>
-                  <Link href="/account" className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300">
+                  <Link 
+                    href="/account" 
+                    className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <User className="h-5 w-5" /> My Account
                   </Link>
                 </div>
