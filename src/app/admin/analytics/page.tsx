@@ -57,60 +57,13 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     setLoading(true)
     try {
-      // Fetch real product data
-      const productsRes = await fetch('/api/products')
-      const productsData = await productsRes.json()
-      const productCount = productsData.total || productsData.data?.length || 0
-
-      // Generate realistic analytics data
-      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-      const revenueChart = generateChartData(days, 5000, 25000)
-      const ordersChart = generateChartData(days, 5, 30)
-      const visitorsChart = generateChartData(days, 100, 800)
-
-      const totalRevenue = revenueChart.reduce((acc, d) => acc + d.value, 0)
-      const totalOrders = ordersChart.reduce((acc, d) => acc + d.value, 0)
-      const totalVisitors = visitorsChart.reduce((acc, d) => acc + d.value, 0)
-
-      setData({
-        revenue: {
-          total: totalRevenue,
-          change: 12.5,
-          chartData: revenueChart,
-        },
-        orders: {
-          total: totalOrders,
-          change: 8.3,
-          chartData: ordersChart,
-        },
-        visitors: {
-          total: totalVisitors,
-          change: 15.2,
-          chartData: visitorsChart,
-        },
-        conversionRate: ((totalOrders / totalVisitors) * 100),
-        averageOrderValue: totalRevenue / totalOrders,
-        topCategories: [
-          { name: 'Protein Supplements', sales: 45200, percentage: 35 },
-          { name: 'Pre-Workout', sales: 32100, percentage: 25 },
-          { name: 'Vitamins & Minerals', sales: 25680, percentage: 20 },
-          { name: 'Energy Bars', sales: 15400, percentage: 12 },
-          { name: 'Accessories', sales: 10280, percentage: 8 },
-        ],
-        salesByChannel: [
-          { channel: 'Direct', value: 45, color: '#1B198F' },
-          { channel: 'Organic Search', value: 25, color: '#10B981' },
-          { channel: 'Paid Ads', value: 18, color: '#F59E0B' },
-          { channel: 'Social Media', value: 12, color: '#EC4899' },
-        ],
-        recentActivity: [
-          { type: 'order', description: 'New order #ORD-2847 placed', time: '2 mins ago' },
-          { type: 'customer', description: 'New customer registered', time: '15 mins ago' },
-          { type: 'product', description: 'Product "Whey Protein" updated', time: '1 hour ago' },
-          { type: 'review', description: 'New 5-star review received', time: '2 hours ago' },
-          { type: 'order', description: 'Order #ORD-2845 shipped', time: '3 hours ago' },
-        ],
-      })
+      // Use server action instead of API route
+      const { getAnalyticsData } = await import('./analytics-actions')
+      const result = await getAnalyticsData(timeRange)
+      
+      if (result.success && result.data) {
+        setData(result.data)
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error)
     }
