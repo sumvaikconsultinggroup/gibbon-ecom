@@ -7,13 +7,13 @@ import BlogPostClient from './BlogPostClient'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ handle: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
+  const { handle } = await params
   await connectDb()
-  const post = await BlogPost.findOne({ slug, status: 'published' }).lean()
+  const post = await BlogPost.findOne({ slug: handle, status: 'published' }).lean()
   
   if (!post) {
     return { title: 'Post Not Found' }
@@ -70,8 +70,8 @@ async function getBlogPost(slug: string) {
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { slug } = await params
-  const data = await getBlogPost(slug)
+  const { handle } = await params
+  const data = await getBlogPost(handle)
   
   if (!data) {
     notFound()
