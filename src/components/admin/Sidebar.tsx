@@ -33,6 +33,8 @@ import {
   Heart,
   X,
   Menu,
+  Home,
+  PanelTop,
 } from 'lucide-react'
 
 interface NavItem {
