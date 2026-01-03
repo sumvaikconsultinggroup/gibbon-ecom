@@ -493,47 +493,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setActionLoading(null)
     }
   }
-      })
-      
-      // Get invoice data
-      const response = await fetch(`${BASE_URL}/api/admin/orders/${order?.orderId || resolvedParams.id}/invoice`)
-      const invoice = await response.json()
-      
-      // Open print window with invoice
-      const printWindow = window.open('', '_blank')
-      if (printWindow) {
-        printWindow.document.write(generateInvoiceHTML(invoice))
-        printWindow.document.close()
-        printWindow.print()
-      }
-      toast.success('Invoice opened for printing')
-    } catch (error) {
-      toast.error('Failed to generate invoice')
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  // Send invoice email
-  const handleSendInvoice = async () => {
-    await handleAction('/email', 'POST', {
-      type: 'invoice',
-      user: 'Admin',
-    }, 'Invoice sent to customer')
-  }
-
-  // Send email
-  const handleSendEmail = async () => {
-    await handleAction('/email', 'POST', {
-      type: emailType,
-      subject: customEmailSubject,
-      customMessage: customEmailMessage,
-      user: 'Admin',
-    }, 'Email sent successfully')
-    setShowEmailModal(false)
-    setCustomEmailSubject('')
-    setCustomEmailMessage('')
-  }
 
   // Send WhatsApp (opens WhatsApp web)
   const handleSendWhatsApp = () => {
