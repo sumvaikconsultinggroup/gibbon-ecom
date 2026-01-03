@@ -674,6 +674,63 @@ export default function ProductEditPage() {
                           </button>
                         )}
                       </div>
+                      
+                      {/* Variant Image Section */}
+                      <div className="mb-4 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                            <ImageIcon className="mr-1 inline h-3 w-3" />
+                            Variant Image
+                          </span>
+                          <span className="rounded bg-[#1B198F]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#1B198F]">Shopify+</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {variant.image ? (
+                            <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+                              <Image src={variant.image} alt={`Variant ${index + 1}`} fill className="object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => updateVariant(index, 'image', '')}
+                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 text-neutral-400 hover:border-[#1B198F] hover:text-[#1B198F] dark:border-neutral-600">
+                              <Upload className="h-4 w-4" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    const url = URL.createObjectURL(file)
+                                    updateVariant(index, 'image', url)
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                          <div className="flex-1">
+                            <p className="text-xs text-neutral-500">Upload an image specific to this variant</p>
+                            {formData.images?.length > 0 && (
+                              <select
+                                value={variant.image || ''}
+                                onChange={(e) => updateVariant(index, 'image', e.target.value)}
+                                className="mt-1 w-full rounded-lg border border-neutral-200 px-2 py-1 text-xs outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-800"
+                              >
+                                <option value="">Or select from product images</option>
+                                {formData.images.map((img, imgIndex) => (
+                                  <option key={imgIndex} value={img.src}>Image {imgIndex + 1}</option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                           <label className="mb-1 block text-xs font-medium text-neutral-500">Option (Size/Flavor)</label>
@@ -735,6 +792,21 @@ export default function ProductEditPage() {
                             placeholder="Cost"
                             className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-900"
                           />
+                        </div>
+                      </div>
+                      
+                      {/* Inventory Management */}
+                      <div className="mt-4 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">Inventory Management</span>
+                          <select
+                            value={variant.inventoryManagement || 'manual'}
+                            onChange={(e) => updateVariant(index, 'inventoryManagement', e.target.value)}
+                            className="rounded-lg border border-neutral-200 px-2 py-1 text-xs outline-none focus:border-[#1B198F] dark:border-neutral-700 dark:bg-neutral-800"
+                          >
+                            <option value="manual">Track inventory manually</option>
+                            <option value="none">Don't track inventory</option>
+                          </select>
                         </div>
                       </div>
                     </div>
