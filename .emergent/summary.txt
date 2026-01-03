@@ -1,50 +1,56 @@
 <analysis>**original_problem_statement:**
-The user's initial request was for a UI/UX overhaul, which evolved into building a full enterprise-grade eCommerce system. The most recent user requests include:
-1.  **Fix Console Errors:** Resolve , serialization issues, and hydration errors.
-2.  **Remove Clerk Auth:** Permanently remove Clerk due to persistent errors and replace it with a custom JWT-based authentication system.
-3.  **Fix Empty Navigation Menus:** Ensure Bestsellers, New Arrivals, and Offers sections display products correctly.
-4.  **CMS-Managed Navigation:** Build an enterprise-level feature in the Admin CMS to dynamically manage the entire site navigation (menus, sub-menus, images, etc.).
-5.  **CMS-Managed Homepage:** Build an enterprise-grade Homepage Builder to allow full control over homepage banners and content sections from the Admin CMS.
+The user's initial request from the previous session was for a UI/UX overhaul, which has since evolved into building a full enterprise-grade eCommerce system. In this session, the user requested the following features sequentially:
+1.  **Complete the Enterprise-Grade Homepage Builder**: Finish the in-progress task from the last session.
+2.  **Create an Enterprise Grade 9 Bundle Offer System**: This should be manageable from the Admin CMS and display on product detail pages.
+3.  **Create a Blogs Feature (Enterprise Grade 7)**: The system should allow blog creation from a CMS, with posts appearing in a new footer section.
+4.  **Implement Dual-Mode Image Upload**: A critical requirement added alongside the blog feature. All image fields across the admin panel (Homepage, Bundles, Blogs) must support both direct file uploads and pasting an image URL.
+5.  **Update the Admin Dashboard (Enterprise Grade 9)**: Revamp the main admin dashboard to include modern, filterable charts (Daily, Weekly, Monthly, Custom sales).
+6.  **Fix an Error**: The user uploaded a screenshot showing a generic error page, which the agent identified as a Next.js routing conflict.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The agent has successfully addressed several critical user requests. It fixed numerous console errors, including MongoDB ObjectId serialization issues and client-side fetch error handling, and resolved UI hydration errors on product pages.
+The agent has successfully delivered a significant number of enterprise-grade features in this session. The application now includes:
+1.  **A complete Enterprise Homepage Builder**, allowing admins to dynamically control homepage banners and content sections.
+2.  **An Enterprise Grade 9 Bundle Offer system**, enabling the creation of product bundles in the admin panel which are then displayed on the corresponding product pages.
+3.  **An Enterprise Grade 7 Blog system**, with an admin interface for creating posts and categories. A new blog section has been added to the site footer, and public-facing pages for the blog index and individual posts have been created.
+4.  A reusable **dual-mode Image Upload component** () that supports both direct file uploads (via ) and URL inputs. This has been integrated into the admin pages for the Homepage Builder, Bundle Offers, and the new Blog system.
+5.  A completely revamped **Enterprise Grade 9 Admin Dashboard** featuring modern, interactive charts powered by  for analyzing sales data with various time-period filters.
+6.  New backend models for , , , and  have been created to support these features.
 
-A major architectural change was completed: **Clerk authentication has been completely removed** and replaced with a custom JWT-based authentication system for customers. This involved creating new API endpoints for login/register/session management, a new , and updating all relevant components and pages.
-
-The issue of empty Bestsellers and New Arrivals pages was fixed by correctly identifying that these pages filter products by  (e.g., 'bestseller', 'new') and then adding these tags to the products in the database.
-
-Furthermore, the agent has built and delivered a complete **Enterprise Navigation Manager**. This feature, accessible in the admin panel, allows for dynamic, tree-based management of the entire site navigation, including mega menus, featured images, and badges. The main header now fetches its structure from this system.
-
-Currently, the agent has begun work on the next major feature: an **Enterprise-Grade Homepage Builder**. The backend models (, ) and the required API endpoints have been created, along with the admin page placeholder.
+The agent was in the process of fixing a Next.js routing conflict when the session ended.
 
 **Last working item**:
-- **Last item agent was working:** Building the Enterprise-Grade Homepage Builder. The agent has set up the backend infrastructure, including Mongoose models (, ), API endpoints for CRUD and reordering (, ), and created the admin UI page ().
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** frontend testing agent to verify the admin UI and the dynamic homepage rendering.
-- **User Testing Done:** N
+-   **Last item agent was working:** Fixing a critical Next.js routing conflict error reported by the user. The error, , was caused by having  and  in the same route group. The agent was renaming all slug instances for the blog feature to handle for consistency.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** manual testing by curl to verify the API routes () and then screenshot tool to verify the frontend blog pages ( and ).
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: [P0] Platform-level HTTP 520 Proxy Error on API Routes**
--   **Issue 2: [P0] Critical Backend Failures on Integrations Pages**
+-   **Issue 1: [P0] Fix Next.js Dynamic Route Conflict**
+-   **Issue 2: [P1] Critical Backend Failures on Integrations Pages**
 -   **Issue 3: [P1] Production Build Fails**
--   **Issue 4: [P1]  on Collection Page**
--   **Issue 5: [P2] Broken ESLint Configuration**
+-   **Issue 4: [P2] Platform-level HTTP 520 Proxy Error on API Routes**
+-   **Issue 5: [P2]  on Collection Page**
+-   **Issue 6: [P3] Broken ESLint Configuration**
 
 **Issues Detail:**
--   **Issue 1: Platform-level HTTP 520 Proxy Error on API Routes**
-    -   **Attempted fixes:** This is a recurring infrastructure issue. A workaround using Next.js Server Actions was applied to the Orders page. The new custom auth routes might be vulnerable.
-    -   **Next debug checklist:** The most reliable path forward is to continue using Server Actions for critical admin functionality. Monitor if the new client-side auth API calls are affected. The root cause is likely outside the codebase.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a **BLOCKER** for any feature relying on client-side API calls to the external URL.
-    -   **Status:** IN PROGRESS (Workaround available)
-    -   **Is recurring issue?** Y
+-   **Issue 1: Fix Next.js Dynamic Route Conflict**
+    -   **Attempted fixes:** The agent correctly identified the conflict between  and . It has renamed the directory from  to  and updated the corresponding  and API route file ().
+    -   **Next debug checklist:**
+        1.  Restart the frontend service using frontend: ERROR (not running)
+frontend: ERROR (abnormal termination) to apply the file system and route changes.
+        2.  Verify the fix by curling the API endpoints for both products and blogs.
+        3.  Verify the fix by navigating to a product page and a blog page on the frontend.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a **BLOCKER** that prevents multiple pages on the site from rendering correctly, as shown in the user's screenshot.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on other issue:** None
 
 -   **Issue 2: Critical Backend Failures on Integrations Pages**
-    -   **Attempted fixes:** None. This has been ignored for multiple sessions.
+    -   **Attempted fixes:** None. This has been ignored.
     -   **Next debug checklist:** Edit  and import the Mongoose models for , , and  to ensure they are registered on DB connection.
     -   **Why fix this issue and what will be achieved with the fix?** This is a **BLOCKER** for all future work on Payment and Shipping orchestration.
     -   **Status:** NOT STARTED
@@ -69,20 +75,29 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   **Should Test frontend/backend/both after fix?** N/A (Build process)
     -   **Blocked on other issue:** None
 
--   **Issue 4:  on Collection Page**
-    -   **Attempted fixes:** None. The user pointed this out from the agent's own logs.
-    -   **Next debug checklist:** The error is  in . Investigate why  is false. It could be related to the 520 proxy error or another server-side issue when fetching products.
-    -   **Why fix this issue and what will be achieved with the fix?** Ensures data loading is robust and removes confusing error logs.
+-   **Issue 4: Platform-level HTTP 520 Proxy Error on API Routes**
+    -   **Attempted fixes:** None in this session. Workarounds using Server Actions exist in some parts of the code.
+    -   **Next debug checklist:** Monitor API calls. If errors persist, refactor client-side fetches to use Server Actions.
+    -   **Why fix this issue and what will be achieved with the fix?** Stabilizes the application and prevents random feature failures.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on other issue:** None
+
+-   **Issue 5:  on Collection Page**
+    -   **Attempted fixes:** None.
+    -   **Next debug checklist:** Investigate  to see why  is false when fetching products.
+    -   **Why fix this issue and what will be achieved with the fix?** Improves data loading robustness and removes confusing error logs.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Frontend
     -   **Blocked on other issue:** None
 
--   **Issue 5: Broken ESLint Configuration**
-    -   **Attempted fixes:** Previous attempts failed.
+-   **Issue 6: Broken ESLint Configuration**
+    -   **Attempted fixes:** None.
     -   **Next debug checklist:** Run yarn run v1.22.22
 $ next lint
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., diagnose the configuration error in , and fix the project path or rules.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., diagnose the configuration error in , and fix it.
     -   **Why fix this issue and what will be achieved with the fix?** Restores a critical tool for maintaining code quality.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
@@ -90,25 +105,14 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: [P0] Complete the Enterprise-Grade Homepage Builder**
-    -   **Where to resume:** The backend is ready. The next step is to build out the UI on the  page to allow admins to create, edit, and reorder banners and content sections. Then, refactor the public homepage () to dynamically render content from these new models.
-    -   **What will be achieved with this?** The homepage will be fully manageable from the CMS, fulfilling a core user requirement.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** None
-
--   **Task 2: [P1] General Codebase Cleanup**
-    -   **Where to resume:** The user has repeatedly requested this. Key targets are deleting the obsolete  file, removing the now-redundant order API routes (), and deleting any leftover Clerk-related files (e.g., in ).
-    -   **What will be achieved with this?** Improves code maintainability and removes dead code, aligning with the user's neat and clean request.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Frontend (regression testing)
-    -   **Blocked on something:** None
+-   None. The current work is categorized as an issue fix.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **P0**: User Verification: Await feedback on the fixed console errors, Clerk replacement, and dynamic navigation.
+    -   **P0**: User Verification: After the route conflict is fixed, ask the user to verify the four major completed features: Homepage Builder, Bundle Offers, Blog System, and the new Admin Dashboard.
     -   **P1**: **Fix Pending Blockers**: Address Issue #2 (Integrations Backend) and Issue #3 (Production Build).
-    -   **P2**: **Build Finance Reports Page**: Implement the placeholder page at .
+    -   **P2**: **General Codebase Cleanup**: Delete  and old order API routes.
+    -   **P3**: **Build Finance Reports Page**: Implement the placeholder page at .
 -   **Future Tasks**:
     -   Implement Payment and Shipping Orchestration Engines **(Blocked by Issue 2)**.
     -   Build out the Automation Rules Engine.
@@ -117,15 +121,27 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   Implement Role-Based Access Control (RBAC) for admin users.
 
 **Completed work in this session**
--   **Critical Errors Fixed:**
-    -   Resolved multiple MongoDB ObjectId serialization errors and  JSON parsing errors across the site.
-    -   Fixed UI hydration errors on product pages caused by client/server mismatch.
--   **Clerk Auth Replaced:**
-    -   Successfully migrated the entire customer authentication system from Clerk to a custom JWT-based solution.
--   **Navigation Menu Logic Fixed:**
-    -   Correctly populated the Bestsellers, New Arrivals, and Offers pages by adding the required  to products.
--   **Enterprise Navigation Manager (Feature Complete):**
-    -   Built a full-featured navigation management system in the admin panel, allowing dynamic control over the site's main header and mega menus.
+-   **Enterprise Homepage Builder (Feature Complete):**
+    -   Finished all backend APIs (CRUD, reorder) and the public-facing API.
+    -   Refactored the homepage () to dynamically render content from the CMS with a static fallback.
+    -   Added Homepage to the admin sidebar.
+-   **Enterprise Grade 9 Bundle Offer Creator (Feature Complete):**
+    -   Created  model, all necessary admin/public APIs.
+    -   Built the admin CMS page at .
+    -   Integrated a premium bundle display component into the product detail page.
+-   **Enterprise Grade 7 Blog System (Feature Complete):**
+    -   Created  and  models and all APIs.
+    -   Built the admin CMS page at .
+    -   Created public-facing blog list and detail pages at .
+    -   Integrated a new blog section into the main site footer.
+-   **Dual-Mode Image Upload (Feature Complete):**
+    -   Created a reusable  component and a backend  route.
+    -   Updated Homepage, Bundle, and Blog admin pages to use this new component.
+-   **Enterprise Grade 9 Admin Dashboard (Feature Complete):**
+    -   Installed .
+    -   Created a new  endpoint to aggregate sales, user, and order data.
+    -   Created a new  model.
+    -   Completely overwrote the admin homepage () with a new dashboard UI displaying analytics charts.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Critical Backend Failures on Integrations Pages:** The unregistered Mongoose models (, ) issue persists, blocking payment/shipping features.
@@ -150,59 +166,63 @@ $ next build
 
   Creating an optimized production build ...
 info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.) failure and backend 500 errors on integration pages.
--   **Recurrence count:** 6+
+-   **Recurrence count:** 7+
 -   **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Custom JWT Authentication:** Replaced a third-party service (Clerk) with a custom-built JWT authentication flow (login, register, session management via cookies and context).
--   **Dynamic Content Management:** A major architectural push to make the site fully manageable from the admin panel, demonstrated by the new Navigation Manager and the in-progress Homepage Builder.
--   **Next.js Server/Client Component Interaction:** Successfully debugged and fixed common issues like serialization errors (passing non-plain objects) and hydration errors (server/client UI mismatch).
--   **Database Tagging vs. Collections:** Differentiated between using product  for dynamic filtering on collection pages versus Mongoose collection relationships.
+-   **Full-Stack Feature Development (Next.js App Router):** Rapid implementation of complete features, including models, APIs (admin/public), admin UIs, and public-facing components.
+-   **CMS-Driven Architecture:** All new features are manageable from the admin panel, fulfilling the core user requirement of a dynamic, headless-style setup.
+-   **Component Reusability:** Creation of a generic  component that was retrofitted into multiple existing and new admin pages.
+-   **Data Aggregation for Analytics:** The dashboard feature required creating a complex API endpoint that joins and aggregates data from multiple collections (, , ) to generate analytics.
+-   **File Uploads:** Implemented a basic file upload handler that saves files to the  directory.
 
 **key DB schema**
--   **User**:  field removed. Core fields are , .
--   **NavigationItem**: 
--   **HomeBanner**: 
--   **HomeSection**: 
+-   **Order**: 
+-   **BundleOffer**: 
+-   **BlogPost**: 
+-   **BlogCategory**: 
 
 **changes in tech stack**
--   **Authentication:** Major change from **Clerk (3rd-party SaaS)** to a **self-hosted, custom JWT-based solution**.
+-   **Added:**  and  for data visualization on the new dashboard.
 
 **All files of reference**
--   : The UI for the new Homepage Builder.
--   : The UI for the completed Navigation Manager.
--   : The new global state for customer authentication.
--   : The now fully dynamic site header.
--   : File that must be edited to fix the critical backend errors on integration pages.
--   : This file uses product  for filtering, a key piece of logic to remember.
+-   : The new Enterprise Dashboard.
+-   : Homepage Builder UI (now uses ).
+-   : Bundle Offer CMS UI (now uses ).
+-   : New Blog CMS UI.
+-   : The new reusable dual-mode image upload component.
+-   : The backend handler for direct file uploads.
+-   : The newly created model for orders.
+-   : The file causing the route conflict (was ).
+-   : The other file in the route conflict.
 
 **Areas that need refactoring**:
--   **Homepage Components:** The current homepage () must be refactored to dynamically render its content using the new Homepage Builder models (, ).
--   **Dead Code Removal:** The file  contains a large amount of unused, hardcoded data and should be deleted.
--   **API Cleanup:** The old order API routes () are deprecated by Server Actions and should be removed.
+-   The file  and old API routes () still need to be deleted.
+-   The file upload logic in  is basic and saves directly to the public folder. For a production system, this should be refactored to use a persistent storage solution (like S3).
 
 **Critical Info for New Agent**
--   **AUTHENTICATION IS CUSTOM:** Do not look for Clerk. Customer auth is handled by  endpoints and the . Admin auth remains separate and was not changed.
--   **TAGS DRIVE COLLECTIONS:** The public-facing collection pages for Bestsellers, New Arrivals, and Offers are driven by product **tags** (e.g., ), not by their membership in a Mongoose  document. This is a critical distinction for debugging or extending these pages.
--   **ADDRESS BLOCKERS:** The backend failures on integration pages (Issue #2) and the production build failure (Issue #3) are long-standing, critical issues that prevent feature development and deployment. They must be prioritized.
--   **DYNAMIC-FIRST APPROACH:** The user's goal is a fully CMS-driven site. New features should follow the pattern established by the Navigation Manager and Homepage Builder: create models, build APIs, and then create the admin UI and public-facing components.
+-   **IMMEDIATE TASK:** You must fix the  vs  routing conflict. The agent has done most of the work by renaming files. You need to restart the frontend and verify the fix.
+-   **USER VERIFICATION NEEDED:** Four major features were completed in this session. Once the routing bug is fixed, you must confirm with the user that they are satisfied with the Homepage Builder, Bundle Offers, Blog System, and the new Admin Dashboard.
+-   **PRIORITIZE BLOCKERS:** The previous agent ignored long-standing critical issues (Production Build Failure, Integrations Backend Errors). These are now P1 priorities and must be addressed after the current bug fix and user verification.
+-   **NEW PATTERNS:** The agent established a pattern of creating reusable components like . Continue this practice. All image inputs should now use this component.
 
 **documents and test reports created in this job**
 -   None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Request:** Fix  and clean up codebase. - **Status:** DONE.
-2.  **Request:** Remove Clerk permanently due to multiple errors. - **Status:** DONE.
-3.  **Request:** Fix empty Bestsellers and New Arrivals menus. - **Status:** DONE.
-4.  **Request:** Build an enterprise-level, CMS-driven navigation manager. - **Status:** DONE.
-5.  **Request:** Build an enterprise-grade, CMS-driven homepage builder. - **Status:** IN PROGRESS.
-6.  **Pending:** User is waiting for the Homepage Builder to be completed.
+1.  **Request**: Create Enterprise Homepage Builder. - **Status:** DONE
+2.  **Request**: Create Enterprise Grade 9 Bundle Offer Creator. - **Status:** DONE
+3.  **Request**: Create Enterprise Grade 7 Blogs Feature. - **Status:** DONE
+4.  **Request**: Add dual-mode image upload (Direct or URL). - **Status:** DONE (Integrated into all relevant features)
+5.  **Request**: Update Admin Dashboard to Grade 9 with modern charts. - **Status:** DONE
+6.  **Pending**: User uploaded a screenshot of an error page. - **Status:** IN PROGRESS (Agent identified it as a route conflict and is actively fixing it).
 
 **Project Health Check:**
 -   **Broken**:
+    -   **Routing:** Critical conflict between blog and product pages, preventing pages from loading. **(Fix in progress)**.
     -   **Production Build (yarn run v1.22.22
 $ next build
 ▲ Next.js 16.1.0 (Turbopack)
@@ -212,8 +232,7 @@ $ next build
 
   Creating an optimized production build ...
 info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.)**: Expected to fail.
-    -   **Integrations Backend**: Payment and Shipping pages will throw 500 errors due to unregistered Mongoose models.
-    -   **API Gateway (External)**: Still potentially unstable due to the platform's HTTP 520 proxy error, though many features now have workarounds.
+    -   **Integrations Backend**: Payment and Shipping pages will throw 500 errors.
     -   **Linting (yarn run v1.22.22
 $ next lint
 info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.)**: Non-functional.
@@ -221,17 +240,17 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   The  file still exists with large amounts of unused, hardcoded data.
 
 **3rd Party Integrations**
--   **Clerk**: **REMOVED**.
--   **bcryptjs**: Used for hashing passwords in the new custom auth system.
--   **jsonwebtoken**: Used for creating/verifying tokens in the new custom auth system.
--   **ip-api.com**: Used for IP geolocation in the Live View feature.
+-   **bcryptjs**: Used for password hashing.
+-   **jsonwebtoken**: Used for token creation/verification.
+-   **ip-api.com**: Used for IP geolocation.
+-   **recharts**: **NEW**. Used for dashboard charts.
 -   **Razorpay, Shiprocket**: Scaffolding exists, but they are **NOT INTEGRATED** and are blocked by backend failures.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (Agent used screenshots and manual verification).
+-   **Testing agent used after significant changes:** NO (User explicitly requested not to).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** None.
+-   **Known regressions:** A new routing conflict was introduced that breaks blog and potentially other pages.
 
 **Credentials to test flow:**
 -   **Admin URL**: 
@@ -240,7 +259,4 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 -   **Customer Login URL**:  (No default customer exists; must use the  page to create one).
 
 **What agent forgot to execute**
--   Did not fix the critical backend errors on the integration pages (unregistered Mongoose models).
--   Did not attempt to fix the production build failure.
--   Did not fix the broken ESLint configuration.
--   Did not physically delete old Clerk-related files after replacing the system.</analysis>
+-   The agent consistently ignored the high-priority, long-standing issues from the previous fork's summary: the failing production build, the broken integrations backend, and the broken linter. It prioritized new feature development over stabilizing the application, leading to an accumulation of technical debt.</analysis>
