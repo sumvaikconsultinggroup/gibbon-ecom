@@ -6,6 +6,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
+import ImageUpload from '@/components/ui/ImageUpload'
 import {
   Plus, Edit2, Trash2, Eye, EyeOff, Save, X, Search, Filter,
   Package, Percent, Gift, Layers, ShoppingBag, Tag, Clock,
