@@ -1259,11 +1259,20 @@ class APITester:
         print(f"📍 Base URL: {self.base_url}")
         print("=" * 60)
         
-        # Test sequence - Admin Auth tests first
+        # Test sequence - Admin Auth tests first, then Order APIs
         tests = [
             ("Admin Setup Status", self.test_admin_setup_status),
             ("Admin Login", self.test_admin_login),
             ("Admin Current User", self.test_admin_me),
+            ("Order List API", self.test_orders_list),
+            ("Single Order API", self.test_single_order),
+            ("Order Update Status", self.test_order_update_status),
+            ("Order Add Note", self.test_order_add_note),
+            ("Order Add Tag", self.test_order_add_tag),
+            ("Order Remove Tag", self.test_order_remove_tag),
+            ("Order Assignment", self.test_order_assign),
+            ("Invoice Generation", self.test_order_generate_invoice),
+            ("Email Sending", self.test_order_send_email),
             ("Admin Staff List", self.test_admin_staff_list),
             ("Admin Staff Invite", self.test_admin_staff_invite),
             ("Admin Logout", self.test_admin_logout),
