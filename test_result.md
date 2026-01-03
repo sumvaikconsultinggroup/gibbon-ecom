@@ -243,6 +243,9 @@ test_plan:
     - "Admin Products Page"
     - "Admin Staff Management Page"
     - "Admin Logout Functionality"
+    - "Admin Inventory Page (CRITICAL)"
+    - "Admin Reports Page (NEW FEATURE)"
+    - "Admin Analytics Page"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
