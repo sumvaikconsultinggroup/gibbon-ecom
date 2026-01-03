@@ -76,8 +76,7 @@ export async function getGeoFromIP(ip: string): Promise<GeoData> {
     return geoData
 
   } catch (error) {
-    console.error('Geo lookup error:', error)
-    // Fallback to random India city for Indian IPs
+    // Silent fallback for geo lookup failures (not critical)
     const fallback = getRandomIndiaCity()
     geoCache.set(ip, fallback)
     return fallback
