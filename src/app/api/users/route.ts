@@ -1,21 +1,37 @@
 import User from '@/models/User'
 import { connectToDB } from '@/utils/db'
-import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'gibbon-user-secret-key-change-in-production'
+
+async function getUserFromToken() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('user_token')?.value
+  
+  if (!token) return null
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string }
+    return decoded
+  } catch {
+    return null
+  }
+}
 
 export async function GET() {
   try {
-    const clerkUser = await currentUser()
-    if (!clerkUser) {
+    const authUser = await getUserFromToken()
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connectToDB()
 
-    const isAdmin = clerkUser.publicMetadata?.role === 'admin'
-
     const projection = {
-      clerkId: 1,
+      firstName: 1,
+      lastName: 1,
       billing_fullname: 1,
       email: 1,
       billing_phone: 1,
@@ -29,13 +45,8 @@ export async function GET() {
       updatedAt: 1,
     }
 
-    if (isAdmin) {
-      const users = await User.find({}, projection).lean()
-      return NextResponse.json(users)
-    } else {
-      const user = await User.findOne({ clerkId: clerkUser.id }, projection).lean()
-      return NextResponse.json(user ? [user] : [])
-    }
+    const user = await User.findById(authUser.userId, projection).lean()
+    return NextResponse.json(user ? [user] : [])
   } catch (error) {
     console.error('Error fetching users:', error)
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
@@ -65,8 +76,8 @@ function normalizePhone(phone: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const clerkUser = await currentUser()
-    if (!clerkUser) {
+    const authUser = await getUserFromToken()
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -91,44 +102,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid DOB format' }, { status: 400 })
     }
 
-    const existingUser = await User.findOne({ clerkId: clerkUser.id })
-    if (existingUser) {
-      return NextResponse.json({ error: 'User profile already exists' }, { status: 409 })
+    // Update existing user profile
+    const user = await User.findByIdAndUpdate(
+      authUser.userId,
+      {
+        billing_fullname,
+        email: email || authUser.email,
+        billing_phone: normalizePhone(billing_phone),
+        billing_customer_dob: billing_customer_dob ? dob : undefined,
+        billing_customer_gender,
+        billing_address,
+      },
+      { new: true }
+    )
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-
-    const emailExists = await User.findOne({
-      email,
-      clerkId: { $ne: clerkUser.id },
-    })
-
-    if (emailExists) {
-      return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
-    }
-
-    const resolvedFullName =
-      billing_fullname ||
-      `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
-
-    const resolvedEmail =
-      email || clerkUser.emailAddresses[0]?.emailAddress || ''
-
-    const user = await User.create({
-      clerkId: clerkUser.id,
-      billing_fullname: resolvedFullName,
-      email: resolvedEmail,
-      billing_phone: normalizePhone(billing_phone),
-      billing_customer_dob: billing_customer_dob ? dob : undefined,
-      billing_customer_gender,
-      billing_address,
-      wallet: { points: 0, transactions: [] },
-    })
 
     return NextResponse.json(
       {
-        message: 'User profile created successfully',
+        message: 'User profile updated successfully',
         user: {
           id: user._id,
-          clerkId: user.clerkId,
           billing_fullname: user.billing_fullname,
           email: user.email,
           billing_phone: user.billing_phone,
@@ -139,22 +135,19 @@ export async function POST(req: NextRequest) {
           createdAt: user.createdAt,
         },
       },
-      { status: 201 }
+      { status: 200 }
     )
   } catch (error: any) {
-    console.error('Error creating user:', error)
+    console.error('Error updating user:', error)
 
     if (error?.code === 11000) {
-      if (error.keyPattern?.clerkId) {
-        return NextResponse.json({ error: 'User profile already exists' }, { status: 409 })
-      }
       if (error.keyPattern?.email) {
         return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
       }
     }
 
     return NextResponse.json(
-      { error: 'Failed to create user', message: error?.message || 'Unknown error' },
+      { error: 'Failed to update user', message: error?.message || 'Unknown error' },
       { status: 500 }
     )
   }
