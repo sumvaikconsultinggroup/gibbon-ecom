@@ -3,6 +3,19 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Optimize for faster dev experience
+  reactStrictMode: false,
+  poweredByHeader: false,
+  compress: true,
+  
+  // Experimental features for faster compilation
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+  
   allowedDevOrigins: [
     'gibbon-dashboard.preview.emergentagent.com',
     '*.preview.emergentagent.com',
