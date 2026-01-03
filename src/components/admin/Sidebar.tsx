@@ -71,6 +71,7 @@ const sidebarItems: NavItem[] = [
     children: [
       { name: 'Products', href: '/admin/products', icon: Package, permission: 'products.view' },
       { name: 'Collections', href: '/admin/collections', icon: FolderOpen, permission: 'products.view' },
+      { name: 'Navigation', href: '/admin/navigation', icon: Menu, permission: 'settings.view', badge: 'New' },
     ],
   },
   {
