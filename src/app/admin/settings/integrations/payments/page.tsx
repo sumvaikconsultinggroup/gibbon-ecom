@@ -152,11 +152,34 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm">
+        <Link href="/admin/settings" className="text-neutral-500 hover:text-neutral-700">Settings</Link>
+        <ChevronRight className="h-4 w-4 text-neutral-400" />
+        <Link href="/admin/settings/integrations" className="text-neutral-500 hover:text-neutral-700">Integrations</Link>
+        <ChevronRight className="h-4 w-4 text-neutral-400" />
+        <span className="text-neutral-900 dark:text-white">Payment Gateways</span>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Payments</h1>
-          <p className="text-neutral-500">Manage payment gateways and view transactions</p>
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/admin/settings/integrations"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800"
+          >
+            <ArrowLeft className="h-5 w-5 text-neutral-600" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Payment Gateways</h1>
+            <p className="text-neutral-500">Configure payment providers with smart routing</p>
+          </div>
+        </div>
+        
+        {/* Pro Badge */}
+        <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1B198F]/10 to-purple-500/10 px-4 py-2">
+          <Zap className="h-4 w-4 text-[#1B198F]" />
+          <span className="text-sm font-medium text-[#1B198F]">Multi-Gateway Orchestration</span>
         </div>
       </div>
 
