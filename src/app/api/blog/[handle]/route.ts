@@ -6,14 +6,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ handle: string }> }
 ) {
   try {
-    const { slug } = await params
+    const { handle } = await params
     await connectDb()
     
     const post = await BlogPost.findOneAndUpdate(
-      { slug, status: 'published' },
+      { slug: handle, status: 'published' },
       { $inc: { viewCount: 1 } },
       { new: true }
     ).lean()
