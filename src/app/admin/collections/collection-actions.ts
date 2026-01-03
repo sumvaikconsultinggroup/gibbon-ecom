@@ -217,12 +217,30 @@ export async function createCollection(data: any): Promise<CollectionResult> {
       title: data.title,
       description: data.description || '',
       image: data.image || '',
+      bannerImage: data.bannerImage || '',
+      mobileImage: data.mobileImage || '',
+      thumbnailImage: data.thumbnailImage || '',
       seo: data.seo || {},
       sortOrder: data.sortOrder || 'manual',
       collectionType: data.collectionType || 'manual',
       conditions: data.conditions || [],
       conditionMatch: data.conditionMatch || 'all',
       productHandles: data.productHandles || [],
+      displaySettings: data.displaySettings || {
+        locations: [],
+        priority: 0,
+        showOnMobile: true,
+        showOnDesktop: true,
+        layoutStyle: 'grid',
+        itemsPerRow: 4,
+        maxItems: 12,
+        showTitle: true,
+        showDescription: false,
+        showProductCount: true,
+      },
+      linkedPages: data.linkedPages || [],
+      isFeatured: data.isFeatured ?? false,
+      featuredOrder: data.featuredOrder || 0,
       published: data.published ?? false,
       publishedAt: data.published ? new Date() : null,
       template: data.template || '',
@@ -258,6 +276,9 @@ export async function updateCollection(handle: string, data: any): Promise<Colle
     if (data.handle !== undefined) updateData.handle = data.handle
     if (data.description !== undefined) updateData.description = data.description
     if (data.image !== undefined) updateData.image = data.image
+    if (data.bannerImage !== undefined) updateData.bannerImage = data.bannerImage
+    if (data.mobileImage !== undefined) updateData.mobileImage = data.mobileImage
+    if (data.thumbnailImage !== undefined) updateData.thumbnailImage = data.thumbnailImage
     if (data.seo !== undefined) updateData.seo = data.seo
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
     if (data.collectionType !== undefined) updateData.collectionType = data.collectionType
@@ -265,6 +286,10 @@ export async function updateCollection(handle: string, data: any): Promise<Colle
     if (data.conditionMatch !== undefined) updateData.conditionMatch = data.conditionMatch
     if (data.productHandles !== undefined) updateData.productHandles = data.productHandles
     if (data.template !== undefined) updateData.template = data.template
+    if (data.displaySettings !== undefined) updateData.displaySettings = data.displaySettings
+    if (data.linkedPages !== undefined) updateData.linkedPages = data.linkedPages
+    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured
+    if (data.featuredOrder !== undefined) updateData.featuredOrder = data.featuredOrder
     
     if (data.published !== undefined) {
       updateData.published = data.published
