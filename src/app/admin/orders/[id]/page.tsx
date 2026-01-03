@@ -205,16 +205,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const [order, setOrder] = useState<OrderData | null>(null)
 
-  // Fetch order data
+  // Fetch order data using server action
   const fetchOrder = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${BASE_URL}/api/admin/orders/${resolvedParams.id}`)
-      if (!response.ok) {
-        throw new Error('Order not found')
+      const result = await getOrderAction(resolvedParams.id)
+      if (result.success && result.order) {
+        setOrder(result.order as OrderData)
+      } else {
+        toast.error(result.error || 'Order not found')
       }
-      const data = await response.json()
-      setOrder(data)
     } catch (error) {
       console.error('Error fetching order:', error)
       toast.error('Failed to load order')
@@ -227,57 +227,51 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     fetchOrder()
   }, [fetchOrder])
 
-  // API action handler
-  const handleAction = async (
-    endpoint: string,
-    method: string,
-    body: Record<string, unknown>,
-    successMessage: string
-  ) => {
+  // Update order status
+  const handleStatusUpdate = async (newStatus: string) => {
     try {
-      setActionLoading(endpoint)
-      const response = await fetch(`${BASE_URL}/api/admin/orders/${order?.orderId || resolvedParams.id}${endpoint}`, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+      setActionLoading('status')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'update_status', {
+        status: newStatus,
+        user: 'Admin',
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Action failed')
+      if (result.success) {
+        toast.success(`Order status updated to ${newStatus}`)
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to update status')
       }
-      
-      const data = await response.json()
-      toast.success(successMessage)
-      await fetchOrder() // Refresh order data
-      return data
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Action failed'
-      toast.error(message)
-      throw error
+    } catch (error) {
+      toast.error('Failed to update status')
     } finally {
       setActionLoading(null)
     }
   }
 
-  // Update order status
-  const handleStatusUpdate = async (newStatus: string) => {
-    await handleAction('', 'PATCH', {
-      action: 'update_status',
-      status: newStatus,
-      user: 'Admin',
-    }, `Order status updated to ${newStatus}`)
-  }
-
   // Add note
   const handleAddNote = async () => {
     if (!newNote.trim()) return
-    await handleAction('', 'PATCH', {
-      action: 'add_note',
-      content: newNote,
-      author: 'Admin',
-      isInternal: true,
-    }, 'Note added successfully')
+    try {
+      setActionLoading('note')
+      const result = await updateOrderAction(order?.orderId || resolvedParams.id, 'add_note', {
+        content: newNote,
+        author: 'Admin',
+        isInternal: true,
+      })
+      if (result.success) {
+        toast.success('Note added successfully')
+        setNewNote('')
+        setShowNoteModal(false)
+        await fetchOrder()
+      } else {
+        toast.error(result.error || 'Failed to add note')
+      }
+    } catch (error) {
+      toast.error('Failed to add note')
+    } finally {
+      setActionLoading(null)
+    }
+  }
     setNewNote('')
     setShowNoteModal(false)
   }
