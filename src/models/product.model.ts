@@ -17,6 +17,13 @@ import { Document, Schema, model, models } from 'mongoose'
 
 
 /* ------------------------------- Variant Types ------------------------------ */
+export interface IVariantImage {
+  src: string
+  position: number
+  altText?: string
+  isPrimary: boolean
+}
+
 export interface IVariant {
   option1Value: string
   option2Value?: string
@@ -30,10 +37,23 @@ export interface IVariant {
   requiresShipping?: boolean
   taxable?: boolean
   barcode?: string
-  image?: string
+  image?: string // Legacy field - primary image URL
+  images?: IVariantImage[] // New: Multiple images per variant
   weightUnit?: string
   taxCode?: string
   costPerItem?: number
+  // Inventory tracking
+  inventoryItemId?: string
+  inventoryManagement?: 'shopify' | 'manual' | 'none'
+  // Location-based inventory
+  inventoryLocations?: {
+    locationId: string
+    locationName: string
+    available: number
+    reserved: number
+    incoming: number
+    damaged: number
+  }[]
 }
 
 /* ------------------------------- Product Types ------------------------------ */
@@ -59,6 +79,24 @@ export interface IProduct extends Document {
   isDeleted?: boolean
 }
 
+/* ------------------------------- Variant Image Schema ------------------------------ */
+const variantImageSchema = new Schema({
+  src: { type: String, required: true },
+  position: { type: Number, default: 0 },
+  altText: String,
+  isPrimary: { type: Boolean, default: false },
+}, { _id: false })
+
+/* ------------------------------- Inventory Location Schema ------------------------------ */
+const inventoryLocationSchema = new Schema({
+  locationId: { type: String, required: true },
+  locationName: { type: String, required: true },
+  available: { type: Number, default: 0 },
+  reserved: { type: Number, default: 0 },
+  incoming: { type: Number, default: 0 },
+  damaged: { type: Number, default: 0 },
+}, { _id: false })
+
 /* ------------------------------- Variant Schema ------------------------------ */
 const variantSchema = new Schema<IVariant>(
   {
@@ -78,10 +116,19 @@ const variantSchema = new Schema<IVariant>(
     requiresShipping: { type: Boolean, default: true },
     taxable: { type: Boolean, default: true },
     barcode: String,
-    image: String,
+    image: String, // Legacy field - primary image URL
+    images: [variantImageSchema], // New: Multiple images per variant
     weightUnit: { type: String, default: 'kg' },
     taxCode: String,
     costPerItem: Number,
+    // Inventory tracking
+    inventoryItemId: String,
+    inventoryManagement: {
+      type: String,
+      enum: ['shopify', 'manual', 'none'],
+      default: 'manual',
+    },
+    inventoryLocations: [inventoryLocationSchema],
   },
   { _id: true }
 )
