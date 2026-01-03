@@ -1249,13 +1249,12 @@ export default function BundleOffersPage() {
                     </div>
 
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium">Bundle Image URL</label>
-                      <input
-                        type="text"
+                      <ImageUpload
+                        label="Bundle Image"
                         value={form.image}
-                        onChange={(e) => setForm({ ...form, image: e.target.value })}
-                        className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 outline-none focus:border-[#1B198F] dark:border-neutral-600 dark:bg-neutral-700"
-                        placeholder="https://..."
+                        onChange={(url) => setForm({ ...form, image: url })}
+                        aspectRatio="video"
+                        hint="Optional promotional image for the bundle"
                       />
                     </div>
                   </div>
