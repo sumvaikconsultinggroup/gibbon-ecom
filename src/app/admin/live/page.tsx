@@ -102,80 +102,63 @@ export default function LiveViewPage() {
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Connect to SSE stream
-  const connectSSE = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-    }
-
-    // Use relative URL for SSE
-    const sseUrl = '/api/live/stream'
-    console.log('Connecting to SSE:', sseUrl)
-    
-    const eventSource = new EventSource(sseUrl)
-    eventSourceRef.current = eventSource
-
-    eventSource.onopen = () => {
-      setConnected(true)
-      console.log('Live stream connected')
-    }
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        console.log('SSE data received:', data.stats)
-        
-        if (data.type === 'update') {
-          // Update visitors
-          if (data.visitors) {
-            setVisitors(data.visitors.map((v: any) => ({
-              ...v,
-              location: {
-                ...v.location,
-                lat: INDIA_CITIES[v.location?.city]?.lat || v.location?.lat || 20.593,
-                lng: INDIA_CITIES[v.location?.city]?.lng || v.location?.lng || 78.962,
-              }
-            })))
-          }
-          
-          // Update stats
-          if (data.stats) {
-            setStats(prev => ({
-              ...prev,
-              activeVisitors: data.stats.activeVisitors || 0,
-              activeCarts: data.stats.activeCarts || 0,
-              activeCartValue: data.stats.activeCartValue || 0,
-              inCheckout: data.stats.inCheckout || 0,
-            }))
-          }
-          
-          // Update events (append new, keep last 20)
-          if (data.events && data.events.length > 0) {
-            setEvents(prev => {
-              const newEvents = data.events.filter(
-                (e: LiveEvent) => !prev.some(pe => pe.id === e.id)
-              )
-              return [...newEvents, ...prev].slice(0, 20)
-            })
-          }
-        }
-      } catch (error) {
-        console.error('SSE parse error:', error)
+  // Use polling instead of SSE for better proxy compatibility
+  const fetchLiveData = useCallback(async () => {
+    try {
+      // Fetch stats
+      const statsRes = await fetch('/api/live/stats')
+      if (statsRes.ok) {
+        const statsData = await statsRes.json()
+        setStats(prev => ({
+          ...prev,
+          ...statsData,
+        }))
       }
-    }
-
-    eventSource.onerror = (error) => {
-      console.error('SSE error:', error)
-      setConnected(false)
-      eventSource.close()
       
-      // Reconnect after 5 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        console.log('Attempting SSE reconnect...')
-        connectSSE()
-      }, 5000)
+      // Fetch visitors
+      const visitorsRes = await fetch('/api/live/visitors')
+      if (visitorsRes.ok) {
+        const visitorsData = await visitorsRes.json()
+        if (visitorsData.visitors) {
+          setVisitors(visitorsData.visitors.map((v: any) => ({
+            ...v,
+            location: {
+              ...v.location,
+              lat: INDIA_CITIES[v.location?.city]?.lat || v.location?.lat || 20.593,
+              lng: INDIA_CITIES[v.location?.city]?.lng || v.location?.lng || 78.962,
+            }
+          })))
+        }
+      }
+      
+      // Fetch events
+      const eventsRes = await fetch('/api/live/events?limit=20')
+      if (eventsRes.ok) {
+        const eventsData = await eventsRes.json()
+        if (eventsData.events) {
+          setEvents(eventsData.events)
+        }
+      }
+      
+      setConnected(true)
+    } catch (error) {
+      console.error('Live data fetch error:', error)
+      setConnected(false)
     }
   }, [])
+
+  // Fetch initial data and start polling
+  useEffect(() => {
+    // Initial fetch
+    fetchLiveData()
+
+    // Poll every 3 seconds for real-time updates
+    const pollInterval = setInterval(fetchLiveData, 3000)
+
+    return () => {
+      clearInterval(pollInterval)
+    }
+  }, [fetchLiveData])
 
   // Fetch initial stats
   const fetchStats = useCallback(async () => {
