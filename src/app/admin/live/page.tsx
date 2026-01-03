@@ -159,39 +159,6 @@ export default function LiveViewPage() {
     }
   }, [fetchLiveData])
 
-  // Fetch initial stats
-  const fetchStats = useCallback(async () => {
-    try {
-      const response = await fetch('/api/live/stats')
-      const data = await response.json()
-      setStats(prev => ({
-        ...prev,
-        ...data,
-      }))
-    } catch (error) {
-      console.error('Stats fetch error:', error)
-    }
-  }, [])
-
-  // Fetch initial data and connect SSE
-  useEffect(() => {
-    fetchStats()
-    connectSSE()
-
-    // Refresh full stats every 30 seconds
-    const statsInterval = setInterval(fetchStats, 30000)
-
-    return () => {
-      clearInterval(statsInterval)
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
-    }
-  }, [connectSSE, fetchStats])
-
   // Draw map
   useEffect(() => {
     const canvas = canvasRef.current
