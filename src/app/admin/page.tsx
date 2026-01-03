@@ -69,7 +69,15 @@ export default function AdminDashboard() {
     try {
       // Fetch products count
       const productsRes = await fetch('/api/products')
-      const productsData = await productsRes.json()
+      let productsData = { total: 0, count: 0, data: [] }
+      if (productsRes.ok) {
+        const text = await productsRes.text()
+        try {
+          productsData = JSON.parse(text)
+        } catch (e) {
+          console.error('Failed to parse products response')
+        }
+      }
 
       // Set stats with real product count
       setStats({
