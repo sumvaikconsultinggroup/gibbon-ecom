@@ -4,7 +4,7 @@
 
 ### Test Execution Summary
 **Date:** January 3, 2026  
-**Environment:** Production deployment (https://nextcommerce-8.preview.emergentagent.com/admin)  
+**Environment:** Production deployment (https://merchant-dashboard-7.preview.emergentagent.com/admin)  
 **Browser:** Chromium (Playwright automation)  
 **Viewport:** 1920x1080 (Desktop)  
 **Login Credentials:** admin@gibbonnutrition.com / gibbonsecret
@@ -151,7 +151,7 @@
 7. Shipping Integration (Shiprocket) settings
 
 ### Admin Credentials
-- URL: https://nextcommerce-8.preview.emergentagent.com/admin
+- URL: https://merchant-dashboard-7.preview.emergentagent.com/admin
 - Email: admin@gibbonnutrition.com
 - Password: gibbonsecret
 
@@ -205,7 +205,7 @@
    - Status: WORKING
 
 ### Technical Implementation Notes
-- Frontend URL: https://nextcommerce-8.preview.emergentagent.com
+- Frontend URL: https://merchant-dashboard-7.preview.emergentagent.com
 - All admin routes use Next.js server actions
 - Payment gateway integrations properly configured
 - Shopify+ features implemented with appropriate UI indicators
