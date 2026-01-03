@@ -165,8 +165,6 @@ interface OrderData {
   }
 }
 
-const BASE_URL = typeof window !== 'undefined' ? '' : process.env.NEXT_PUBLIC_BASE_URL || ''
-
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [loading, setLoading] = useState(true)
