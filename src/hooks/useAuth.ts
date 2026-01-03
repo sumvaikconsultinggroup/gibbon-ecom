@@ -1,11 +1,11 @@
 'use client'
-import { useUser } from '@clerk/nextjs'
+import { useUser as useUserContext } from '@/context/UserAuthContext'
 import { useEffect } from 'react'
 import { useAuthStore } from './useAuthStore'
 
 
 export function useAuthSync() {
-  const { user, isLoaded, isSignedIn } = useUser()
+  const { user, isLoaded, isSignedIn } = useUserContext()
   const { setUser, setIsLoading, setIsAuthenticated } = useAuthStore()
 
   useEffect(() => {
