@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
+import { fetchDashboardData, DashboardData } from './dashboard-actions'
 
 interface DashboardData {
   period: { start: string; end: string }
