@@ -70,17 +70,6 @@ export default function AnalyticsPage() {
     setLoading(false)
   }
 
-  const generateChartData = (days: number, min: number, max: number) => {
-    return Array.from({ length: days }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - (days - 1 - i))
-      return {
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: Math.floor(Math.random() * (max - min) + min),
-      }
-    })
-  }
-
   const StatCard = ({ title, value, change, icon: Icon, color, chartData }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
