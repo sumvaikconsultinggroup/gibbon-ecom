@@ -3,13 +3,42 @@ import connectDb from '@/lib/mongodb'
 import BlogPost from '@/models/BlogPost'
 import BlogCategory from '@/models/BlogCategory'
 import BlogListClient from './BlogListClient'
+import { siteConfig, generateBreadcrumbSchema } from '@/lib/seo'
+import JsonLd from '@/components/SEO/JsonLd'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Blog | Gibbon Nutrition',
-  description: 'Read the latest articles on fitness, nutrition, supplements, and healthy lifestyle tips from Gibbon Nutrition.',
+  title: 'Fitness & Nutrition Blog - Expert Tips & Guides',
+  description: 'Expert articles on fitness, nutrition, supplements, workout tips, and healthy lifestyle. Learn from certified trainers and nutritionists at Gibbon Nutrition.',
+  keywords: [
+    'fitness blog',
+    'nutrition articles',
+    'supplement guides',
+    'workout tips',
+    'healthy lifestyle',
+    'muscle building tips',
+    'weight loss guide',
+    'protein guide',
+    'gym tips',
+    'bodybuilding articles',
+  ],
+  alternates: {
+    canonical: '/blog',
+  },
+  openGraph: {
+    type: 'website',
+    title: 'Fitness & Nutrition Blog | Gibbon Nutrition',
+    description: 'Expert articles on fitness, nutrition, supplements, and healthy lifestyle tips.',
+    url: `${siteConfig.url}/blog`,
+    siteName: 'Gibbon Nutrition',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Fitness & Nutrition Blog | Gibbon Nutrition',
+    description: 'Expert articles on fitness, nutrition, supplements, and healthy lifestyle tips.',
+  },
 }
 
 async function getBlogData() {
@@ -53,11 +82,48 @@ async function getBlogData() {
 export default async function BlogPage() {
   const { posts, categories, featuredPosts } = await getBlogData()
   
+  // Generate breadcrumb schema
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Blog', url: `${siteConfig.url}/blog` },
+  ])
+
+  // Generate blog listing schema
+  const blogListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Gibbon Nutrition Blog',
+    description: 'Expert articles on fitness, nutrition, supplements, and healthy lifestyle.',
+    url: `${siteConfig.url}/blog`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Gibbon Nutrition',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteConfig.url}/GibbonLogoEccom.png`,
+      },
+    },
+    blogPost: posts.slice(0, 10).map((post: any) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.excerpt,
+      url: `${siteConfig.url}/blog/${post.slug}`,
+      datePublished: post.publishedAt,
+      author: {
+        '@type': 'Person',
+        name: post.author || 'Gibbon Nutrition Team',
+      },
+    })),
+  }
+  
   return (
-    <BlogListClient 
-      initialPosts={posts}
-      categories={categories}
-      featuredPosts={featuredPosts}
-    />
+    <>
+      <JsonLd data={[breadcrumbSchema, blogListSchema]} />
+      <BlogListClient 
+        initialPosts={posts}
+        categories={categories}
+        featuredPosts={featuredPosts}
+      />
+    </>
   )
 }
