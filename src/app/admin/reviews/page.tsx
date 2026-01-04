@@ -119,6 +119,20 @@ export default function ReviewsManagementPage() {
       })
       
       const res = await fetch(`/api/admin/reviews?${params}`)
+      
+      // Check if response is OK
+      if (!res.ok) {
+        console.error('API returned error status:', res.status)
+        return // Don't show error toast, just leave empty state
+      }
+      
+      // Check content type before parsing
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid content type:', contentType)
+        return
+      }
+      
       const data = await res.json()
       
       if (data.success) {
@@ -129,7 +143,7 @@ export default function ReviewsManagementPage() {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error)
-      toast.error('Failed to load reviews')
+      // Don't show toast for network errors - page will show empty state
     } finally {
       setLoading(false)
     }
