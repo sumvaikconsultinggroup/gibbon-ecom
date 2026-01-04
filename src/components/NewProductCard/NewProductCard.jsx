@@ -223,7 +223,16 @@ const NewProductCard = ({ product: data }) => {
 
         {/* Add to Cart Button */}
         <div>
-          <AddToCartButton blackVariant={false} product={productForCart} />
+          {outOfStock ? (
+            <button 
+              disabled
+              className="w-full rounded-full bg-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-500 cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          ) : (
+            <AddToCartButton blackVariant={false} product={productForCart} />
+          )}
         </div>
       </div>
     </div>
