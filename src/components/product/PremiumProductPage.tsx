@@ -51,6 +51,7 @@ import ProductReviews from '@/components/product/ProductReviews'
 import YouMayAlsoLike from '@/components/product/YouMayAlsoLike'
 import BoughtTogether from '@/components/product/BoughtTogether'
 import RecentlyViewed, { addToRecentlyViewed } from '@/components/product/RecentlyViewed'
+import SafeHTML from '@/components/SafeHTML'
 
 interface ProductImage {
   src: string
