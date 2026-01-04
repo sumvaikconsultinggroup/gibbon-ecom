@@ -235,6 +235,9 @@ export default function ReviewsManagementPage() {
       isVerifiedPurchase: false,
       adminNotes: ''
     })
+    setSelectedProduct(null)
+    setProductSearch('')
+    setProductOptions([])
   }
 
   const openModal = (review?: Review) => {
@@ -252,6 +255,7 @@ export default function ReviewsManagementPage() {
         isVerifiedPurchase: review.isVerifiedPurchase,
         adminNotes: review.adminNotes || ''
       })
+      setSelectedProduct({ handle: review.productHandle, title: review.productTitle })
     } else {
       setEditingReview(null)
       resetForm()
