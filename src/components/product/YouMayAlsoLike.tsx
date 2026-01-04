@@ -29,23 +29,31 @@ export default function YouMayAlsoLike({ productHandle, title = 'You May Also Li
       try {
         const res = await fetch(`/api/recommendations/${productHandle}?type=you_may_also_like`)
         
+        // Silently handle non-OK responses (including 520 proxy errors)
         if (!res.ok) {
-          console.error('Failed to fetch recommendations:', res.status)
+          setLoading(false)
           return
         }
         
         const contentType = res.headers.get('content-type')
         if (!contentType || !contentType.includes('application/json')) {
-          console.error('Invalid response type')
+          setLoading(false)
           return
         }
         
-        const data = await res.json()
-        if (data.success && data.data.youMayAlsoLike?.length) {
+        const text = await res.text()
+        // Check if response is actually JSON (not HTML error page)
+        if (!text.startsWith('{') && !text.startsWith('[')) {
+          setLoading(false)
+          return
+        }
+        
+        const data = JSON.parse(text)
+        if (data.success && data.data?.youMayAlsoLike?.length) {
           setProducts(data.data.youMayAlsoLike)
         }
-      } catch (error) {
-        console.error('Error fetching recommendations:', error)
+      } catch {
+        // Silent fail - don't log errors for this non-critical feature
       } finally {
         setLoading(false)
       }
@@ -56,6 +64,7 @@ export default function YouMayAlsoLike({ productHandle, title = 'You May Also Li
     }
   }, [productHandle])
 
+  // Don't render anything if loading or no products
   if (loading || products.length === 0) return null
 
   return (
