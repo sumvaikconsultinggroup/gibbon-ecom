@@ -762,11 +762,113 @@ export default function RecommendationsPage() {
                     )}
                   </div>
                   
+                  {/* Auto-Suggestions for Bought Together */}
+                  {form.type === 'bought_together' && sourceProduct && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-5 w-5 text-blue-600" />
+                          <h4 className="font-semibold text-blue-900">Auto-Suggested Products</h4>
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                            Based on Order History
+                          </span>
+                        </div>
+                        {!autoPreviewLoading && autoPreviewProducts.length > 0 && (
+                          <button
+                            onClick={addAllAutoSuggestions}
+                            className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add All
+                          </button>
+                        )}
+                      </div>
+                      
+                      {autoPreviewLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                          <span className="ml-2 text-sm text-blue-700">Analyzing order history...</span>
+                        </div>
+                      ) : autoPreviewProducts.length > 0 ? (
+                        <>
+                          {autoPreviewStats && (
+                            <p className="mb-3 text-xs text-blue-700">
+                              <Info className="mr-1 inline h-3 w-3" />
+                              {autoPreviewStats.message}
+                            </p>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                            {autoPreviewProducts.map((product) => {
+                              const isAlreadySelected = selectedProducts.some(p => p.handle === product.handle)
+                              return (
+                                <button
+                                  key={product.handle}
+                                  onClick={() => !isAlreadySelected && addRecommendedProduct({
+                                    _id: product._id,
+                                    handle: product.handle,
+                                    title: product.title,
+                                    image: product.image,
+                                    price: product.price
+                                  })}
+                                  disabled={isAlreadySelected}
+                                  className={`flex items-center gap-2 rounded-lg border p-2 text-left transition-all ${
+                                    isAlreadySelected
+                                      ? 'border-green-300 bg-green-50 opacity-60'
+                                      : 'border-blue-200 bg-white hover:border-blue-400'
+                                  }`}
+                                >
+                                  {product.image && (
+                                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded">
+                                      <Image src={product.image} alt="" fill className="object-cover" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-medium">{product.title}</p>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-neutral-500">₹{product.price}</span>
+                                      <span className="rounded bg-blue-100 px-1 py-0.5 text-[10px] font-medium text-blue-700">
+                                        {product.percentage}% co-purchased
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {isAlreadySelected ? (
+                                    <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
+                                  ) : (
+                                    <Plus className="h-4 w-4 shrink-0 text-blue-600" />
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="py-3 text-center text-sm text-blue-700">
+                          <Info className="mx-auto mb-1 h-5 w-5" />
+                          {autoPreviewStats?.message || 'No order history found for this product. You can manually add recommendations below.'}
+                        </div>
+                      )}
+                      
+                      {!autoPreviewLoading && (
+                        <button
+                          onClick={() => fetchAutoPreview(sourceProduct.handle)}
+                          className="mt-3 text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Refresh Suggestions
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
                   {/* Recommended Products */}
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Recommended Products * ({selectedProducts.length} selected)
+                      {form.type === 'bought_together' ? 'Manual Override Products' : 'Recommended Products'} * ({selectedProducts.length} selected)
                     </label>
+                    <p className="mb-2 text-xs text-neutral-500">
+                      {form.type === 'bought_together' 
+                        ? 'These manually selected products will override the automated suggestions on the product page.'
+                        : 'Select products to recommend for this item.'}
+                    </p>
                     
                     {/* Selected Products */}
                     {selectedProducts.length > 0 && (
