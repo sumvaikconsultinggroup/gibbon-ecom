@@ -898,17 +898,86 @@ export default function ReviewsManagementPage() {
               
               <div className="max-h-[70vh] overflow-y-auto p-6">
                 <div className="space-y-4">
-                  {/* Product Handle */}
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">Product Handle *</label>
-                    <input
-                      type="text"
-                      value={form.productHandle}
-                      onChange={(e) => setForm({ ...form, productHandle: e.target.value })}
-                      className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 outline-none focus:border-[#1B198F] dark:border-neutral-600 dark:bg-neutral-700"
-                      placeholder="e.g., whey-protein-chocolate"
-                      disabled={!!editingReview}
-                    />
+                  {/* Product Selection */}
+                  <div className="relative">
+                    <label className="mb-1.5 block text-sm font-medium">Product *</label>
+                    {editingReview ? (
+                      <div className="flex items-center gap-3 rounded-lg border border-neutral-300 px-4 py-2.5 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-700">
+                        <Package className="h-5 w-5 text-neutral-400" />
+                        <span className="font-medium">{selectedProduct?.title || form.productHandle}</span>
+                      </div>
+                    ) : (
+                      <>
+                        {selectedProduct ? (
+                          <div className="flex items-center justify-between rounded-lg border border-[#1B198F] bg-[#1B198F]/5 px-4 py-2.5">
+                            <div className="flex items-center gap-3">
+                              <Package className="h-5 w-5 text-[#1B198F]" />
+                              <span className="font-medium">{selectedProduct.title}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedProduct(null)
+                                setForm({ ...form, productHandle: '' })
+                              }}
+                              className="text-neutral-400 hover:text-neutral-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={productSearch}
+                              onChange={(e) => {
+                                setProductSearch(e.target.value)
+                                setShowProductDropdown(true)
+                              }}
+                              onFocus={() => setShowProductDropdown(true)}
+                              className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 pl-10 outline-none focus:border-[#1B198F] dark:border-neutral-600 dark:bg-neutral-700"
+                              placeholder="Search products..."
+                            />
+                            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+                            {searchingProducts && (
+                              <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-neutral-400" />
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Product Dropdown */}
+                        {showProductDropdown && productOptions.length > 0 && (
+                          <div className="absolute z-50 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+                            <div className="max-h-60 overflow-y-auto">
+                              {productOptions.map((product) => (
+                                <button
+                                  key={product.handle}
+                                  onClick={() => selectProduct(product)}
+                                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                                >
+                                  {product.image ? (
+                                    <Image
+                                      src={product.image}
+                                      alt={product.title}
+                                      width={40}
+                                      height={40}
+                                      className="rounded-md object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-700">
+                                      <Package className="h-5 w-5 text-neutral-400" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{product.title}</p>
+                                    <p className="text-sm text-neutral-500">₹{product.price?.toLocaleString()}</p>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                   
                   {/* Customer Info */}
