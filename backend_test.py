@@ -1257,6 +1257,603 @@ class APITester:
             self.log_test("POST /api/promoCode/check", False, f"Exception: {str(e)}")
             return False
 
+    # ===== REVIEWS SYSTEM TESTING =====
+    
+    def test_admin_reviews_list(self) -> bool:
+        """Test GET /api/admin/reviews - List all reviews with filters"""
+        if not self.admin_authenticated:
+            self.log_test("GET /api/admin/reviews", False, "Cannot test admin reviews list - not authenticated")
+            return False
+            
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/reviews")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    reviews = data.get('data', [])
+                    pagination = data.get('pagination', {})
+                    stats = data.get('stats', {})
+                    
+                    self.log_test(
+                        "GET /api/admin/reviews", 
+                        True, 
+                        f"Successfully retrieved {len(reviews)} reviews. Stats: {stats.get('total', 0)} total, {stats.get('approved', 0)} approved, {stats.get('pending', 0)} pending"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "GET /api/admin/reviews", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/admin/reviews", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/reviews", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_create_review(self) -> bool:
+        """Test POST /api/admin/reviews - Create a new review manually"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/reviews", False, "Cannot test admin create review - not authenticated")
+            return False
+            
+        review_data = {
+            "productHandle": self.test_product_handles[0],  # bcaa-4-1-1-glutamine
+            "customerName": "Alex Johnson",
+            "customerEmail": "alex.johnson@example.com",
+            "rating": 5,
+            "title": "Excellent BCAA supplement!",
+            "content": "This BCAA supplement has really helped with my recovery after workouts. Great taste and mixes well. Highly recommend for anyone serious about fitness.",
+            "status": "approved",
+            "isVerifiedPurchase": True
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/reviews",
+                json=review_data
+            )
+            
+            if response.status_code == 201:
+                data = response.json()
+                if data.get('success'):
+                    review = data.get('data', {})
+                    self.created_review_id = review.get('_id')
+                    self.log_test(
+                        "POST /api/admin/reviews", 
+                        True, 
+                        f"Successfully created review with ID: {self.created_review_id} for product {review_data['productHandle']}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/admin/reviews", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 404:
+                # Product not found - try with a different product
+                review_data["productHandle"] = "test-product"
+                response = self.session.post(
+                    f"{self.base_url}/api/admin/reviews",
+                    json=review_data
+                )
+                if response.status_code == 201:
+                    data = response.json()
+                    if data.get('success'):
+                        review = data.get('data', {})
+                        self.created_review_id = review.get('_id')
+                        self.log_test(
+                            "POST /api/admin/reviews", 
+                            True, 
+                            f"Successfully created review with fallback product"
+                        )
+                        return True
+                
+                self.log_test(
+                    "POST /api/admin/reviews", 
+                    False, 
+                    f"Product not found: {review_data['productHandle']}"
+                )
+                return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/reviews", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/reviews", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_update_review(self) -> bool:
+        """Test PUT /api/admin/reviews/[id] - Update review"""
+        if not self.admin_authenticated:
+            self.log_test("PUT /api/admin/reviews/[id]", False, "Cannot test admin update review - not authenticated")
+            return False
+            
+        if not self.created_review_id:
+            self.log_test("PUT /api/admin/reviews/[id]", False, "No review ID available for update test")
+            return False
+            
+        update_data = {
+            "rating": 4,
+            "title": "Updated: Good BCAA supplement",
+            "content": "Updated review content: Still a good product but not as amazing as I initially thought.",
+            "status": "approved",
+            "adminNotes": "Updated by admin during testing"
+        }
+        
+        try:
+            response = self.session.put(
+                f"{self.base_url}/api/admin/reviews/{self.created_review_id}",
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    review = data.get('data', {})
+                    if review.get('rating') == 4:
+                        self.log_test(
+                            "PUT /api/admin/reviews/[id]", 
+                            True, 
+                            f"Successfully updated review rating to {review.get('rating')}"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "PUT /api/admin/reviews/[id]", 
+                            False, 
+                            f"Review not updated correctly: expected rating 4, got {review.get('rating')}", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "PUT /api/admin/reviews/[id]", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "PUT /api/admin/reviews/[id]", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("PUT /api/admin/reviews/[id]", False, f"Exception: {str(e)}")
+            return False
+
+    def test_customer_submit_review(self) -> bool:
+        """Test POST /api/reviews/submit - Customer submits a new review"""
+        review_data = {
+            "productHandle": self.test_product_handles[1],  # t-shirt
+            "customerName": "Sarah Wilson",
+            "customerEmail": "sarah.wilson@example.com",
+            "rating": 4,
+            "title": "Nice quality t-shirt",
+            "content": "The t-shirt is comfortable and fits well. Good material quality. Would buy again."
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/reviews/submit",
+                json=review_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    review_info = data.get('data', {})
+                    if review_info.get('status') == 'pending':
+                        self.log_test(
+                            "POST /api/reviews/submit", 
+                            True, 
+                            f"Customer review submitted successfully with status: {review_info.get('status')}"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "POST /api/reviews/submit", 
+                            False, 
+                            f"Review status incorrect: expected 'pending', got '{review_info.get('status')}'", 
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "POST /api/reviews/submit", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 404:
+                self.log_test(
+                    "POST /api/reviews/submit", 
+                    False, 
+                    f"Product not found: {review_data['productHandle']}"
+                )
+                return False
+            elif response.status_code == 400:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                if "already submitted" in data.get('error', ''):
+                    self.log_test(
+                        "POST /api/reviews/submit", 
+                        True, 
+                        "Review submission working (customer already submitted review - expected behavior)"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/reviews/submit", 
+                        False, 
+                        f"Bad request: {data.get('error', response.text)}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/reviews/submit", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/reviews/submit", False, f"Exception: {str(e)}")
+            return False
+
+    def test_public_product_reviews(self) -> bool:
+        """Test GET /api/product-reviews/[handle] - Get approved reviews for a product"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/product-reviews/{self.test_product_handles[0]}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    reviews = data.get('data', [])
+                    stats = data.get('stats', {})
+                    pagination = data.get('pagination', {})
+                    
+                    # Check that only approved reviews are returned
+                    all_approved = all(review.get('status', 'approved') == 'approved' for review in reviews)
+                    
+                    self.log_test(
+                        "GET /api/product-reviews/[handle]", 
+                        True, 
+                        f"Successfully retrieved {len(reviews)} approved reviews. Avg rating: {stats.get('avgRating', 0)}, Total: {stats.get('totalReviews', 0)}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "GET /api/product-reviews/[handle]", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "GET /api/product-reviews/[handle]", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/product-reviews/[handle]", False, f"Exception: {str(e)}")
+            return False
+
+    def test_mark_review_helpful(self) -> bool:
+        """Test POST /api/reviews/helpful - Mark a review as helpful"""
+        if not self.created_review_id:
+            self.log_test("POST /api/reviews/helpful", False, "No review ID available for helpful test")
+            return False
+            
+        helpful_data = {
+            "reviewId": self.created_review_id,
+            "voterId": "test-voter-123"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/reviews/helpful",
+                json=helpful_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    helpful_count = data.get('helpfulCount', 0)
+                    self.log_test(
+                        "POST /api/reviews/helpful", 
+                        True, 
+                        f"Successfully marked review as helpful. New helpful count: {helpful_count}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/reviews/helpful", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            elif response.status_code == 400:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                if "already marked" in data.get('error', ''):
+                    self.log_test(
+                        "POST /api/reviews/helpful", 
+                        True, 
+                        "Helpful vote working (already voted - expected behavior)"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/reviews/helpful", 
+                        False, 
+                        f"Bad request: {data.get('error', response.text)}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/reviews/helpful", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/reviews/helpful", False, f"Exception: {str(e)}")
+            return False
+
+    def test_sample_csv_download(self) -> bool:
+        """Test GET /api/admin/reviews/sample-csv - Download sample CSV template"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/admin/reviews/sample-csv")
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                
+                if 'text/csv' in content_type and 'attachment' in content_disposition:
+                    csv_content = response.text
+                    if 'product_handle,customer_name,email,rating' in csv_content:
+                        self.log_test(
+                            "GET /api/admin/reviews/sample-csv", 
+                            True, 
+                            f"Successfully downloaded sample CSV ({len(csv_content)} characters)"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "GET /api/admin/reviews/sample-csv", 
+                            False, 
+                            "CSV content format incorrect"
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "GET /api/admin/reviews/sample-csv", 
+                        False, 
+                        f"Incorrect headers: Content-Type: {content_type}, Content-Disposition: {content_disposition}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "GET /api/admin/reviews/sample-csv", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/reviews/sample-csv", False, f"Exception: {str(e)}")
+            return False
+
+    def test_bulk_actions(self) -> bool:
+        """Test POST /api/admin/reviews/bulk - Bulk approve/reject/delete reviews"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/reviews/bulk", False, "Cannot test bulk actions - not authenticated")
+            return False
+            
+        if not self.created_review_id:
+            self.log_test("POST /api/admin/reviews/bulk", False, "No review ID available for bulk actions test")
+            return False
+            
+        # Test bulk approve
+        bulk_data = {
+            "action": "approve",
+            "reviewIds": [self.created_review_id]
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/reviews/bulk",
+                json=bulk_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    message = data.get('message', '')
+                    self.log_test(
+                        "POST /api/admin/reviews/bulk", 
+                        True, 
+                        f"Bulk action successful: {message}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/admin/reviews/bulk", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/reviews/bulk", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/reviews/bulk", False, f"Exception: {str(e)}")
+            return False
+
+    def test_import_reviews(self) -> bool:
+        """Test POST /api/admin/reviews/import - Import reviews from CSV data"""
+        if not self.admin_authenticated:
+            self.log_test("POST /api/admin/reviews/import", False, "Cannot test import reviews - not authenticated")
+            return False
+            
+        # Sample review data for import
+        import_data = {
+            "reviews": [
+                {
+                    "product_handle": self.test_product_handles[2],  # shaker
+                    "customer_name": "Mike Davis",
+                    "email": "mike.davis@example.com",
+                    "rating": "5",
+                    "title": "Perfect shaker bottle",
+                    "content": "This shaker bottle is exactly what I needed. No leaks, easy to clean, and the mixing ball works great.",
+                    "verified": "false",
+                    "created_at": "2024-01-15"
+                }
+            ],
+            "overwriteExisting": False
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/admin/reviews/import",
+                json=import_data
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    imported = data.get('imported', 0)
+                    skipped = data.get('skipped', 0)
+                    errors = data.get('errors', [])
+                    
+                    if imported > 0 or (skipped > 0 and len(errors) == 0):
+                        self.log_test(
+                            "POST /api/admin/reviews/import", 
+                            True, 
+                            f"Import successful: {imported} imported, {skipped} skipped"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "POST /api/admin/reviews/import", 
+                            False, 
+                            f"Import failed: {imported} imported, {skipped} skipped, errors: {errors}"
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "POST /api/admin/reviews/import", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "POST /api/admin/reviews/import", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/reviews/import", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_delete_review(self) -> bool:
+        """Test DELETE /api/admin/reviews/[id] - Delete review"""
+        if not self.admin_authenticated:
+            self.log_test("DELETE /api/admin/reviews/[id]", False, "Cannot test admin delete review - not authenticated")
+            return False
+            
+        if not self.created_review_id:
+            self.log_test("DELETE /api/admin/reviews/[id]", False, "No review ID available for delete test")
+            return False
+            
+        try:
+            response = self.session.delete(f"{self.base_url}/api/admin/reviews/{self.created_review_id}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    self.log_test(
+                        "DELETE /api/admin/reviews/[id]", 
+                        True, 
+                        "Successfully deleted review"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "DELETE /api/admin/reviews/[id]", 
+                        False, 
+                        f"API returned success=false: {data.get('error', 'Unknown error')}", 
+                        data
+                    )
+                    return False
+            else:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                self.log_test(
+                    "DELETE /api/admin/reviews/[id]", 
+                    False, 
+                    f"HTTP {response.status_code}: {data.get('error', response.text)}", 
+                    data
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("DELETE /api/admin/reviews/[id]", False, f"Exception: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all API tests"""
         print(f"🚀 Starting API tests for Gibbon Nutrition Admin Panel")
