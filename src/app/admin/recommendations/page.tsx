@@ -163,12 +163,27 @@ export default function RecommendationsPage() {
     try {
       const exclude = [...excludeHandles, form.productHandle].filter(Boolean).join(',')
       const res = await fetch(`/api/admin/recommendations/products?search=${encodeURIComponent(query)}&exclude=${exclude}`)
+      
+      if (!res.ok) {
+        console.error('Product search failed:', res.status)
+        setProductOptions([])
+        return
+      }
+      
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid content type:', contentType)
+        setProductOptions([])
+        return
+      }
+      
       const data = await res.json()
       if (data.success) {
         setProductOptions(data.data)
       }
     } catch (error) {
       console.error('Error searching products:', error)
+      setProductOptions([])
     } finally {
       setSearchingProducts(false)
     }
