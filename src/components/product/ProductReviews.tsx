@@ -74,7 +74,7 @@ export default function ProductReviews({ productHandle, productTitle }: ProductR
         sortOrder
       })
       
-      const res = await fetch(`/api/reviews/product/${productHandle}?${params}`)
+      const res = await fetch(`/api/product-reviews/${productHandle}?${params}`)
       const data = await res.json()
       
       if (data.success) {
