@@ -501,15 +501,16 @@ export default function ProductEditPage() {
                     </div>
                     <div>
                       <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        Description (HTML supported)
+                        Description
                       </label>
-                      <textarea
-                        value={formData.bodyHtml}
-                        onChange={(e) => updateField('bodyHtml', e.target.value)}
-                        rows={8}
-                        placeholder="Detailed product description..."
-                        className="w-full rounded-xl border border-neutral-200 px-4 py-3 font-mono text-sm outline-none transition-all focus:border-[#1B198F] focus:ring-2 focus:ring-[#1B198F]/20 dark:border-neutral-700 dark:bg-neutral-900"
+                      <RichTextEditor
+                        content={formData.bodyHtml}
+                        onChange={(html) => updateField('bodyHtml', html)}
+                        placeholder="Write a detailed product description..."
                       />
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Use the toolbar to format text, add headings, lists, links, and images.
+                      </p>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
