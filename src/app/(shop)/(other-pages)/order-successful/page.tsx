@@ -3,10 +3,11 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ButtonPrimary from '@/shared/Button/ButtonPrimary';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useCart } from '@/components/useCartStore';
+import { Loader2 } from 'lucide-react';
 
-const OrderSuccessfulPage = () => {
+const OrderSuccessContent = () => {
     const searchParams = useSearchParams();
     const txnid = searchParams.get('txnid');
     const { removeAll } = useCart();
@@ -37,6 +38,20 @@ const OrderSuccessfulPage = () => {
                 </div>
             </div>
         </main>
+    );
+};
+
+const OrderSuccessfulPage = () => {
+    return (
+        <Suspense fallback={
+            <main className="container py-16 lg:pt-20 lg:pb-28">
+                <div className="flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#1B198F]" />
+                </div>
+            </main>
+        }>
+            <OrderSuccessContent />
+        </Suspense>
     );
 };
 
