@@ -806,8 +806,15 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
               className="rounded-3xl bg-white p-6 shadow-sm dark:bg-neutral-800 lg:p-8"
             >
               {activeTab === 'description' && (
-                <div className="prose prose-neutral max-w-none dark:prose-invert">
-                  <p className="text-lg leading-relaxed">{product.description || product.bodyHtml || 'No description available.'}</p>
+                <div className="prose prose-neutral max-w-none dark:prose-invert prose-headings:font-bold prose-p:text-neutral-600 prose-p:dark:text-neutral-400 prose-li:text-neutral-600 prose-li:dark:text-neutral-400">
+                  {(product.description || product.bodyHtml) ? (
+                    <SafeHTML 
+                      html={product.bodyHtml || product.description || ''} 
+                      className="text-lg leading-relaxed"
+                    />
+                  ) : (
+                    <p className="text-lg leading-relaxed text-neutral-500">No description available.</p>
+                  )}
                   {product.benefits && product.benefits.length > 0 && (
                     <div className="mt-8">
                       <h3 className="mb-6 text-2xl font-bold">Key Benefits</h3>
