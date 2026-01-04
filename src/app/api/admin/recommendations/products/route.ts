@@ -26,19 +26,22 @@ export async function GET(request: NextRequest) {
     }
     
     const products = await Product.find(query, {
-      _id: 1, handle: 1, title: 1, images: 1, price: 1, compareAtPrice: 1
+      _id: 1, handle: 1, title: 1, images: 1, price: 1, compareAtPrice: 1, variants: 1
     })
       .limit(limit)
       .lean()
     
-    const serialized = products.map((p: any) => ({
-      _id: p._id.toString(),
-      handle: p.handle,
-      title: p.title,
-      image: typeof p.images?.[0] === 'object' ? p.images[0]?.src : (p.images?.[0] || ''),
-      price: p.price || p.variants?.[0]?.price || 0,
-      compareAtPrice: p.compareAtPrice || p.variants?.[0]?.compareAtPrice || 0
-    }))
+    const serialized = products.map((p: any) => {
+      const firstVariant = p.variants?.[0]
+      return {
+        _id: p._id.toString(),
+        handle: p.handle,
+        title: p.title,
+        image: typeof p.images?.[0] === 'object' ? p.images[0]?.src : (p.images?.[0] || ''),
+        price: firstVariant?.price || p.price || 0,
+        compareAtPrice: firstVariant?.compareAtPrice || p.compareAtPrice || 0
+      }
+    })
     
     return NextResponse.json({ success: true, data: serialized })
   } catch (error: any) {
