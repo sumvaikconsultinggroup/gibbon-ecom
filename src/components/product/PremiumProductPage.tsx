@@ -527,9 +527,12 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
 
               {/* Short Description */}
               {(product.description || product.bodyHtml) && (
-                <p className="mb-6 text-lg leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {(product.description || product.bodyHtml || '').slice(0, 200)}...
-                </p>
+                <div className="mb-6">
+                  <SafeHTML 
+                    html={(product.bodyHtml || product.description || '').slice(0, 300) + '...'} 
+                    className="text-lg leading-relaxed text-neutral-600 dark:text-neutral-400 [&>p]:m-0"
+                  />
+                </div>
               )}
 
               {/* Size Options with Price */}
