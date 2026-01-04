@@ -15,6 +15,25 @@ const NewProductCard = ({ product: data }) => {
 
   const [showMoreColors, setShowMoreColors] = useState(false)
   const { open: openAside, setProductQuickViewHandle } = useAside()
+  
+  // Check if product is out of stock
+  const isOutOfStock = () => {
+    if (!variants || variants.length === 0) return false
+    
+    const hasInventoryTracking = variants.some(v => 
+      v.inventoryManagement === 'shopify' || v.inventoryManagement === 'manual'
+    )
+    
+    if (!hasInventoryTracking) return false
+    
+    return variants.every(v => {
+      const qty = v.inventoryQty ?? v.inventory_quantity ?? 0
+      const policy = v.inventoryPolicy ?? 'deny'
+      return qty <= 0 && policy === 'deny'
+    })
+  }
+  
+  const outOfStock = isOutOfStock()
 
   const renderColorOptions = () => {
     const optionColorValues = options?.find((option) => option.name === 'Flavors')?.values
