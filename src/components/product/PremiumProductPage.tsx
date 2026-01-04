@@ -48,6 +48,9 @@ import { useCart } from '@/components/useCartStore'
 import { useAside } from '@/components/aside/aside'
 import ProductBundleOffers from '@/components/ProductBundleOffers'
 import ProductReviews from '@/components/product/ProductReviews'
+import YouMayAlsoLike from '@/components/product/YouMayAlsoLike'
+import BoughtTogether from '@/components/product/BoughtTogether'
+import RecentlyViewed, { addToRecentlyViewed } from '@/components/product/RecentlyViewed'
 
 interface ProductImage {
   src: string
