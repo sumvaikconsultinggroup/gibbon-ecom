@@ -903,12 +903,41 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
         </div>
       </section>
 
-      {/* Related Products */}
+      {/* Frequently Bought Together (CMS-driven) */}
+      <section className="py-8 lg:py-12">
+        <div className="container mx-auto px-4">
+          <BoughtTogether
+            productHandle={product.handle}
+            currentProduct={{
+              handle: product.handle,
+              title: product.title,
+              image: images[0]?.src || '',
+              price: price
+            }}
+          />
+        </div>
+      </section>
+
+      {/* You May Also Like (CMS-driven) */}
+      <section className="py-8 lg:py-12">
+        <div className="container mx-auto px-4">
+          <YouMayAlsoLike productHandle={product.handle} />
+        </div>
+      </section>
+
+      {/* Recently Viewed (Client-side auto-generated) */}
+      <section className="py-8 lg:py-12">
+        <div className="container mx-auto px-4">
+          <RecentlyViewed excludeHandle={product.handle} limit={6} />
+        </div>
+      </section>
+
+      {/* Fallback Related Products (if no CMS recommendations) */}
       {relatedProducts.length > 0 && (
         <section className="py-12 lg:py-16">
           <div className="container mx-auto px-4">
             <div className="mb-8 flex items-center justify-between">
-              <h2 className="font-[family-name:var(--font-family-antonio)] text-3xl font-black uppercase">You May Also Like</h2>
+              <h2 className="font-[family-name:var(--font-family-antonio)] text-3xl font-black uppercase">More Products</h2>
               <Link href="/collections/all" className="flex items-center gap-1 text-sm font-semibold text-[#1B198F] hover:underline">
                 View All <ChevronRight className="h-4 w-4" />
               </Link>
