@@ -1,10 +1,9 @@
 'use client'
 
 import { useEditor, EditorContent } from '@tiptap/react'
-import { BubbleMenu } from '@tiptap/extension-bubble-menu'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import TiptapLink from '@tiptap/extension-link'
+import TiptapImage from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
@@ -34,7 +33,6 @@ import {
   Heading3,
   Pilcrow,
   Highlighter,
-  Palette,
   Minus,
   X,
 } from 'lucide-react'
@@ -86,13 +84,13 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Write
           levels: [1, 2, 3],
         },
       }),
-      Link.configure({
+      TiptapLink.configure({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-[#1B198F] underline hover:text-[#1B198F]/80',
         },
       }),
-      Image.configure({
+      TiptapImage.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg my-4',
         },
@@ -364,51 +362,16 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Write
         </div>
       </div>
 
-      {/* Bubble Menu for selected text */}
-      {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
-            <MenuButton
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              isActive={editor.isActive('bold')}
-            >
-              <Bold className="h-3.5 w-3.5" />
-            </MenuButton>
-            <MenuButton
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              isActive={editor.isActive('italic')}
-            >
-              <Italic className="h-3.5 w-3.5" />
-            </MenuButton>
-            <MenuButton
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              isActive={editor.isActive('underline')}
-            >
-              <UnderlineIcon className="h-3.5 w-3.5" />
-            </MenuButton>
-            <MenuButton onClick={setLink} isActive={editor.isActive('link')}>
-              <LinkIcon className="h-3.5 w-3.5" />
-            </MenuButton>
-            <MenuButton
-              onClick={() => editor.chain().focus().toggleHighlight().run()}
-              isActive={editor.isActive('highlight')}
-            >
-              <Highlighter className="h-3.5 w-3.5" />
-            </MenuButton>
-          </div>
-        </BubbleMenu>
-      )}
-
       {/* Editor Content */}
       <EditorContent editor={editor} />
 
       {/* Character Count */}
       <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-2 dark:border-neutral-700">
         <span className="text-xs text-neutral-500">
-          {editor.storage.characterCount?.characters?.() ?? editor.getText().length} characters
+          {editor.getText().length} characters
         </span>
         <span className="text-xs text-neutral-500">
-          HTML Editor • TipTap
+          Rich Text Editor
         </span>
       </div>
     </div>
