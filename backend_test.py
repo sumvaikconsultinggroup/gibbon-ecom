@@ -24,6 +24,8 @@ class APITester:
         self.created_discount_id = None
         self.admin_authenticated = False
         self.admin_user_info = None
+        self.created_review_id = None
+        self.test_product_handles = ["bcaa-4-1-1-glutamine", "t-shirt", "shaker"]
 
     def log_test(self, test_name: str, success: bool, message: str, response_data: Optional[Dict] = None):
         """Log test results"""
