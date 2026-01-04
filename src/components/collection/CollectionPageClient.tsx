@@ -379,25 +379,25 @@ export default function CollectionPageClient({
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
-                      className="absolute bottom-3 left-3 right-3"
+                      className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 hidden sm:block"
                     >
                       <button
                         onClick={() => handleQuickAdd(product)}
-                        className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1B198F] py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#1B198F]/90"
+                        className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1B198F] py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-all hover:bg-[#1B198F]/90"
                       >
-                        <ShoppingBag className="h-4 w-4" />
+                        <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         Quick Add
                       </button>
                     </motion.div>
                   </div>
 
-                  {/* Product Info */}
-                  <div className="mt-4">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                  {/* Product Info - Mobile Optimized */}
+                  <div className="mt-2 sm:mt-4">
+                    <p className="mb-0.5 sm:mb-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-500 line-clamp-1">
                       {product.productCategory || 'Supplements'}
                     </p>
                     <Link href={`/products/${product.handle}`}>
-                      <h3 className="line-clamp-2 font-semibold text-neutral-900 transition-colors hover:text-[#1B198F] dark:text-white">
+                      <h3 className="text-sm sm:text-base line-clamp-2 font-semibold text-neutral-900 transition-colors hover:text-[#1B198F] dark:text-white">
                         {product.title}
                       </h3>
                     </Link>
@@ -407,19 +407,19 @@ export default function CollectionPageClient({
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-3.5 w-3.5 ${
+                              className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${
                                 i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'fill-neutral-200 text-neutral-200'
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-neutral-500">({product.reviews?.length || 0})</span>
+                        <span className="text-[10px] sm:text-xs text-neutral-500">({product.reviews?.length || 0})</span>
                       </div>
                     )}
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-lg font-bold text-neutral-900 dark:text-white">₹{price}</span>
+                    <div className="mt-1 sm:mt-2 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <span className="text-sm sm:text-lg font-bold text-neutral-900 dark:text-white">₹{price.toLocaleString()}</span>
                       {compareAtPrice && compareAtPrice > price && (
-                        <span className="text-sm text-neutral-500 line-through">₹{compareAtPrice}</span>
+                        <span className="text-xs sm:text-sm text-neutral-500 line-through">₹{compareAtPrice.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
