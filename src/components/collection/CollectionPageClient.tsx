@@ -432,7 +432,7 @@ export default function CollectionPageClient({
         )}
       </div>
 
-      {/* Filter Drawer */}
+      {/* Filter Drawer - Mobile Optimized */}
       <AnimatePresence>
         {isFilterOpen && (
           <>
@@ -448,11 +448,15 @@ export default function CollectionPageClient({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto bg-white p-6 dark:bg-neutral-900"
+              className="fixed left-0 top-0 z-50 h-full w-[85vw] max-w-sm overflow-y-auto bg-white p-4 sm:p-6 pb-24 dark:bg-neutral-900"
+              style={{ maxHeight: '100dvh' }}
             >
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Filters</h2>
-                <button onClick={() => setIsFilterOpen(false)} className="rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <div className="safe-area-top mb-6 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold">Filters</h2>
+                <button 
+                  onClick={() => setIsFilterOpen(false)} 
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-neutral-100 active:scale-95 dark:hover:bg-neutral-800"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -465,7 +469,7 @@ export default function CollectionPageClient({
                     <button
                       key={range.label}
                       onClick={() => handleFilterChange('priceRange', `${range.min}-${range.max}`)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm ${
+                      className={`flex min-h-[44px] w-full items-center justify-between rounded-xl px-4 py-3 text-sm active:scale-[0.98] ${
                         filters.priceRange === `${range.min}-${range.max}`
                           ? 'bg-[#1B198F] text-white'
                           : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300'
