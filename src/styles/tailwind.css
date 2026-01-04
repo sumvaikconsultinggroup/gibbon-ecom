@@ -259,6 +259,209 @@
   }
 }
 
+/* ==========================================
+   MOBILE RESPONSIVE ENHANCEMENTS
+   ========================================== */
+
+/* Safe area padding for iOS notch devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth scrolling for iOS */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal overflow on mobile */
+body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Touch-friendly tap targets (min 44px) */
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile-first container padding */
+@utility mobile-container {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Full-width mobile sections */
+@utility mobile-full {
+  @apply -mx-4 px-4 sm:mx-0 sm:px-0;
+}
+
+/* Mobile card spacing */
+@utility mobile-card {
+  @apply rounded-none sm:rounded-2xl;
+}
+
+/* Hide on mobile, show on desktop */
+@utility desktop-only {
+  @apply hidden lg:block;
+}
+
+/* Show on mobile, hide on desktop */
+@utility mobile-only {
+  @apply block lg:hidden;
+}
+
+/* Mobile sticky footer button */
+@utility sticky-bottom-btn {
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] dark:bg-neutral-900;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile drawer adjustments */
+@utility mobile-drawer {
+  max-height: calc(100vh - env(safe-area-inset-top, 0px));
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+}
+
+/* Responsive text utilities */
+@utility text-responsive-xs {
+  @apply text-[11px] sm:text-xs;
+}
+@utility text-responsive-sm {
+  @apply text-xs sm:text-sm;
+}
+@utility text-responsive-base {
+  @apply text-sm sm:text-base;
+}
+@utility text-responsive-lg {
+  @apply text-base sm:text-lg;
+}
+@utility text-responsive-xl {
+  @apply text-lg sm:text-xl;
+}
+@utility text-responsive-2xl {
+  @apply text-xl sm:text-2xl;
+}
+@utility text-responsive-3xl {
+  @apply text-2xl sm:text-3xl;
+}
+@utility text-responsive-4xl {
+  @apply text-3xl sm:text-4xl lg:text-5xl;
+}
+
+/* Mobile hero text sizing */
+@utility hero-title {
+  @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
+}
+
+/* Responsive grid for products */
+@utility product-grid {
+  @apply grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6;
+}
+
+/* Mobile horizontal scroll container */
+@utility mobile-scroll {
+  @apply -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 scrollbar-hide sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0;
+}
+
+/* Mobile swipe cards */
+@utility swipe-card {
+  @apply w-[280px] shrink-0 sm:w-auto;
+}
+
+/* Responsive button sizes */
+@utility btn-responsive {
+  @apply px-4 py-2.5 text-sm sm:px-6 sm:py-3 sm:text-base;
+}
+
+/* Mobile bottom navigation safe spacing */
+@utility pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Fixed elements accounting for iOS safe area */
+@utility fixed-bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent text selection on interactive elements */
+@utility no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Active state for touch devices */
+@utility touch-active {
+  @apply active:scale-[0.98] active:opacity-90;
+}
+
+/* Image aspect ratios for mobile */
+@utility aspect-product {
+  @apply aspect-square sm:aspect-[4/5];
+}
+
+@utility aspect-hero {
+  @apply aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9];
+}
+
+@utility aspect-banner {
+  @apply aspect-[3/4] sm:aspect-[16/9];
+}
+
+/* Mobile-friendly form inputs */
+@utility input-mobile {
+  @apply h-12 rounded-xl px-4 text-base sm:h-11 sm:text-sm;
+}
+
+/* Responsive modal/dialog */
+@utility modal-responsive {
+  @apply fixed inset-x-4 bottom-0 top-auto max-h-[85vh] rounded-t-3xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[90vh] sm:w-full sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl;
+}
+
+/* Mobile-friendly gap utilities */
+@utility gap-mobile {
+  @apply gap-3 sm:gap-4 lg:gap-6;
+}
+
+/* Horizontal scroll snap */
+@utility scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+@utility snap-start {
+  scroll-snap-align: start;
+}
+@utility snap-center {
+  scroll-snap-align: center;
+}
+
 /* MENU */
 .menuIsNew_lv1 > a::before {
   content: 'New!';
