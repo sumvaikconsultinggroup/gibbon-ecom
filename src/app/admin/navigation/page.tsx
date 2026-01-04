@@ -84,16 +84,35 @@ export default function NavigationManagementPage() {
 
   const fetchNavigation = useCallback(async () => {
     try {
+      setLoading(true)
       const [navRes, flatRes] = await Promise.all([
         fetch('/api/admin/navigation'),
         fetch('/api/admin/navigation?flat=true')
       ])
       
+      // Check for non-JSON responses (520 proxy errors return HTML)
+      const navContentType = navRes.headers.get('content-type')
+      const flatContentType = flatRes.headers.get('content-type')
+      
+      if (!navContentType?.includes('application/json') || !flatContentType?.includes('application/json')) {
+        console.error('Non-JSON response received - possible proxy error')
+        toast.error('Failed to load navigation - server error')
+        setLoading(false)
+        return
+      }
+      
       if (navRes.ok && flatRes.ok) {
         const navData = await navRes.json()
         const flatData = await flatRes.json()
-        if (navData.success) setNavItems(navData.data)
-        if (flatData.success) setFlatItems(flatData.data)
+        if (navData.success) {
+          setNavItems(navData.data || [])
+        }
+        if (flatData.success) {
+          setFlatItems(flatData.data || [])
+        }
+      } else {
+        console.error('API error:', navRes.status, flatRes.status)
+        toast.error('Failed to load navigation')
       }
     } catch (error) {
       console.error('Error fetching navigation:', error)
