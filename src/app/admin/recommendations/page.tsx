@@ -111,6 +111,11 @@ export default function RecommendationsPage() {
   const [sourceProduct, setSourceProduct] = useState<ProductOption | null>(null)
   const [searchingProducts, setSearchingProducts] = useState(false)
   const [showProductDropdown, setShowProductDropdown] = useState(false)
+  
+  // Auto-preview state for "Bought Together"
+  const [autoPreviewProducts, setAutoPreviewProducts] = useState<AutoPreviewProduct[]>([])
+  const [autoPreviewLoading, setAutoPreviewLoading] = useState(false)
+  const [autoPreviewStats, setAutoPreviewStats] = useState<{ ordersAnalyzed: number; message: string } | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
