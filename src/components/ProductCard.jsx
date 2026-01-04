@@ -19,6 +19,28 @@ const ProductCard = ({ className = '', data, isLiked = false }) => {
   const defaultVariant = variants?.[0]
   const price = defaultVariant?.price
   const featuredImage = images?.[0]
+  
+  // Check if product is out of stock
+  const isOutOfStock = () => {
+    // Check if any variant has inventory tracking and is out of stock
+    if (!variants || variants.length === 0) return false
+    
+    // If inventoryManagement is set and inventoryPolicy is 'deny', check quantity
+    const hasInventoryTracking = variants.some(v => 
+      v.inventoryManagement === 'shopify' || v.inventoryManagement === 'manual'
+    )
+    
+    if (!hasInventoryTracking) return false
+    
+    // Check if all variants are out of stock
+    return variants.every(v => {
+      const qty = v.inventoryQty ?? v.inventory_quantity ?? 0
+      const policy = v.inventoryPolicy ?? 'deny'
+      return qty <= 0 && policy === 'deny'
+    })
+  }
+  
+  const outOfStock = isOutOfStock()
 
   const ratingCount = reviews?.length > 0 ? reviews?.reduce((sum, review) => sum + review.star, 0) / reviews.length : 0
 
