@@ -139,6 +139,17 @@ export default function ProductReviews({ productHandle, productTitle }: ProductR
         })
       })
       
+      if (!res.ok) {
+        console.error('Failed to mark helpful:', res.status)
+        return
+      }
+      
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid response type')
+        return
+      }
+      
       const data = await res.json()
       
       if (data.success) {
