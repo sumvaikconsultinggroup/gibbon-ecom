@@ -686,7 +686,13 @@ export default function RecommendationsPage() {
                         return (
                           <button
                             key={key}
-                            onClick={() => setForm({ ...form, type: key as Recommendation['type'] })}
+                            onClick={() => {
+                              setForm({ ...form, type: key as Recommendation['type'] })
+                              // Auto-fetch suggestions when switching to bought_together
+                              if (key === 'bought_together' && sourceProduct) {
+                                fetchAutoPreview(sourceProduct.handle)
+                              }
+                            }}
                             disabled={!!editingRec}
                             className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all ${
                               form.type === key
