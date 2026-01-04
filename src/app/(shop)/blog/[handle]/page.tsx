@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import connectDb from '@/lib/mongodb'
 import BlogPost from '@/models/BlogPost'
 import BlogPostClient from './BlogPostClient'
+import { generateArticleSchema, generateBreadcrumbSchema, siteConfig } from '@/lib/seo'
+import JsonLd from '@/components/SEO/JsonLd'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,20 +15,42 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { handle } = await params
   await connectDb()
-  const post = await BlogPost.findOne({ slug: handle, status: 'published' }).lean()
+  const post = await BlogPost.findOne({ slug: handle, status: 'published' }).lean() as any
   
   if (!post) {
     return { title: 'Post Not Found' }
   }
   
-  const p = post as any
+  const title = post.seo?.metaTitle || post.title
+  const description = post.seo?.metaDescription || post.excerpt || post.content?.slice(0, 160)
+  const image = post.featuredImage?.url || `${siteConfig.url}/og-image.jpg`
+  
   return {
-    title: p.seo?.metaTitle || `${p.title} | Gibbon Nutrition Blog`,
-    description: p.seo?.metaDescription || p.excerpt,
+    title: title,
+    description: description,
+    keywords: post.tags || [],
+    authors: [{ name: post.author || 'Gibbon Nutrition Team' }],
+    alternates: {
+      canonical: `/blog/${handle}`,
+    },
     openGraph: {
-      title: p.seo?.metaTitle || p.title,
-      description: p.seo?.metaDescription || p.excerpt,
-      images: p.featuredImage?.url ? [{ url: p.featuredImage.url }] : [],
+      type: 'article',
+      title: title,
+      description: description,
+      url: `${siteConfig.url}/blog/${handle}`,
+      siteName: 'Gibbon Nutrition',
+      images: [{ url: image, width: 1200, height: 630, alt: post.title }],
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt?.toISOString(),
+      authors: [post.author || 'Gibbon Nutrition Team'],
+      section: post.category || 'Fitness',
+      tags: post.tags,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: description,
+      images: [image],
     },
   }
 }
@@ -40,18 +64,17 @@ async function getBlogPost(slug: string) {
       { slug, status: 'published' },
       { $inc: { viewCount: 1 } },
       { new: true }
-    ).lean()
+    ).lean() as any
     
     if (!post) return null
     
     // Get related posts
-    const p = post as any
     const relatedPosts = await BlogPost.find({
-      _id: { $ne: p._id },
+      _id: { $ne: post._id },
       status: 'published',
       $or: [
-        { category: p.category },
-        { tags: { $in: p.tags || [] } }
+        { category: post.category },
+        { tags: { $in: post.tags || [] } }
       ]
     })
       .sort({ publishedAt: -1 })
@@ -60,7 +83,7 @@ async function getBlogPost(slug: string) {
       .lean()
     
     return {
-      post: { ...p, _id: p._id.toString() },
+      post: { ...post, _id: post._id.toString() },
       related: relatedPosts.map((r: any) => ({ ...r, _id: r._id.toString() }))
     }
   } catch (error) {
@@ -77,5 +100,31 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound()
   }
   
-  return <BlogPostClient post={data.post} relatedPosts={data.related} />
+  const post = data.post
+
+  // Generate Article Schema
+  const articleSchema = generateArticleSchema({
+    title: post.title,
+    handle: post.slug,
+    content: post.content,
+    excerpt: post.excerpt,
+    image: post.featuredImage?.url,
+    author: post.author,
+    publishedAt: post.publishedAt?.toISOString?.() || post.publishedAt,
+    updatedAt: post.updatedAt?.toISOString?.() || post.updatedAt,
+  })
+
+  // Generate Breadcrumb Schema
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: siteConfig.url },
+    { name: 'Blog', url: `${siteConfig.url}/blog` },
+    { name: post.title, url: `${siteConfig.url}/blog/${handle}` },
+  ])
+  
+  return (
+    <>
+      <JsonLd data={[articleSchema, breadcrumbSchema]} />
+      <BlogPostClient post={post} relatedPosts={data.related} />
+    </>
+  )
 }
