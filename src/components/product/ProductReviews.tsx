@@ -75,6 +75,18 @@ export default function ProductReviews({ productHandle, productTitle }: ProductR
       })
       
       const res = await fetch(`/api/product-reviews/${productHandle}?${params}`)
+      
+      if (!res.ok) {
+        console.error('Failed to fetch reviews:', res.status)
+        return
+      }
+      
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid response type')
+        return
+      }
+      
       const data = await res.json()
       
       if (data.success) {
