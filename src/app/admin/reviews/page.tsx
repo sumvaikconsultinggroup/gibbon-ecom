@@ -168,6 +168,60 @@ export default function ReviewsManagementPage() {
     }
   }, [isAuthenticated, fetchData])
 
+  // Product search function
+  const searchProducts = async (query: string) => {
+    if (!query.trim()) {
+      setProductOptions([])
+      return
+    }
+    
+    setSearchingProducts(true)
+    try {
+      const res = await fetch(`/api/admin/reviews/products?search=${encodeURIComponent(query)}`)
+      
+      if (!res.ok) {
+        console.error('Product search failed:', res.status)
+        setProductOptions([])
+        return
+      }
+      
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid content type')
+        setProductOptions([])
+        return
+      }
+      
+      const data = await res.json()
+      if (data.success) {
+        setProductOptions(data.data)
+      }
+    } catch (error) {
+      console.error('Error searching products:', error)
+      setProductOptions([])
+    } finally {
+      setSearchingProducts(false)
+    }
+  }
+
+  // Debounce product search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (productSearch) {
+        searchProducts(productSearch)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [productSearch])
+
+  const selectProduct = (product: {handle: string; title: string}) => {
+    setSelectedProduct(product)
+    setForm({ ...form, productHandle: product.handle })
+    setProductSearch('')
+    setProductOptions([])
+    setShowProductDropdown(false)
+  }
+
   const resetForm = () => {
     setForm({
       productHandle: '',
