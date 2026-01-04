@@ -297,6 +297,17 @@ export default function RecommendationsPage() {
         body: JSON.stringify(form)
       })
 
+      if (!res.ok) {
+        toast.error('Server error. Please try again.')
+        return
+      }
+      
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        toast.error('Server error. Please try again.')
+        return
+      }
+
       const data = await res.json()
       
       if (data.success) {
