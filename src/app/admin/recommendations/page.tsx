@@ -10,7 +10,7 @@ import {
   Plus, Edit2, Trash2, Save, X, Search, Package,
   Sparkles, ShoppingBag, Eye, EyeOff, Loader2,
   ChevronDown, ChevronUp, GripVertical, CheckCircle,
-  ArrowRight, Layers, Settings, Filter
+  ArrowRight, Layers, Settings, Filter, Zap, Info
 } from 'lucide-react'
 
 interface RecommendedProduct {
@@ -20,6 +20,16 @@ interface RecommendedProduct {
   productImage: string
   productPrice: number
   position: number
+}
+
+interface AutoPreviewProduct {
+  _id: string
+  handle: string
+  title: string
+  image: string
+  price: number
+  frequency: number
+  percentage: number
 }
 
 interface Recommendation {
