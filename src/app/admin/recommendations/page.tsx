@@ -114,6 +114,20 @@ export default function RecommendationsPage() {
       })
       
       const res = await fetch(`/api/admin/recommendations?${params}`)
+      
+      // Check if response is OK
+      if (!res.ok) {
+        console.error('API returned error status:', res.status)
+        return
+      }
+      
+      // Check content type before parsing
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid content type:', contentType)
+        return
+      }
+      
       const data = await res.json()
       
       if (data.success) {
@@ -123,7 +137,7 @@ export default function RecommendationsPage() {
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error)
-      toast.error('Failed to load recommendations')
+      // Don't show toast for network errors
     } finally {
       setLoading(false)
     }
