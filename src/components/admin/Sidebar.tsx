@@ -78,6 +78,7 @@ const sidebarItems: NavItem[] = [
       { name: 'Navigation', href: '/admin/navigation', icon: Menu, permission: 'settings.view' },
       { name: 'Blog', href: '/admin/blog', icon: Newspaper, permission: 'settings.view', badge: 'New' },
       { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare, permission: 'settings.view', badge: 'New' },
+      { name: 'Recommendations', href: '/admin/recommendations', icon: Sparkles, permission: 'settings.view', badge: 'New' },
     ],
   },
   {
