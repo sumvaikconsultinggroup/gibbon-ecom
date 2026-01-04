@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import {
   Store,
@@ -9,38 +8,131 @@ import {
   Upload,
   Loader2,
   Check,
+  AlertCircle,
 } from 'lucide-react'
 
+interface StoreSettings {
+  storeName: string
+  storeEmail: string
+  storePhone: string
+  storeAddress: string
+  currency: string
+  timezone: string
+  logoUrl?: string
+}
+
 export default function StoreSettingsPage() {
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [settings, setSettings] = useState({
-    storeName: 'Gibbon Nutrition',
-    storeEmail: 'support@gibbonnutrition.com',
-    storePhone: '+91 98765 43210',
-    storeAddress: 'Mumbai, Maharashtra, India',
+  const [settings, setSettings] = useState<StoreSettings>({
+    storeName: '',
+    storeEmail: '',
+    storePhone: '',
+    storeAddress: '',
     currency: 'INR',
     timezone: 'Asia/Kolkata',
+    logoUrl: '/GibbonLogoEccom.png',
   })
+
+  // Fetch settings on mount
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/admin/settings')
+      const data = await response.json()
+      
+      if (data.success && data.settings) {
+        setSettings({
+          storeName: data.settings.storeName || '',
+          storeEmail: data.settings.storeEmail || '',
+          storePhone: data.settings.storePhone || '',
+          storeAddress: data.settings.storeAddress || '',
+          currency: data.settings.currency || 'INR',
+          timezone: data.settings.timezone || 'Asia/Kolkata',
+          logoUrl: data.settings.logoUrl || '/GibbonLogoEccom.png',
+        })
+      } else {
+        setError(data.error || 'Failed to load settings')
+      }
+    } catch (err: any) {
+      console.error('Error fetching settings:', err)
+      setError('Failed to load settings. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setError(null)
+    setSaved(false)
+    
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      } else {
+        setError(data.error || 'Failed to save settings')
+      }
+    } catch (err: any) {
+      console.error('Error saving settings:', err)
+      setError('Failed to save settings. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1B198F]" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 p-4 text-red-700">
+          <AlertCircle className="h-5 w-5" />
+          {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {saved && (
+        <div className="flex items-center gap-2 rounded-xl bg-green-50 p-4 text-green-700">
+          <Check className="h-5 w-5" />
+          Settings saved successfully!
+        </div>
+      )}
+
       {/* Store Logo */}
       <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
         <h2 className="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Store Logo</h2>
         <div className="flex items-center gap-6">
           <div className="relative h-20 w-40 overflow-hidden rounded-xl bg-neutral-100">
             <Image
-              src="/GibbonLogoEccom.png"
+              src={settings.logoUrl || '/GibbonLogoEccom.png'}
               alt="Store Logo"
               fill
               className="object-contain p-2"
