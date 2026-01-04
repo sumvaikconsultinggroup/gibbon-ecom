@@ -291,30 +291,26 @@ export default function CollectionPageClient({
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* Products Grid - Mobile Optimized */}
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-square rounded-2xl bg-neutral-200 dark:bg-neutral-800" />
-                <div className="mt-4 h-4 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
-                <div className="mt-2 h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="aspect-square rounded-xl sm:rounded-2xl bg-neutral-200 dark:bg-neutral-800" />
+                <div className="mt-3 sm:mt-4 h-3 sm:h-4 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="mt-2 h-3 sm:h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
               </div>
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-lg text-neutral-500">No products found</p>
+          <div className="py-16 sm:py-20 text-center">
+            <p className="text-base sm:text-lg text-neutral-500">No products found</p>
             <button onClick={clearFilters} className="mt-4 text-[#1B198F] hover:underline">
               Clear filters
             </button>
           </div>
         ) : (
-          <div
-            className={`grid gap-4 sm:gap-6 ${
-              gridCols === 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-            }`}
-          >
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:gap-6">
             {products.map((product, index) => {
               const variant = product.variants?.[0]
               const price = variant?.price || 0
@@ -328,56 +324,58 @@ export default function CollectionPageClient({
                   key={product._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
                   className="group"
                   onMouseEnter={() => setHoveredProduct(product._id)}
                   onMouseLeave={() => setHoveredProduct(null)}
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-lg dark:bg-neutral-900">
+                  <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-lg dark:bg-neutral-900">
                     <Link href={`/products/${product.handle}`}>
                       <Image
                         src={product.images?.[0]?.src || '/placeholder-images.webp'}
                         alt={product.title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {product.images?.[1] && (
                         <Image
                           src={product.images[1].src}
                           alt={product.title}
                           fill
+                          sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
                           className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                         />
                       )}
                     </Link>
 
                     {/* Badges */}
-                    <div className="absolute left-3 top-3 flex flex-col gap-2">
+                    <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex flex-col gap-1.5 sm:gap-2">
                       {discount > 0 && (
-                        <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white">
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-white">
                           -{discount}%
                         </span>
                       )}
                     </div>
 
-                    {/* Quick Actions */}
+                    {/* Quick Actions - Hidden on mobile */}
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: isHovered ? 1 : 0 }}
-                      className="absolute right-3 top-3 flex flex-col gap-2"
+                      className="absolute right-2 top-2 sm:right-3 sm:top-3 hidden sm:flex flex-col gap-2"
                     >
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow-lg transition-colors hover:bg-[#1B198F] hover:text-white">
-                        <Heart className="h-4 w-4" />
+                      <button className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow-lg transition-colors hover:bg-[#1B198F] hover:text-white">
+                        <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <Link
                         href={`/products/${product.handle}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow-lg transition-colors hover:bg-[#1B198F] hover:text-white"
+                        className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow-lg transition-colors hover:bg-[#1B198F] hover:text-white"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Link>
                     </motion.div>
 
-                    {/* Quick Add */}
+                    {/* Quick Add - Hidden on mobile */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
