@@ -37,6 +37,7 @@ import {
   PanelTop,
   Newspaper,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react'
 
 interface NavItem {
