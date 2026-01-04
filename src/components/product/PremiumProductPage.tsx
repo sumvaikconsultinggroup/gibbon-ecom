@@ -776,7 +776,6 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
                 }`}
               >
                 {tab.replace('-', ' ')}
-                {tab === 'reviews' && ` (${reviews.length})`}
               </button>
             ))}
           </div>
