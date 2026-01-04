@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base URL for testing - using production URL from .env
-BASE_URL = "https://reviewhub-29.preview.emergentagent.com"
+BASE_URL = "https://product-recs.preview.emergentagent.com"
 
 class APITester:
     def __init__(self, base_url: str):
