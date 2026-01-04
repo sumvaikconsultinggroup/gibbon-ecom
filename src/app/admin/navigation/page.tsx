@@ -695,6 +695,25 @@ export default function NavigationManagementPage() {
           </div>
         </div>
 
+        {/* Fallback Mode Banner */}
+        {usingFallback && (
+          <div className="mx-6 mt-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-800 dark:text-amber-200">Using Cached Navigation Data</p>
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Unable to connect to the server. Showing default menu structure. Changes won't be saved until server connection is restored.
+              </p>
+            </div>
+            <button
+              onClick={fetchNavigation}
+              className="rounded-lg bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200 dark:hover:bg-amber-700"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Toolbar */}
         <div className="flex items-center gap-4 border-t border-neutral-100 px-6 py-3 dark:border-neutral-800">
           {/* Search */}
