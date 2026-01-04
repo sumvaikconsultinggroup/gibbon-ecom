@@ -103,18 +103,23 @@ export async function POST(request: NextRequest) {
     // Get recommended products
     const recommendedProducts = await Product.find(
       { handle: { $in: recommendedHandles } },
-      { _id: 1, handle: 1, title: 1, images: 1, price: 1 }
+      { _id: 1, handle: 1, title: 1, images: 1, price: 1, variants: 1 }
     ).lean()
     
     const recommendations = recommendedHandles.map((handle: string, index: number) => {
       const product = recommendedProducts.find((p: any) => p.handle === handle)
       if (!product) return null
+      const p = product as any
+      const firstVariant = p.variants?.[0]
+      // Handle images stored as objects with src property
+      const imageValue = p.images?.[0]
+      const imageUrl = typeof imageValue === 'object' ? imageValue?.src : (imageValue || '')
       return {
-        productId: (product as any)._id,
-        productHandle: (product as any).handle,
-        productTitle: (product as any).title,
-        productImage: (product as any).images?.[0] || '',
-        productPrice: (product as any).price || 0,
+        productId: p._id,
+        productHandle: p.handle,
+        productTitle: p.title,
+        productImage: imageUrl,
+        productPrice: firstVariant?.price || p.price || 0,
         position: index
       }
     }).filter(Boolean)
