@@ -1,6 +1,6 @@
 'use client'
 
-import { useUser } from '@/context/UserAuthContext'
+import { useAuth } from '@/context/UserAuthContext'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { User, Heart, Wallet, ShoppingBag, LogOut, Loader2 } from 'lucide-react'
 
 const AccountDropdown = () => {
-  const { user, isLoading, isSignedIn, signOut } = useUserAuth()
+  const { user, isLoading, isSignedIn, signOut } = useAuth()
   const router = useRouter()
   const [wishlistCount, setWishlistCount] = useState(0)
   const [walletPoints, setWalletPoints] = useState(0)
