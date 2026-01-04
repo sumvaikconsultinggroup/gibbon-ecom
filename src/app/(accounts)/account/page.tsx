@@ -43,6 +43,7 @@ const Page = () => {
   const { user, isSignedIn, isLoaded } = useUser()
   const { signOut } = useAuth()
   const router = useRouter()
+  const userId = user?.id
 
   const {
     register,
