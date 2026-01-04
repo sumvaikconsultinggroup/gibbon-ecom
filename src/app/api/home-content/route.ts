@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import connectDb from '@/lib/mongodb'
 import HomeBanner from '@/models/HomeBanner'
 import HomeSection from '@/models/HomeSection'
-import Product from '@/models/Product'
+import Product from '@/models/product.model'
 
 // Deep serialize for MongoDB documents
 const deepSerialize = (obj: any): any => {
