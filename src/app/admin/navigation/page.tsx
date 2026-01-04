@@ -142,12 +142,11 @@ export default function NavigationManagementPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
+  // Fetch on mount regardless of auth (read-only)
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchNavigation()
-      fetchProducts()
-    }
-  }, [isAuthenticated, fetchNavigation, fetchProducts])
+    fetchNavigation()
+    fetchProducts()
+  }, [fetchNavigation, fetchProducts])
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedItems)
