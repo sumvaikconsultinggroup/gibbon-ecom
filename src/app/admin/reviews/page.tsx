@@ -105,6 +105,13 @@ export default function ReviewsManagementPage() {
   
   // Bulk selection
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(new Set())
+  
+  // Product search for create/edit modal
+  const [productSearch, setProductSearch] = useState('')
+  const [productOptions, setProductOptions] = useState<{_id: string; handle: string; title: string; image: string; price: number}[]>([])
+  const [searchingProducts, setSearchingProducts] = useState(false)
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<{handle: string; title: string} | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
