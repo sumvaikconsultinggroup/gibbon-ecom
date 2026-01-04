@@ -230,19 +230,24 @@ const ProductCard = ({ className = '', data, isLiked = false }) => {
             {renderColorOptions()}
           </div>
           <div>
-            <h2 className="nc-ProductCard__title text-base font-semibold transition-colors">
+            <h2 className="nc-ProductCard__title text-sm sm:text-base font-semibold transition-colors line-clamp-2">
               {title} {variants?.[0]?.option2Value && `(${variants[0].option2Value})`}
             </h2>
-            <p className={`mt-1 text-sm text-neutral-500 dark:text-neutral-400`}>{defaultVariant?.option1Value}</p>
+            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1">{defaultVariant?.option1Value}</p>
           </div>
 
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-2">
             <Prices price={price ?? 1} />
-            <div className="mb-0.5 flex items-center">
-              <StarIcon className="h-5 w-5 pb-px text-amber-400" />
-              <span className="ms-1 text-sm text-neutral-500 dark:text-neutral-400">
-                {ratingCount.toFixed(1) || 0} ({reviews?.length || 0} reviews)
+            <div className="mb-0.5 hidden sm:flex items-center">
+              <StarIcon className="h-4 w-4 sm:h-5 sm:w-5 pb-px text-amber-400" />
+              <span className="ms-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
+                {ratingCount.toFixed(1) || 0} ({reviews?.length || 0})
               </span>
+            </div>
+            {/* Mobile rating - simplified */}
+            <div className="flex sm:hidden items-center">
+              <StarIcon className="h-3.5 w-3.5 text-amber-400" />
+              <span className="ms-0.5 text-xs text-neutral-500">{ratingCount.toFixed(1)}</span>
             </div>
           </div>
         </div>
