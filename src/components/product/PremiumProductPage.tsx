@@ -196,6 +196,18 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Track recently viewed products
+  useEffect(() => {
+    if (product?.handle) {
+      addToRecentlyViewed({
+        handle: product.handle,
+        title: product.title,
+        image: images[0] || '',
+        price: price
+      })
+    }
+  }, [product?.handle, product?.title, images, price])
+
   // Image zoom handler
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageRef.current) return
