@@ -431,20 +431,20 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
 
               {/* Enhanced Thumbnails */}
               {images.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto pb-2">
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                   {images.map((image, index) => (
                     <motion.button
                       key={index}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedImage(index)}
-                      className={`relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                      className={`relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded-lg sm:rounded-xl border-2 transition-all ${
                         selectedImage === index 
                           ? 'border-[#1B198F] shadow-lg shadow-[#1B198F]/30' 
                           : 'border-transparent hover:border-neutral-300'
                       }`}
                     >
-                      <Image src={image.src} alt={`${product.title} ${index + 1}`} fill className="object-cover" />
+                      <Image src={image.src} alt={`${product.title} ${index + 1}`} fill className="object-contain p-1 sm:p-2 bg-neutral-50" sizes="80px" />
                       {selectedImage === index && (
                         <div className="absolute inset-0 bg-[#1B198F]/10" />
                       )}
@@ -454,7 +454,7 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
               )}
 
               {/* Product Highlights Grid */}
-              <div className="grid grid-cols-4 gap-3 rounded-2xl bg-gradient-to-br from-neutral-50 to-neutral-100 p-4 dark:from-neutral-900 dark:to-neutral-800">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-neutral-50 to-neutral-100 p-3 sm:p-4 dark:from-neutral-900 dark:to-neutral-800">
                 {highlights.map((item, i) => (
                   <motion.div 
                     key={i}
@@ -463,11 +463,11 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
                     transition={{ delay: i * 0.1 }}
                     className="flex flex-col items-center gap-1 text-center"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1B198F]/10">
-                      <item.icon className="h-5 w-5 text-[#1B198F]" />
+                    <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-[#1B198F]/10">
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 text-[#1B198F]" />
                     </div>
-                    <span className="text-xs font-bold text-neutral-900 dark:text-white">{item.label}</span>
-                    <span className="text-[10px] text-neutral-500">{item.desc}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-neutral-900 dark:text-white">{item.label}</span>
+                    <span className="text-[9px] sm:text-[10px] text-neutral-500">{item.desc}</span>
                   </motion.div>
                 ))}
               </div>
