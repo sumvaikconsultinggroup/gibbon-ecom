@@ -203,7 +203,7 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
       addToRecentlyViewed({
         handle: product.handle,
         title: product.title,
-        image: images[0] || '',
+        image: images[0]?.src || '',
         price: price
       })
     }
