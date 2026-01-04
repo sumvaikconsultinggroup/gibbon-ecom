@@ -183,6 +183,8 @@ export default function NavigationManagementPage() {
   const fetchNavigation = useCallback(async () => {
     try {
       setLoading(true)
+      setUsingFallback(false)
+      
       const [navRes, flatRes] = await Promise.all([
         fetch('/api/admin/navigation'),
         fetch('/api/admin/navigation?flat=true')
@@ -193,8 +195,11 @@ export default function NavigationManagementPage() {
       const flatContentType = flatRes.headers.get('content-type')
       
       if (!navContentType?.includes('application/json') || !flatContentType?.includes('application/json')) {
-        console.error('Non-JSON response received - possible proxy error')
-        toast.error('Failed to load navigation - server error')
+        console.warn('Non-JSON response received - using fallback navigation data')
+        setNavItems(FALLBACK_NAVIGATION)
+        setFlatItems(flattenNavigation(FALLBACK_NAVIGATION))
+        setUsingFallback(true)
+        toast('Using cached navigation data (server unavailable)', { icon: '⚠️' })
         setLoading(false)
         return
       }
@@ -202,19 +207,32 @@ export default function NavigationManagementPage() {
       if (navRes.ok && flatRes.ok) {
         const navData = await navRes.json()
         const flatData = await flatRes.json()
-        if (navData.success) {
-          setNavItems(navData.data || [])
+        if (navData.success && navData.data && navData.data.length > 0) {
+          setNavItems(navData.data)
+          setUsingFallback(false)
+        } else {
+          // Empty data from server - use fallback
+          setNavItems(FALLBACK_NAVIGATION)
+          setFlatItems(flattenNavigation(FALLBACK_NAVIGATION))
+          setUsingFallback(true)
         }
-        if (flatData.success) {
-          setFlatItems(flatData.data || [])
+        if (flatData.success && flatData.data) {
+          setFlatItems(flatData.data)
         }
       } else {
-        console.error('API error:', navRes.status, flatRes.status)
-        toast.error('Failed to load navigation')
+        console.warn('API error - using fallback:', navRes.status, flatRes.status)
+        setNavItems(FALLBACK_NAVIGATION)
+        setFlatItems(flattenNavigation(FALLBACK_NAVIGATION))
+        setUsingFallback(true)
+        toast('Using cached navigation data', { icon: '⚠️' })
       }
     } catch (error) {
       console.error('Error fetching navigation:', error)
-      toast.error('Failed to load navigation')
+      // Use fallback on error
+      setNavItems(FALLBACK_NAVIGATION)
+      setFlatItems(flattenNavigation(FALLBACK_NAVIGATION))
+      setUsingFallback(true)
+      toast('Using cached navigation data', { icon: '⚠️' })
     } finally {
       setLoading(false)
     }
