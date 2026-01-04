@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
 
 const Page = () => {
-  const { user, isLoading, isSignedIn } = useUserAuth()
+  const { user, isLoading, isSignedIn } = useUser()
   const router = useRouter()
   
   const [wishlistProducts, setWishlistProducts] = useState([])

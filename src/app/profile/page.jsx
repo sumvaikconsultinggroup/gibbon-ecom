@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { user, isLoading, isSignedIn } = useUserAuth()
+  const { user, isLoading, isSignedIn } = useUser()
   const router = useRouter()
 
   useEffect(() => {
