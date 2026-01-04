@@ -36,19 +36,27 @@ export default function BoughtTogether({ productHandle, currentProduct }: Bought
       try {
         const res = await fetch(`/api/recommendations/${productHandle}?type=bought_together`)
         
+        // Silently handle non-OK responses (including 520 proxy errors)
         if (!res.ok) {
-          console.error('Failed to fetch bought together:', res.status)
+          setLoading(false)
           return
         }
         
         const contentType = res.headers.get('content-type')
         if (!contentType || !contentType.includes('application/json')) {
-          console.error('Invalid response type')
+          setLoading(false)
           return
         }
         
-        const data = await res.json()
-        if (data.success && data.data.boughtTogether?.length) {
+        const text = await res.text()
+        // Check if response is actually JSON (not HTML error page)
+        if (!text.startsWith('{') && !text.startsWith('[')) {
+          setLoading(false)
+          return
+        }
+        
+        const data = JSON.parse(text)
+        if (data.success && data.data?.boughtTogether?.length) {
           setProducts(data.data.boughtTogether)
           // Auto-select first 2 products
           const initial = new Set<string>()
@@ -56,8 +64,8 @@ export default function BoughtTogether({ productHandle, currentProduct }: Bought
           data.data.boughtTogether.slice(0, 2).forEach((p: RecommendedProduct) => initial.add(p.handle))
           setSelectedProducts(initial)
         }
-      } catch (error) {
-        console.error('Error fetching bought together:', error)
+      } catch {
+        // Silent fail - don't log errors for this non-critical feature
       } finally {
         setLoading(false)
       }
@@ -116,6 +124,7 @@ export default function BoughtTogether({ productHandle, currentProduct }: Bought
     toast.success(`Added ${selectedProducts.size} items to cart!`)
   }
 
+  // Don't render anything if loading or no products
   if (loading || products.length === 0) return null
 
   const allProducts = [currentProduct, ...products]
