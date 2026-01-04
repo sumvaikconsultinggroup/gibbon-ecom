@@ -2,15 +2,14 @@
 
 import ProductCard from '@/components/ProductCard'
 import ButtonPrimary from '@/shared/Button/ButtonPrimary'
-import { useAuth, useUser } from '@clerk/nextjs'
+import { useUserAuth } from '@/context/UserAuthContext'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
 
 const Page = () => {
-  const { isSignedIn, userId, isLoaded } = useAuth()
-  const { user } = useUser()
+  const { user, isLoading, isSignedIn } = useUserAuth()
   const router = useRouter()
   
   const [wishlistProducts, setWishlistProducts] = useState([])
@@ -18,14 +17,14 @@ const Page = () => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/sign-in?redirect_url=/account-wishlists')
+    if (!isLoading && !isSignedIn) {
+      router.push('/login?redirect=/account-wishlists')
     }
-  }, [isSignedIn, isLoaded, router])
+  }, [isSignedIn, isLoading, router])
 
   useEffect(() => {
     const fetchWishlistProducts = async () => {
-      if (!isSignedIn || !userId) {
+      if (!isSignedIn || !user) {
         setLoading(false)
         return
       }
@@ -57,17 +56,17 @@ const Page = () => {
       }
     }
 
-    if (isSignedIn && userId) {
+    if (isSignedIn && user) {
       fetchWishlistProducts()
     }
-  }, [isSignedIn, userId])
+  }, [isSignedIn, user])
 
   const handleProductRemoved = (productId) => {
     setWishlistProducts(prev => prev.filter(product => product._id !== productId))
     router.refresh()
   }
 
-  if (!isLoaded) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
@@ -94,7 +93,7 @@ const Page = () => {
             Please sign in to view and manage your saved products
           </p>
           <ButtonPrimary 
-            onClick={() => router.push('/sign-in?redirect_url=/account-wishlists')}
+            onClick={() => router.push('/login?redirect=/account-wishlists')}
             className="rounded-xl bg-linear-to-r from-[#1B198F] to-[#3086C8] px-8 py-3 font-family-antonio text-base font-bold uppercase"
           >
             Sign In Now
