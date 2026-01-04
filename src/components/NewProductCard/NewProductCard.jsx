@@ -162,10 +162,14 @@ const NewProductCard = ({ product: data }) => {
   return (
     <div
       key={data._id}
-      className=" p-4  border-[1.75px] border-[#1B198F] flex-shrink-0 bg-white relative"
+      className={`p-4 border-[1.75px] border-[#1B198F] flex-shrink-0 bg-white relative ${outOfStock ? 'opacity-60' : ''}`}
     >
-      {/* Red left border accent */}
-      {/* <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1B198F]" /> */}
+      {/* Out of Stock Badge */}
+      {outOfStock && (
+        <div className="absolute top-2 left-2 z-20 rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white">
+          Out of Stock
+        </div>
+      )}
 
       {/* Product Image */}
       <div className="relative bg-[#e8e4df] p-6">
@@ -187,7 +191,7 @@ const NewProductCard = ({ product: data }) => {
             src={data.images?.[0]?.src || "/placeholder.svg"}
             alt={data.title}
             fill
-            className="object-cover max-h-full"
+            className={`object-cover max-h-full ${outOfStock ? 'grayscale' : ''}`}
           />
         </div>
       </div>
