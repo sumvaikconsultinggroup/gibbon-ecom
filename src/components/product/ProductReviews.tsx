@@ -118,10 +118,13 @@ export default function ProductReviews({ productHandle, productTitle }: ProductR
     if (helpedReviews.has(reviewId)) return
     
     try {
-      const res = await fetch(`/api/reviews/${reviewId}/helpful`, {
+      const res = await fetch(`/api/reviews/helpful`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voterId: 'user_' + Math.random().toString(36).substr(2, 9) })
+        body: JSON.stringify({ 
+          reviewId,
+          voterId: 'user_' + Math.random().toString(36).substr(2, 9) 
+        })
       })
       
       const data = await res.json()
