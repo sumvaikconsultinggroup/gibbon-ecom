@@ -35,6 +35,18 @@ export default function BoughtTogether({ productHandle, currentProduct }: Bought
     const fetchRecommendations = async () => {
       try {
         const res = await fetch(`/api/recommendations/${productHandle}?type=bought_together`)
+        
+        if (!res.ok) {
+          console.error('Failed to fetch bought together:', res.status)
+          return
+        }
+        
+        const contentType = res.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Invalid response type')
+          return
+        }
+        
         const data = await res.json()
         if (data.success && data.data.boughtTogether?.length) {
           setProducts(data.data.boughtTogether)
