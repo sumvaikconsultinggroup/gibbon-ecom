@@ -597,21 +597,27 @@ export default function DynamicMegaHeader() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto bg-white dark:bg-neutral-900"
+              className="fixed left-0 top-0 z-50 h-full w-[85vw] max-w-sm overflow-y-auto bg-white pb-safe dark:bg-neutral-900"
+              style={{ maxHeight: '100dvh' }}
             >
-              <div className="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-700">
+              {/* Header with safe area */}
+              <div className="safe-area-top flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-700">
                 <Image src="/GibbonLogoEccom.png" alt="Gibbon" width={120} height={36} className="h-8 w-auto" />
-                <button onClick={() => setIsMobileMenuOpen(false)} className="rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-neutral-100 active:scale-95 dark:hover:bg-neutral-800"
+                  aria-label="Close menu"
+                >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
-              <div className="p-4">
+              <div className="p-4 pb-24">
                 {categories.map((category) => (
                   <div key={category.id} className="border-b border-neutral-100 py-3 dark:border-neutral-800">
                     <Link
                       href={category.href}
-                      className="flex items-center justify-between py-2 font-semibold text-neutral-900 dark:text-white"
+                      className="flex min-h-[44px] items-center justify-between py-2 font-semibold text-neutral-900 active:opacity-70 dark:text-white"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {category.name}
@@ -623,13 +629,13 @@ export default function DynamicMegaHeader() {
                           <Link
                             key={sub.id}
                             href={sub.href}
-                            className="flex items-center justify-between py-1.5 text-sm text-neutral-600 dark:text-neutral-400"
+                            className="flex min-h-[40px] items-center justify-between py-2 text-sm text-neutral-600 active:opacity-70 dark:text-neutral-400"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
                             {sub.name}
                             {sub.badge && (
                               <span 
-                                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                                className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                                 style={{ 
                                   backgroundColor: `${sub.badgeColor || '#1B198F'}20`, 
                                   color: sub.badgeColor || '#1B198F' 
@@ -650,7 +656,7 @@ export default function DynamicMegaHeader() {
                     <Link
                       key={link.name}
                       href={link.href}
-                      className="flex items-center gap-3 rounded-lg bg-neutral-100 p-3 font-semibold dark:bg-neutral-800"
+                      className="flex min-h-[48px] items-center gap-3 rounded-xl bg-neutral-100 p-3 font-semibold active:scale-[0.98] dark:bg-neutral-800"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <link.icon className="h-5 w-5 text-[#1B198F]" />
@@ -659,17 +665,17 @@ export default function DynamicMegaHeader() {
                   ))}
                 </div>
 
-                <div className="mt-6 space-y-3">
+                <div className="mt-6 space-y-2">
                   <Link 
                     href="/wishlist" 
-                    className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300"
+                    className="flex min-h-[44px] items-center gap-3 py-2 text-neutral-700 active:opacity-70 dark:text-neutral-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Heart className="h-5 w-5" /> Wishlist
                   </Link>
                   <Link 
                     href="/account" 
-                    className="flex items-center gap-3 py-2 text-neutral-700 dark:text-neutral-300"
+                    className="flex min-h-[44px] items-center gap-3 py-2 text-neutral-700 active:opacity-70 dark:text-neutral-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <User className="h-5 w-5" /> My Account
