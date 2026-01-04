@@ -345,7 +345,7 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
               {/* Main Image with Zoom */}
               <div
                 ref={imageRef}
-                className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-3xl bg-gradient-to-br from-neutral-100 to-neutral-50 shadow-lg dark:from-neutral-900 dark:to-neutral-800"
+                className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-neutral-100 to-neutral-50 shadow-lg dark:from-neutral-900 dark:to-neutral-800"
                 onMouseEnter={() => setIsZoomed(true)}
                 onMouseLeave={() => setIsZoomed(false)}
                 onMouseMove={handleMouseMove}
@@ -356,11 +356,12 @@ export default function PremiumProductPage({ product, relatedProducts = [] }: Pr
                     src={images[selectedImage].src}
                     alt={images[selectedImage].alt || product.title}
                     fill
-                    className={`object-cover transition-transform duration-300 ${
+                    className={`object-contain p-4 sm:p-6 transition-transform duration-300 ${
                       isZoomed ? 'scale-150' : 'scale-100'
                     }`}
                     style={isZoomed ? { transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%` } : {}}
                     priority
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 )}
 
