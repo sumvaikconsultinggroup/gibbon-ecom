@@ -198,31 +198,37 @@ const ProductCard = ({ className = '', data, isLiked = false }) => {
       <div className={`product-card font-family-antonio relative flex flex-col bg-transparent ${className} ${outOfStock ? 'opacity-60' : ''}`}>
         <Link href={'/products/' + handle} className="absolute inset-0"></Link>
 
-        <div className="group relative z-1 shrink-0 overflow-hidden rounded-3xl bg-neutral-50 dark:bg-neutral-300">
+        <div className="group relative z-1 shrink-0 overflow-hidden rounded-2xl sm:rounded-3xl bg-neutral-50 dark:bg-neutral-300">
           <Link href={'/products/' + handle} className="block">
             {featuredImage?.src && (
               <NcImage
                 containerClassName="relative aspect-square w-full overflow-hidden"
                 src={featuredImage?.src}
-                className={`h-full w-full object-cover ${outOfStock ? 'grayscale' : ''}`}
+                className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${outOfStock ? 'grayscale' : ''}`}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
                 alt={handle}
               />
             )}
           </Link>
           <ProductStatus status={status} />
           {outOfStock && (
-            <div className="absolute top-3 left-3 z-10 rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white">
+            <div className="absolute top-2 left-2 z-10 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] sm:text-xs sm:px-3 sm:py-1 font-semibold text-white">
               Out of Stock
             </div>
           )}
-          <LikeButton liked={isLiked} productId={_id} productName={title} className="absolute end-3 top-3 z-10" />
-          {!outOfStock && renderGroupButtons()}
+          <LikeButton liked={isLiked} productId={_id} productName={title} className="absolute end-2 top-2 sm:end-3 sm:top-3 z-10" />
+          {/* Hide hover buttons on mobile, show on desktop */}
+          <div className="hidden sm:block">
+            {!outOfStock && renderGroupButtons()}
+          </div>
         </div>
 
-        <div className="space-y-4 px-2.5 pt-5 pb-2.5">
-          {renderColorOptions()}
+        <div className="space-y-2 sm:space-y-4 px-1 sm:px-2.5 pt-3 sm:pt-5 pb-2">
+          {/* Hide color options on mobile */}
+          <div className="hidden sm:block">
+            {renderColorOptions()}
+          </div>
           <div>
             <h2 className="nc-ProductCard__title text-base font-semibold transition-colors">
               {title} {variants?.[0]?.option2Value && `(${variants[0].option2Value})`}
