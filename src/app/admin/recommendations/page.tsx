@@ -311,6 +311,11 @@ export default function RecommendationsPage() {
     setProductSearch('')
     setProductOptions([])
     setShowProductDropdown(false)
+    
+    // Auto-fetch suggestions for "Bought Together"
+    if (form.type === 'bought_together') {
+      fetchAutoPreview(product.handle)
+    }
   }
 
   const addRecommendedProduct = (product: ProductOption) => {
