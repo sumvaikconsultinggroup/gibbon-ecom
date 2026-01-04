@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Link, Eye, EyeOff, Save, X, Menu, 
   ExternalLink, Smartphone, Monitor, ArrowUpDown, Search,
   Layers, FolderTree, LayoutGrid, Settings2, MoreVertical,
-  Copy, MoveUp, MoveDown, Shield, Tag, FileText
+  Copy, MoveUp, MoveDown, Shield, Tag, FileText, AlertTriangle
 } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -45,6 +45,91 @@ interface Product {
   variants?: { price: number }[]
 }
 
+// Fallback navigation data when API fails (matches MegaHeader structure)
+const FALLBACK_NAVIGATION: NavigationItem[] = [
+  {
+    _id: 'fallback-1',
+    name: 'Protein',
+    href: '/collections/protein',
+    slug: 'protein',
+    order: 1,
+    isActive: true,
+    type: 'megamenu',
+    parent: null,
+    description: 'Premium quality proteins for muscle growth',
+    showInHeader: true,
+    showInFooter: true,
+    showInMobile: true,
+    openInNewTab: false,
+    children: [
+      { _id: 'fb-1-1', name: 'Whey Protein', href: '/collections/whey-protein', slug: 'whey-protein', order: 1, isActive: true, type: 'subcategory', parent: 'fallback-1', badge: 'Popular', badgeColor: '#1B198F', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-1-2', name: 'Whey Isolate', href: '/collections/whey-isolate', slug: 'whey-isolate', order: 2, isActive: true, type: 'subcategory', parent: 'fallback-1', badge: 'Premium', badgeColor: '#10b981', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-1-3', name: 'Mass Gainer', href: '/collections/mass-gainer', slug: 'mass-gainer', order: 3, isActive: true, type: 'subcategory', parent: 'fallback-1', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-1-4', name: 'Plant Protein', href: '/collections/plant-protein', slug: 'plant-protein', order: 4, isActive: true, type: 'subcategory', parent: 'fallback-1', badge: 'Vegan', badgeColor: '#22c55e', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+    ]
+  },
+  {
+    _id: 'fallback-2',
+    name: 'Pre-Workout',
+    href: '/collections/pre-workout',
+    slug: 'pre-workout',
+    order: 2,
+    isActive: true,
+    type: 'megamenu',
+    parent: null,
+    description: 'Boost your workout performance',
+    showInHeader: true,
+    showInFooter: true,
+    showInMobile: true,
+    openInNewTab: false,
+    children: [
+      { _id: 'fb-2-1', name: 'Stimulant Pre-Workout', href: '/collections/stimulant-pre-workout', slug: 'stimulant-pre', order: 1, isActive: true, type: 'subcategory', parent: 'fallback-2', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-2-2', name: 'Pump Formulas', href: '/collections/pump', slug: 'pump', order: 2, isActive: true, type: 'subcategory', parent: 'fallback-2', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-2-3', name: 'Creatine', href: '/collections/creatine', slug: 'creatine', order: 3, isActive: true, type: 'subcategory', parent: 'fallback-2', badge: 'Best Seller', badgeColor: '#f59e0b', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+    ]
+  },
+  {
+    _id: 'fallback-3',
+    name: 'Vitamins & Health',
+    href: '/collections/vitamins',
+    slug: 'vitamins',
+    order: 3,
+    isActive: true,
+    type: 'megamenu',
+    parent: null,
+    description: 'Essential vitamins and supplements',
+    showInHeader: true,
+    showInFooter: true,
+    showInMobile: true,
+    openInNewTab: false,
+    children: [
+      { _id: 'fb-3-1', name: 'Multivitamins', href: '/collections/multivitamins', slug: 'multivitamins', order: 1, isActive: true, type: 'subcategory', parent: 'fallback-3', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-3-2', name: 'Omega-3', href: '/collections/omega-3', slug: 'omega-3', order: 2, isActive: true, type: 'subcategory', parent: 'fallback-3', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-3-3', name: 'Vitamin D', href: '/collections/vitamin-d', slug: 'vitamin-d', order: 3, isActive: true, type: 'subcategory', parent: 'fallback-3', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+    ]
+  },
+  {
+    _id: 'fallback-4',
+    name: 'Amino Acids',
+    href: '/collections/amino-acids',
+    slug: 'amino-acids',
+    order: 4,
+    isActive: true,
+    type: 'category',
+    parent: null,
+    description: 'Essential amino acids for recovery',
+    showInHeader: true,
+    showInFooter: true,
+    showInMobile: true,
+    openInNewTab: false,
+    children: [
+      { _id: 'fb-4-1', name: 'BCAAs', href: '/collections/bcaa', slug: 'bcaa', order: 1, isActive: true, type: 'subcategory', parent: 'fallback-4', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-4-2', name: 'EAAs', href: '/collections/eaa', slug: 'eaa', order: 2, isActive: true, type: 'subcategory', parent: 'fallback-4', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+      { _id: 'fb-4-3', name: 'Glutamine', href: '/collections/glutamine', slug: 'glutamine', order: 3, isActive: true, type: 'subcategory', parent: 'fallback-4', showInHeader: true, showInFooter: false, showInMobile: true, openInNewTab: false },
+    ]
+  },
+]
+
 export default function NavigationManagementPage() {
   const { isAuthenticated, isLoading: authLoading } = useAdminAuth()
   const router = useRouter()
@@ -57,6 +142,7 @@ export default function NavigationManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'tree' | 'flat'>('tree')
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+  const [usingFallback, setUsingFallback] = useState(false)
   
   // Modal states
   const [showModal, setShowModal] = useState(false)
@@ -81,6 +167,18 @@ export default function NavigationManagementPage() {
     cssClass: '',
     featuredProducts: [] as string[]
   })
+
+  // Helper to flatten navigation with children
+  const flattenNavigation = (items: NavigationItem[]): NavigationItem[] => {
+    const result: NavigationItem[] = []
+    items.forEach(item => {
+      result.push(item)
+      if (item.children && item.children.length > 0) {
+        result.push(...item.children)
+      }
+    })
+    return result
+  }
 
   const fetchNavigation = useCallback(async () => {
     try {
