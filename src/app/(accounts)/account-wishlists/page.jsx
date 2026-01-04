@@ -2,7 +2,7 @@
 
 import ProductCard from '@/components/ProductCard'
 import ButtonPrimary from '@/shared/Button/ButtonPrimary'
-import { useUserAuth } from '@/context/UserAuthContext'
+import { useUser } from '@/context/UserAuthContext'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
