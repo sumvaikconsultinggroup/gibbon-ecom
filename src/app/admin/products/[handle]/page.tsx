@@ -40,6 +40,16 @@ import {
   getCategories 
 } from '../product-actions'
 
+// Dynamically import the rich text editor to avoid SSR issues
+const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 rounded-xl border border-neutral-200 bg-neutral-50 flex items-center justify-center dark:border-neutral-700 dark:bg-neutral-900">
+      <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+    </div>
+  ),
+})
+
 interface VariantImage {
   src: string
   position: number
