@@ -47,6 +47,7 @@ import {
 import { useCart } from '@/components/useCartStore'
 import { useAside } from '@/components/aside/aside'
 import ProductBundleOffers from '@/components/ProductBundleOffers'
+import ProductReviews from '@/components/product/ProductReviews'
 
 interface ProductImage {
   src: string
