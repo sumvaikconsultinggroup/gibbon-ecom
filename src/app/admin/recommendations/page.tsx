@@ -225,6 +225,53 @@ export default function RecommendationsPage() {
     setSelectedProducts([])
     setProductSearch('')
     setProductOptions([])
+    setAutoPreviewProducts([])
+    setAutoPreviewStats(null)
+  }
+
+  // Fetch automated "Bought Together" suggestions based on order history
+  const fetchAutoPreview = async (handle: string) => {
+    if (!handle) return
+    
+    setAutoPreviewLoading(true)
+    try {
+      const res = await fetch(`/api/admin/recommendations/auto-preview?handle=${encodeURIComponent(handle)}&limit=6`)
+      if (!res.ok) {
+        setAutoPreviewProducts([])
+        return
+      }
+      
+      const data = await res.json()
+      if (data.success) {
+        setAutoPreviewProducts(data.data || [])
+        setAutoPreviewStats(data.stats || null)
+      }
+    } catch (error) {
+      console.error('Error fetching auto preview:', error)
+      setAutoPreviewProducts([])
+    } finally {
+      setAutoPreviewLoading(false)
+    }
+  }
+
+  // Add all auto-suggested products to selection
+  const addAllAutoSuggestions = () => {
+    const newProducts = autoPreviewProducts
+      .filter(ap => !selectedProducts.find(sp => sp.handle === ap.handle))
+      .map(ap => ({
+        _id: ap._id,
+        handle: ap.handle,
+        title: ap.title,
+        image: ap.image,
+        price: ap.price
+      }))
+    
+    setSelectedProducts([...selectedProducts, ...newProducts])
+    setForm({ 
+      ...form, 
+      recommendedHandles: [...form.recommendedHandles, ...newProducts.map(p => p.handle)]
+    })
+    toast.success(`Added ${newProducts.length} suggested products`)
   }
 
   const openModal = async (rec?: Recommendation) => {
