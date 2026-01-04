@@ -1,11 +1,19 @@
-import { UserResource } from '@clerk/types'
 import { create } from 'zustand'
 
+interface UserData {
+  id: string
+  email: string
+  firstName?: string
+  lastName?: string
+  imageUrl?: string
+  phone?: string
+}
+
 interface AuthState {
-  user: UserResource | null | undefined
+  user: UserData | null | undefined
   isAuthenticated: boolean
   isLoading: boolean
-  setUser: (user: UserResource | null | undefined) => void
+  setUser: (user: UserData | null | undefined) => void
   setIsAuthenticated: (isAuthenticated: boolean) => void
   setIsLoading: (isLoading: boolean) => void
 }
