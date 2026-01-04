@@ -28,6 +28,18 @@ export default function YouMayAlsoLike({ productHandle, title = 'You May Also Li
     const fetchRecommendations = async () => {
       try {
         const res = await fetch(`/api/recommendations/${productHandle}?type=you_may_also_like`)
+        
+        if (!res.ok) {
+          console.error('Failed to fetch recommendations:', res.status)
+          return
+        }
+        
+        const contentType = res.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Invalid response type')
+          return
+        }
+        
         const data = await res.json()
         if (data.success && data.data.youMayAlsoLike?.length) {
           setProducts(data.data.youMayAlsoLike)
