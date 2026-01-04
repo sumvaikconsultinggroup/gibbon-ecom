@@ -147,7 +147,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
       </head>
-      <body className="text-neutral-900 dark:bg-neutral-900 dark:text-neutral-200">
+      <body className="text-neutral-900 antialiased dark:bg-neutral-900 dark:text-neutral-200">
+        {/* iOS safe area wrapper */}
+        <div className="safe-area-top safe-area-left safe-area-right"></div>
         <UserAuthProvider>
           <AppProvider>
             <TrackerProvider>
