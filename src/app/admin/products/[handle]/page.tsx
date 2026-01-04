@@ -30,6 +30,7 @@ import {
   Layers,
   Search as SearchIcon,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { 
   getProductByHandle, 
   createProduct, 
