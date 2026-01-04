@@ -8,8 +8,6 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
-import TextStyle from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
 import { useCallback, useEffect } from 'react'
 import {
   Bold,
@@ -105,8 +103,6 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Write
       Highlight.configure({
         multicolor: true,
       }),
-      TextStyle,
-      Color,
     ],
     content,
     editorProps: {
@@ -162,7 +158,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Write
   }
 
   return (
-    <div className={`rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900 ${className}`}>
+    <div className={`rounded-xl border border-neutral-200 bg-white overflow-hidden dark:border-neutral-700 dark:bg-neutral-900 ${className}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-neutral-50 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-800">
         {/* Text Format Group */}
@@ -365,14 +361,16 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Write
       {/* Editor Content */}
       <EditorContent editor={editor} />
 
-      {/* Character Count */}
+      {/* Character Count & Info */}
       <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-2 dark:border-neutral-700">
         <span className="text-xs text-neutral-500">
           {editor.getText().length} characters
         </span>
-        <span className="text-xs text-neutral-500">
-          Rich Text Editor
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            Enterprise Editor
+          </span>
+        </div>
       </div>
     </div>
   )
