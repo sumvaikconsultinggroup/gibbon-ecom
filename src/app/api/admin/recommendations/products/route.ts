@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
       _id: p._id.toString(),
       handle: p.handle,
       title: p.title,
-      image: p.images?.[0] || '',
-      price: p.price || 0,
-      compareAtPrice: p.compareAtPrice || 0
+      image: typeof p.images?.[0] === 'object' ? p.images[0]?.src : (p.images?.[0] || ''),
+      price: p.price || p.variants?.[0]?.price || 0,
+      compareAtPrice: p.compareAtPrice || p.variants?.[0]?.compareAtPrice || 0
     }))
     
     return NextResponse.json({ success: true, data: serialized })
