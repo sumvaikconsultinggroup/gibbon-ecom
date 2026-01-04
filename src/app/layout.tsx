@@ -103,7 +103,7 @@ export const metadata: Metadata = {
   },
 }
 
-// Viewport Configuration
+// Viewport Configuration - Enhanced for iOS/Android
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#1B198F' },
@@ -112,6 +112,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover', // For iOS notch support
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
