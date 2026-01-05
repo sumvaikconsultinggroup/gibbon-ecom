@@ -199,8 +199,8 @@ const Information: React.FC<InformationProps> = ({ onUpdateUserInfo, onUpdatePay
     )
   }
 
-  if (!clerkUser) {
-    // User is not logged in - show login prompt
+  if (!clerkUser && !isGuestCheckout) {
+    // User is not logged in - show login prompt with guest checkout option
     return (
       <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
         <div className="text-center">
@@ -208,10 +208,10 @@ const Information: React.FC<InformationProps> = ({ onUpdateUserInfo, onUpdatePay
             <HugeiconsIcon icon={UserCircle02Icon} className="h-8 w-8 text-primary-600 dark:text-primary-400" />
           </div>
           <h3 className="mb-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Sign in to continue
+            How would you like to checkout?
           </h3>
           <p className="mb-6 text-neutral-600 dark:text-neutral-400">
-            Please sign in to your account to complete your purchase. Your cart items will be saved.
+            Sign in for a faster checkout or continue as a guest
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
@@ -226,6 +226,173 @@ const Information: React.FC<InformationProps> = ({ onUpdateUserInfo, onUpdatePay
             >
               Create Account
             </Link>
+          </div>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-neutral-200 dark:border-neutral-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">or</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsGuestCheckout(true)}
+            className="inline-flex w-full items-center justify-center rounded-full border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700/50 dark:text-neutral-200 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
+          >
+            Continue as Guest
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Guest Checkout Form
+  if (isGuestCheckout) {
+    return (
+      <div className="space-y-6 font-family-roboto sm:space-y-8">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Guest Checkout
+            </h3>
+            <button
+              onClick={() => setIsGuestCheckout(false)}
+              className="text-sm text-primary-600 hover:underline"
+            >
+              Sign in instead
+            </button>
+          </div>
+
+          <Fieldset className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FieldGroup>
+                <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">First Name *</Label>
+                <Input
+                  value={guestInfo.firstName}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, firstName: e.target.value })}
+                  placeholder="John"
+                  className="mt-1"
+                  required
+                />
+              </FieldGroup>
+              <FieldGroup>
+                <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Last Name</Label>
+                <Input
+                  value={guestInfo.lastName}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, lastName: e.target.value })}
+                  placeholder="Doe"
+                  className="mt-1"
+                />
+              </FieldGroup>
+            </div>
+
+            <FieldGroup>
+              <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Email Address *</Label>
+              <Input
+                type="email"
+                value={guestInfo.email}
+                onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                placeholder="john@example.com"
+                className="mt-1"
+                required
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Phone Number *</Label>
+              <Input
+                type="tel"
+                value={guestInfo.phone}
+                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                placeholder="+91 98765 43210"
+                className="mt-1"
+                required
+              />
+            </FieldGroup>
+
+            <div className="border-t border-neutral-200 pt-5 dark:border-neutral-700">
+              <h4 className="mb-4 text-sm font-semibold text-neutral-900 dark:text-neutral-100">Shipping Address</h4>
+              
+              <FieldGroup className="mb-4">
+                <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Address *</Label>
+                <Input
+                  value={guestInfo.address}
+                  onChange={(e) => setGuestInfo({ ...guestInfo, address: e.target.value })}
+                  placeholder="Street address, apartment, floor"
+                  className="mt-1"
+                  required
+                />
+              </FieldGroup>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FieldGroup>
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">City *</Label>
+                  <Input
+                    value={guestInfo.city}
+                    onChange={(e) => setGuestInfo({ ...guestInfo, city: e.target.value })}
+                    placeholder="Mumbai"
+                    className="mt-1"
+                    required
+                  />
+                </FieldGroup>
+                <FieldGroup>
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">State *</Label>
+                  <Input
+                    value={guestInfo.state}
+                    onChange={(e) => setGuestInfo({ ...guestInfo, state: e.target.value })}
+                    placeholder="Maharashtra"
+                    className="mt-1"
+                    required
+                  />
+                </FieldGroup>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FieldGroup>
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">PIN Code *</Label>
+                  <Input
+                    value={guestInfo.zipcode}
+                    onChange={(e) => setGuestInfo({ ...guestInfo, zipcode: e.target.value })}
+                    placeholder="400001"
+                    className="mt-1"
+                    required
+                  />
+                </FieldGroup>
+                <FieldGroup>
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Country</Label>
+                  <Input
+                    value={guestInfo.country}
+                    onChange={(e) => setGuestInfo({ ...guestInfo, country: e.target.value })}
+                    placeholder="India"
+                    className="mt-1"
+                    disabled
+                  />
+                </FieldGroup>
+              </div>
+            </div>
+          </Fieldset>
+
+          {/* Validation Status */}
+          <div className="mt-6 rounded-lg bg-neutral-50 p-4 dark:bg-neutral-700/50">
+            <div className="flex items-center gap-2">
+              {isContactInfoComplete && isShippingAddressComplete ? (
+                <>
+                  <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">Ready to proceed with payment</span>
+                </>
+              ) : (
+                <>
+                  <div className="h-5 w-5 rounded-full bg-amber-500 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                  <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Please fill all required fields (*)</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
