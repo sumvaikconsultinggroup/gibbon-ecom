@@ -65,18 +65,9 @@ export default function CustomersPage() {
     setLoading(false)
   }
 
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || customer.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
-
-  const totalCustomers = customers.length
-  const activeCustomers = customers.filter(c => c.status === 'active').length
+  const activeCustomers = stats?.activeCustomers || 0
   const totalRevenue = customers.reduce((sum, c) => sum + c.totalSpent, 0)
-  const avgOrderValue = totalRevenue / customers.reduce((sum, c) => sum + c.totalOrders, 0) || 0
+  const avgOrderValue = stats?.averageOrderValue || 0
 
   return (
     <div className="space-y-6">
@@ -84,12 +75,21 @@ export default function CustomersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Customers</h1>
-          <p className="text-neutral-500">{totalCustomers} customers registered</p>
+          <p className="text-neutral-500">{stats?.totalCustomers || 0} customers registered</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-          <Download className="h-4 w-4" />
-          Export
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={fetchCustomers}
+            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-all hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
