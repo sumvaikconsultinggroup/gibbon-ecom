@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/context/UserAuthContext'
@@ -16,7 +16,11 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signUp } = useAuth()
+  
+  // Get redirect URL from query params
+  const redirectUrl = searchParams.get('redirect') || '/'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +30,7 @@ export default function RegisterPage() {
       const result = await signUp({ email, password, firstName, lastName })
       if (result.success) {
         toast.success('Account created successfully!')
-        router.push('/')
+        router.push(redirectUrl)
       } else {
         toast.error(result.message)
       }
