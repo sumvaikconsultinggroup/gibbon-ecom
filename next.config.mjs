@@ -13,12 +13,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   
-  // Increase body size limit for video uploads (100MB)
-  serverRuntimeConfig: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
+  // Note: Next.js App Router handles FormData automatically, no body parser config needed
   
   allowedDevOrigins: [
     'gibbon-dashboard.preview.emergentagent.com',
