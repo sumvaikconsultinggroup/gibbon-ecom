@@ -110,6 +110,9 @@ export default function AdminVideosPage() {
   const [editingVideo, setEditingVideo] = useState<VideoReel | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [productSearch, setProductSearch] = useState('')
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url')
 
   // Form state
   const [formData, setFormData] = useState({
