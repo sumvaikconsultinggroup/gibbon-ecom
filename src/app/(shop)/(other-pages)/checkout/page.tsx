@@ -1,13 +1,11 @@
 'use client'
 
-import NcInputNumber from '@/components/NcInputNumber'
 import Prices from '@/components/Prices'
 import { useCart } from '@/components/useCartStore'
-import { TCardProduct } from '@/data/data'
 import Breadcrumb from '@/shared/Breadcrumb'
 import ButtonPrimary from '@/shared/Button/ButtonPrimary'
 import { Link as MyLink } from '@/shared/link'
-import { Coordinate01Icon, InformationCircleIcon, PaintBucketIcon } from '@hugeicons/core-free-icons'
+import { InformationCircleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import Information from './Information'
 import OrderSummary from './OrderSummary'
+import Script from 'next/script'
 
 // Track checkout event for live analytics
 const trackCheckoutEvent = async (type: string, data: any) => {
@@ -44,6 +43,13 @@ const trackCheckoutEvent = async (type: string, data: any) => {
   }
 }
 
+// Declare Razorpay type
+declare global {
+  interface Window {
+    Razorpay: any
+  }
+}
+
 const CheckoutPage = () => {
   const router = useRouter()
   const {
@@ -56,8 +62,11 @@ const CheckoutPage = () => {
     setOrderDetails,
     setOrderSuccess,
     setPaymentMethod,
+    removeAll,
   } = useCart()
   const [isFormValid, setIsFormValid] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const trackedRef = useRef(false)
 
   // Track checkout start when page loads
@@ -73,13 +82,231 @@ const CheckoutPage = () => {
     }
   }, [cartItems])
 
-  console.log('try to fix shit v1', userInfo)
+  // Create order in database
+  const createOrder = async (paymentMethodType: string) => {
+    if (!userInfo || !orderSummary) {
+      throw new Error('Missing user information or order summary')
+    }
+
+    const response = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cartItems.map((item) => ({
+          productId: item.productId,
+          variantId: item.variant?.id,
+          name: item.name,
+          variantTitle: item.variant?.name,
+          quantity: item.quantity,
+          price: item.price,
+          compareAtPrice: item.comapreAtPrice,
+          imageUrl: item.imageUrl,
+          sku: item.variant?.option1Value,
+        })),
+        shippingAddress: {
+          firstName: userInfo.name?.split(' ')[0] || '',
+          lastName: userInfo.lastName || userInfo.name?.split(' ').slice(1).join(' ') || '',
+          address1: userInfo.address1,
+          address2: '',
+          city: userInfo.city,
+          state: userInfo.state,
+          country: userInfo.country || 'India',
+          zipCode: userInfo.zipcode,
+          phone: userInfo.phone,
+        },
+        customerInfo: {
+          email: userInfo.email,
+          firstName: userInfo.name?.split(' ')[0] || '',
+          lastName: userInfo.lastName || userInfo.name?.split(' ').slice(1).join(' ') || '',
+          phone: userInfo.phone,
+        },
+        paymentMethod: paymentMethodType.toLowerCase(),
+        subtotal: orderSummary.subtotal,
+        discount: orderSummary.discount,
+        shippingCost: orderSummary.shipping,
+        tax: orderSummary.taxes,
+        totalAmount: orderSummary.total,
+      }),
+    })
+
+    const data = await response.json()
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to create order')
+    }
+
+    return data.order
+  }
+
+  // Handle Razorpay payment
+  const handleRazorpayPayment = async (order: any) => {
+    try {
+      // Create Razorpay order
+      const razorpayResponse = await fetch('/api/payments/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.orderId,
+          amount: order.totalAmount,
+          customerInfo: {
+            email: userInfo?.email,
+            phone: userInfo?.phone,
+            name: userInfo?.name,
+          },
+        }),
+      })
+
+      const razorpayData = await razorpayResponse.json()
+      
+      if (!razorpayData.success) {
+        throw new Error(razorpayData.message || 'Failed to create Razorpay order')
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: razorpayData.razorpayKeyId,
+        amount: razorpayData.amount,
+        currency: razorpayData.currency,
+        name: 'Gibbon Nutrition',
+        description: `Order #${order.orderNumber}`,
+        order_id: razorpayData.razorpayOrderId,
+        handler: async function (response: any) {
+          // Verify payment
+          try {
+            const verifyResponse = await fetch('/api/payments/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: order.orderId,
+              }),
+            })
+
+            const verifyData = await verifyResponse.json()
+            
+            if (verifyData.success) {
+              // Track successful purchase
+              trackCheckoutEvent('purchase', {
+                orderId: order.orderId,
+                orderTotal: order.totalAmount,
+                paymentMethod: 'razorpay',
+              })
+
+              // Clear cart and redirect
+              removeAll()
+              router.push(`/payment/success/${order.orderId}`)
+            } else {
+              throw new Error(verifyData.message || 'Payment verification failed')
+            }
+          } catch (verifyError: any) {
+            setErrorMessage(verifyError.message || 'Payment verification failed')
+            setIsProcessing(false)
+          }
+        },
+        prefill: {
+          name: userInfo?.name,
+          email: userInfo?.email,
+          contact: userInfo?.phone,
+        },
+        theme: {
+          color: '#1B198F',
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false)
+            setErrorMessage('Payment cancelled')
+          },
+        },
+      }
+
+      const razorpay = new window.Razorpay(options)
+      razorpay.open()
+
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // Handle PayU payment
+  const handlePayUPayment = async (order: any) => {
+    try {
+      const payuResponse = await fetch('/api/payments/payu/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.orderId,
+          amount: order.totalAmount,
+          productInfo: `Order #${order.orderNumber}`,
+          customerInfo: {
+            email: userInfo?.email,
+            phone: userInfo?.phone,
+            firstName: userInfo?.name?.split(' ')[0] || '',
+            lastName: userInfo?.lastName || userInfo?.name?.split(' ').slice(1).join(' ') || '',
+          },
+        }),
+      })
+
+      const payuData = await payuResponse.json()
+      
+      if (!payuData.success) {
+        throw new Error(payuData.message || 'Failed to create PayU order')
+      }
+
+      // Create form and submit to PayU
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = payuData.payuData.payuUrl
+
+      const fields = payuData.payuData
+      Object.keys(fields).forEach((key) => {
+        if (key !== 'payuUrl') {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = fields[key]
+          form.appendChild(input)
+        }
+      })
+
+      document.body.appendChild(form)
+      form.submit()
+
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // Handle COD order
+  const handleCODOrder = async (order: any) => {
+    // Track successful purchase
+    trackCheckoutEvent('purchase', {
+      orderId: order.orderId,
+      orderTotal: order.totalAmount,
+      paymentMethod: 'cod',
+    })
+
+    // Clear cart and redirect
+    removeAll()
+    router.push(`/order-successful?orderId=${order.orderId}`)
+  }
 
   const handleConfirmOrder = async () => {
-    if (isFormValid && paymentMethod && userInfo && orderSummary) {
-      const orderId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    if (!isFormValid || !paymentMethod || !userInfo || !orderSummary) {
+      setErrorMessage('Please complete all required fields')
+      return
+    }
+
+    setIsProcessing(true)
+    setErrorMessage('')
+
+    try {
+      // Create order first
+      const order = await createOrder(paymentMethod)
+
+      // Set order details in store
       setOrderDetails({
-        orderId: orderId,
+        orderId: order.orderId,
         name: userInfo.name,
         phone: userInfo.phone,
         address: userInfo.address,
@@ -89,212 +316,140 @@ const CheckoutPage = () => {
         discount: orderSummary.discount,
         paymentMethod: paymentMethod,
       })
-      setOrderSuccess(true)
+
+      // Handle payment based on method
       if (paymentMethod === 'Prepaid') {
-        router.push('/checkout/pay-u-checkout')
+        // Try Razorpay first (can be configured in settings)
+        await handleRazorpayPayment(order)
+      } else if (paymentMethod === 'COD') {
+        await handleCODOrder(order)
       } else {
-        try {
-          const response = await fetch(' http://localhost:3000/api/order', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              user: {
-                firstName: userInfo.name,
-                email: userInfo.email,
-                phone: userInfo.phone,
-              },
-              products: cartItems.map((item) => ({
-                productId: item.id,
-                title: item.name,
-                quantity: item.quantity,
-                variant: {
-                  price: item.price,
-                  option1Value: item.variant?.option1Value || '',
-                  image: item.imageUrl || '',
-                },
-              })),
-              totalAmount: orderSummary.total,
-              deliveryAddress: userInfo.address,
-              payment: {
-                method: paymentMethod,
-              },
-            }),
-          })
-
-          const data = await response.json()
-
-          if (data.success) {
-            // Track successful purchase for live analytics
-            trackCheckoutEvent('purchase', {
-              orderId: orderId,
-              orderTotal: orderSummary.total,
-              items: cartItems.map((item) => ({
-                productId: item.id,
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-              })),
-            })
-            router.push('/order-successful')
-          } else {
-            alert(data.message || 'Failed to place order')
-            setOrderSuccess(false)
-          }
-        } catch (error) {
-          console.error('Error placing order:', error)
-          alert('Failed to place order')
-          setOrderSuccess(false)
-        }
+        throw new Error('Invalid payment method')
       }
+
+    } catch (error: any) {
+      console.error('Checkout error:', error)
+      setErrorMessage(error.message || 'Failed to process order. Please try again.')
+      setIsProcessing(false)
     }
   }
 
-  const renderProduct = (product: TCardProduct) => {
-    const { image, price, name, handle, id, size, color, quantity } = product
-
+  if (cartItems.length === 0) {
     return (
-      <div key={id} className="relative flex py-8 first:pt-0 last:pb-0 sm:py-10 xl:py-12">
-        <div className="relative h-36 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100 sm:w-32">
-          {image?.src && (
-            <Image
-              fill
-              src={image || '/placeholder-images.webp'}
-              alt={image.alt || ''}
-              sizes="300px"
-              className="object-contain object-center"
-              priority
-            />
-          )}
-          <Link href={'/products/' + handle} className="absolute inset-0"></Link>
+      <main className="container py-16 lg:pt-20 lg:pb-28">
+        <div className="flex flex-col items-center justify-center py-20">
+          <h1 className="text-2xl font-semibold mb-4">Your cart is empty</h1>
+          <p className="text-neutral-500 mb-8">Add some products to your cart to checkout.</p>
+          <Link 
+            href="/collections/all"
+            className="bg-[#1B198F] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1B198F]/90 transition-colors"
+          >
+            Continue Shopping
+          </Link>
         </div>
-
-        <div className="ml-3 flex flex-1 flex-col sm:ml-6">
-          <div>
-            <div className="flex justify-between">
-              <div className="flex-[1.5]">
-                <h3 className="text-base font-semibold">
-                  <Link href={'/products/' + handle}>{name}</Link>
-                </h3>
-                <div className="mt-1.5 flex text-sm text-neutral-600 sm:mt-2.5 dark:text-neutral-300">
-                  <div className="flex items-center gap-x-2">
-                    <HugeiconsIcon icon={PaintBucketIcon} size={16} color="currentColor" strokeWidth={1.5} />
-                    <span>{color}</span>
-                  </div>
-                  <span className="mx-4 border-l border-neutral-200 dark:border-neutral-700"></span>
-                  <div className="flex items-center gap-x-2">
-                    <HugeiconsIcon icon={Coordinate01Icon} size={16} color="currentColor" strokeWidth={1.5} />
-                    <span>{size}</span>
-                  </div>
-                </div>
-
-                <div className="relative mt-3 flex w-full justify-between sm:hidden">
-                  <select
-                    name="qty"
-                    id="qty"
-                    defaultValue={quantity}
-                    className="form-select relative z-10 rounded-md bg-white px-2 py-1 text-xs outline-1 outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-neutral-800"
-                  >
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                  </select>
-                  <Prices contentClass="py-1 px-2 md:py-1.5 md:px-2.5 text-sm font-medium h-full" price={price || 0} />
-                </div>
-              </div>
-
-              <div className="hidden flex-1 justify-end sm:flex">
-                <Prices price={price || 0} className="mt-0.5" />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-auto flex items-end justify-between pt-4 text-sm">
-            <div className="hidden sm:block">
-              <NcInputNumber className="relative z-10" />
-            </div>
-
-            <div className="relative z-10 mt-3 flex items-center text-sm font-medium text-primary-600 hover:text-primary-500">
-              <span>Remove</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    ) 
+      </main>
+    )
   }
 
   return (
-    <main className="container py-16 lg:pt-20 lg:pb-28">
-      <div className="mb-16">
-        <h1 className="mb-5 block text-3xl font-semibold lg:text-4xl">Checkout</h1>
-        <Breadcrumb
-          breadcrumbs={[
-            { id: 1, name: 'Home', href: '/' },
-            { id: 2, name: 'Cart', href: '/cart' },
-          ]}
-          currentPage="Checkout"
-        />
-      </div>
-
-      <div className="flex flex-col lg:flex-row">
-        <div className="flex-1">
-          <Information
-            onUpdateUserInfo={setUserInfo}
-            onUpdatePaymentMethod={setPaymentMethod}
-            onUpdateValidation={setIsFormValid}
+    <>
+      {/* Load Razorpay script */}
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      
+      <main className="container py-16 lg:pt-20 lg:pb-28">
+        <div className="mb-16">
+          <h1 className="mb-5 block text-3xl font-semibold lg:text-4xl">Checkout</h1>
+          <Breadcrumb
+            breadcrumbs={[
+              { id: 1, name: 'Home', href: '/' },
+              { id: 2, name: 'Cart', href: '/cart' },
+            ]}
+            currentPage="Checkout"
           />
         </div>
 
-        <div className="my-10 shrink-0 border-t lg:mx-10 lg:my-0 lg:border-t-0 lg:border-l xl:lg:mx-14 2xl:mx-16" />
+        {errorMessage && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {errorMessage}
+            <button 
+              onClick={() => setErrorMessage('')}
+              className="ml-4 text-red-500 hover:text-red-700"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
-        <div className="w-full lg:w-[36%]">
-          <div className="mt-8 divide-y divide-neutral-200/70 dark:divide-neutral-700">
-            <OrderSummary onSummaryUpdate={setOrderSummary} />
+        <div className="flex flex-col lg:flex-row">
+          <div className="flex-1">
+            <Information
+              onUpdateUserInfo={setUserInfo}
+              onUpdatePaymentMethod={setPaymentMethod}
+              onUpdateValidation={setIsFormValid}
+            />
           </div>
 
-          <ButtonPrimary className="mt-8 w-full" onClick={handleConfirmOrder} disabled={!isFormValid || !paymentMethod}>
-            Confirm order
-          </ButtonPrimary>
-          <div className="mt-5 flex items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
-            <p className="relative block pl-5">
-              <HugeiconsIcon
-                icon={InformationCircleIcon}
-                size={16}
-                color="currentColor"
-                className="absolute top-0.5 -left-1"
-                strokeWidth={1.5}
-              />
-              Learn more{` `}
-              <MyLink
-                target="_blank"
-                rel="noopener noreferrer"
-                href="#"
-                className="font-medium text-neutral-900 underline dark:text-neutral-200"
-              >
-                Taxes
-              </MyLink>
-              <span>
-                {` `}and{` `}
-              </span>
-              <MyLink
-                target="_blank"
-                rel="noopener noreferrer"
-                href="#"
-                className="font-medium text-neutral-900 underline dark:text-neutral-200"
-              >
-                Shipping
-              </MyLink>
-              {` `} infomation
-            </p>
+          <div className="my-10 shrink-0 border-t lg:mx-10 lg:my-0 lg:border-t-0 lg:border-l xl:lg:mx-14 2xl:mx-16" />
+
+          <div className="w-full lg:w-[36%]">
+            <div className="mt-8 divide-y divide-neutral-200/70 dark:divide-neutral-700">
+              <OrderSummary onSummaryUpdate={setOrderSummary} />
+            </div>
+
+            <ButtonPrimary 
+              className="mt-8 w-full" 
+              onClick={handleConfirmOrder} 
+              disabled={!isFormValid || !paymentMethod || isProcessing}
+            >
+              {isProcessing ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                'Confirm order'
+              )}
+            </ButtonPrimary>
+            
+            <div className="mt-5 flex items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="relative block pl-5">
+                <HugeiconsIcon
+                  icon={InformationCircleIcon}
+                  size={16}
+                  color="currentColor"
+                  className="absolute top-0.5 -left-1"
+                  strokeWidth={1.5}
+                />
+                Learn more{` `}
+                <MyLink
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="#"
+                  className="font-medium text-neutral-900 underline dark:text-neutral-200"
+                >
+                  Taxes
+                </MyLink>
+                <span>
+                  {` `}and{` `}
+                </span>
+                <MyLink
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="#"
+                  className="font-medium text-neutral-900 underline dark:text-neutral-200"
+                >
+                  Shipping
+                </MyLink>
+                {` `} information
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   )
 }
 
