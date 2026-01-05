@@ -208,6 +208,8 @@ export default function AdminVideosPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    console.log('Upload started:', file.name, file.type, file.size)
+
     // Validate file type
     const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
     if (!validTypes.includes(file.type)) {
@@ -227,13 +229,17 @@ export default function AdminVideosPage() {
     formDataUpload.append('type', 'video')
 
     try {
+      console.log('Sending upload request...')
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formDataUpload,
       })
 
+      console.log('Upload response:', res.status)
+
       if (res.ok) {
         const data = await res.json()
+        console.log('Upload successful:', data)
         setFormData(prev => ({ ...prev, videoUrl: data.url }))
         toast.success('Video uploaded successfully!')
       } else {
@@ -242,6 +248,7 @@ export default function AdminVideosPage() {
         toast.error(errorData.error || 'Failed to upload video')
       }
     } catch (error) {
+      console.error('Upload error:', error)
       toast.error('Error uploading video')
     } finally {
       setUploadingVideo(false)
