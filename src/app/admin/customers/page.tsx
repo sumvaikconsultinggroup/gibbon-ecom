@@ -210,7 +210,7 @@ export default function CustomersPage() {
             <p className="mt-1 text-neutral-500">Customers will appear here when they sign up</p>
           </div>
         ) : (
-          filteredCustomers.map((customer, index) => (
+          customers.map((customer, index) => (
             <motion.div
               key={customer.id}
               initial={{ opacity: 0, y: 20 }}
