@@ -78,9 +78,53 @@ const Information: React.FC<InformationProps> = ({ onUpdateUserInfo, onUpdatePay
   const [isContactInfoComplete, setIsContactInfoComplete] = useState(false)
   const [isShippingAddressComplete, setIsShippingAddressComplete] = useState(false)
 
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false)
+  const [guestInfo, setGuestInfo] = useState({
+    email: '',
+    phone: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    state: '',
+    country: 'India',
+    zipcode: '',
+  })
+
   useEffect(() => {
     onUpdateValidation(isContactInfoComplete && isShippingAddressComplete)
   }, [isContactInfoComplete, isShippingAddressComplete, onUpdateValidation])
+
+  // Update user info for guest checkout
+  useEffect(() => {
+    if (isGuestCheckout) {
+      onUpdateUserInfo({
+        name: guestInfo.firstName,
+        lastName: guestInfo.lastName,
+        phone: guestInfo.phone,
+        email: guestInfo.email,
+        address: `${guestInfo.address}, ${guestInfo.city}, ${guestInfo.state}`,
+        address1: guestInfo.address,
+        city: guestInfo.city,
+        state: guestInfo.state,
+        country: guestInfo.country,
+        zipcode: guestInfo.zipcode,
+      })
+      
+      // Check if guest info is complete
+      const isComplete = !!(
+        guestInfo.email && 
+        guestInfo.phone && 
+        guestInfo.firstName && 
+        guestInfo.address && 
+        guestInfo.city && 
+        guestInfo.state && 
+        guestInfo.zipcode
+      )
+      setIsContactInfoComplete(isComplete)
+      setIsShippingAddressComplete(isComplete)
+    }
+  }, [isGuestCheckout, guestInfo, onUpdateUserInfo])
 
   useEffect(() => {
     if (userData) {
