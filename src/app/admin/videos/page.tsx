@@ -659,27 +659,146 @@ export default function AdminVideosPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium">Video URL *</label>
+                  {/* Video Upload Section */}
+                  <div className="space-y-3">
+                    <label className="mb-1 block text-sm font-medium">Video *</label>
+                    
+                    {/* Toggle between URL and Upload */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setUploadMode('url')}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          uploadMode === 'url' 
+                            ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' 
+                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-400'
+                        }`}
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                        URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUploadMode('upload')}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          uploadMode === 'upload' 
+                            ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' 
+                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-400'
+                        }`}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload
+                      </button>
+                    </div>
+
+                    {uploadMode === 'url' ? (
                       <input
                         type="url"
                         value={formData.videoUrl}
                         onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                         className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900"
-                        placeholder="https://..."
+                        placeholder="https://example.com/video.mp4"
                       />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium">Thumbnail URL</label>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                          onChange={handleVideoUpload}
+                          className="hidden"
+                          id="video-upload"
+                          disabled={uploadingVideo}
+                        />
+                        <label
+                          htmlFor="video-upload"
+                          className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
+                            uploadingVideo
+                              ? 'border-neutral-300 bg-neutral-50'
+                              : 'border-neutral-300 hover:border-primary-500 hover:bg-primary-50/50 dark:border-neutral-600 dark:hover:border-primary-500'
+                          }`}
+                        >
+                          {uploadingVideo ? (
+                            <>
+                              <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-primary-500" />
+                              <span className="mt-2 text-sm text-neutral-500">Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-8 w-8 text-neutral-400" />
+                              <span className="mt-2 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                                Click to upload video
+                              </span>
+                              <span className="mt-1 text-xs text-neutral-400">
+                                MP4, WebM, MOV (max 100MB)
+                              </span>
+                            </>
+                          )}
+                        </label>
+                      </div>
+                    )}
+
+                    {formData.videoUrl && (
+                      <div className="flex items-center gap-2 rounded-lg bg-green-50 p-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                        <Check className="h-4 w-4" />
+                        Video URL set
+                        <a href={formData.videoUrl} target="_blank" rel="noopener noreferrer" className="ml-auto underline">
+                          Preview
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Thumbnail Upload */}
+                  <div className="space-y-3">
+                    <label className="mb-1 block text-sm font-medium">Thumbnail</label>
+                    <div className="grid grid-cols-2 gap-4">
                       <input
                         type="url"
                         value={formData.thumbnailUrl}
                         onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                        className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900"
-                        placeholder="https://..."
+                        className="rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900"
+                        placeholder="Thumbnail URL"
                       />
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={handleThumbnailUpload}
+                          className="hidden"
+                          id="thumbnail-upload"
+                          disabled={uploadingThumbnail}
+                        />
+                        <label
+                          htmlFor="thumbnail-upload"
+                          className={`flex h-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-colors ${
+                            uploadingThumbnail
+                              ? 'bg-neutral-50'
+                              : 'hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-700'
+                          }`}
+                        >
+                          {uploadingThumbnail ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-200 border-t-primary-500" />
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4" />
+                              Upload Image
+                            </>
+                          )}
+                        </label>
+                      </div>
                     </div>
+                    {formData.thumbnailUrl && (
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={formData.thumbnailUrl}
+                          alt="Thumbnail preview"
+                          width={60}
+                          height={80}
+                          className="rounded-lg object-cover"
+                        />
+                        <span className="text-xs text-neutral-500">Thumbnail set</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
