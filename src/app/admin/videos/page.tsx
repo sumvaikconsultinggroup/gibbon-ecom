@@ -178,9 +178,11 @@ export default function AdminVideosPage() {
       return
     }
     try {
+      console.log('Fetching products for query:', query)
       const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=10&published=true`)
       if (res.ok) {
         const data = await res.json()
+        console.log('Products fetched:', data.total, 'results')
         // Transform products to match expected format
         const transformedProducts = (data.data || data.products || []).map((p: any) => ({
           id: p._id || p.id,
@@ -189,6 +191,7 @@ export default function AdminVideosPage() {
           price: p.variants?.[0]?.price || 0,
           images: p.images || []
         }))
+        console.log('Transformed products:', transformedProducts.length)
         setProducts(transformedProducts)
       } else {
         console.error('Product fetch failed:', res.status)
@@ -231,10 +234,12 @@ export default function AdminVideosPage() {
 
       if (res.ok) {
         const data = await res.json()
-        setFormData({ ...formData, videoUrl: data.url })
+        setFormData(prev => ({ ...prev, videoUrl: data.url }))
         toast.success('Video uploaded successfully!')
       } else {
-        toast.error('Failed to upload video')
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Upload failed:', res.status, errorData)
+        toast.error(errorData.error || 'Failed to upload video')
       }
     } catch (error) {
       toast.error('Error uploading video')
