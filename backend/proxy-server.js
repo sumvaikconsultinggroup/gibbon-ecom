@@ -1,18 +1,26 @@
 const http = require('http');
-const httpProxy = require('http-proxy');
-
-// Create a proxy server
-const proxy = httpProxy.createProxyServer({ target: 'http://127.0.0.1:3000' });
-
-proxy.on('error', (err, req, res) => {
-  console.error('Proxy error:', err.message);
-  res.writeHead(502, { 'Content-Type': 'text/plain' });
-  res.end('Bad Gateway');
-});
 
 const server = http.createServer((req, res) => {
-  console.log(`Proxying: ${req.method} ${req.url}`);
-  proxy.web(req, res);
+  const options = {
+    hostname: '127.0.0.1',
+    port: 3000,
+    path: req.url,
+    method: req.method,
+    headers: req.headers
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('Proxy error:', err.message);
+    res.writeHead(502);
+    res.end('Bad Gateway');
+  });
+
+  req.pipe(proxyReq, { end: true });
 });
 
 server.listen(8001, '0.0.0.0', () => {
