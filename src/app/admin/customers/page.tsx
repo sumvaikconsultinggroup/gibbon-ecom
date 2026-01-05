@@ -15,7 +15,9 @@ import {
   Users,
   UserPlus,
   Download,
+  RefreshCw,
 } from 'lucide-react'
+import { getCustomers, CustomerData, CustomerStats } from './customers-actions'
 
 interface Customer {
   id: string
@@ -29,64 +31,39 @@ interface Customer {
   status: 'active' | 'inactive'
 }
 
-// Mock customers data
-const mockCustomers: Customer[] = [
-  {
-    id: '1',
-    name: 'Rahul Sharma',
-    email: 'rahul@example.com',
-    phone: '+91 98765 43210',
-    totalOrders: 12,
-    totalSpent: 45000,
-    lastOrder: '2024-01-02',
-    createdAt: '2023-06-15',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'Priya Patel',
-    email: 'priya@example.com',
-    phone: '+91 87654 32109',
-    totalOrders: 8,
-    totalSpent: 32000,
-    lastOrder: '2024-01-01',
-    createdAt: '2023-07-20',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Amit Kumar',
-    email: 'amit@example.com',
-    totalOrders: 3,
-    totalSpent: 8500,
-    lastOrder: '2023-12-28',
-    createdAt: '2023-09-10',
-    status: 'active',
-  },
-  {
-    id: '4',
-    name: 'Sneha Gupta',
-    email: 'sneha@example.com',
-    phone: '+91 76543 21098',
-    totalOrders: 1,
-    totalSpent: 2499,
-    createdAt: '2023-12-01',
-    status: 'inactive',
-  },
-]
-
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [stats, setStats] = useState<CustomerStats | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCustomers, setTotalCustomers] = useState(0)
 
   useEffect(() => {
-    setTimeout(() => {
-      setCustomers(mockCustomers)
-      setLoading(false)
-    }, 500)
-  }, [])
+    fetchCustomers()
+  }, [searchQuery, statusFilter, currentPage])
+
+  const fetchCustomers = async () => {
+    setLoading(true)
+    try {
+      const result = await getCustomers({
+        search: searchQuery || undefined,
+        status: statusFilter,
+        page: currentPage,
+        limit: 20,
+      })
+      
+      if (result.success) {
+        setCustomers(result.customers)
+        setStats(result.stats)
+        setTotalCustomers(result.total)
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+    }
+    setLoading(false)
+  }
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
