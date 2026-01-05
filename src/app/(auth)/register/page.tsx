@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,7 +8,7 @@ import { useAuth } from '@/context/UserAuthContext'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -172,5 +172,21 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#1B198F] via-[#2D2BA8] to-[#3086C8] flex items-center justify-center p-4">
+      <div className="h-10 w-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+    </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <RegisterForm />
+    </Suspense>
   )
 }
