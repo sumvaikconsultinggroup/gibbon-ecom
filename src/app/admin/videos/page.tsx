@@ -189,11 +189,95 @@ export default function AdminVideosPage() {
         setProducts(transformedProducts)
       }
     } catch (error) {
-      }
-    } catch (error) {
       console.error('Failed to fetch products')
     }
   }, [])
+
+  // Upload video file
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid video file (MP4, WebM, MOV, AVI)')
+      return
+    }
+
+    // Max 100MB
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error('Video file must be less than 100MB')
+      return
+    }
+
+    setUploadingVideo(true)
+    const formDataUpload = new FormData()
+    formDataUpload.append('file', file)
+    formDataUpload.append('type', 'video')
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setFormData({ ...formData, videoUrl: data.url })
+        toast.success('Video uploaded successfully!')
+      } else {
+        toast.error('Failed to upload video')
+      }
+    } catch (error) {
+      toast.error('Error uploading video')
+    } finally {
+      setUploadingVideo(false)
+    }
+  }
+
+  // Upload thumbnail file
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPG, PNG, WebP, GIF)')
+      return
+    }
+
+    // Max 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image file must be less than 5MB')
+      return
+    }
+
+    setUploadingThumbnail(true)
+    const formDataUpload = new FormData()
+    formDataUpload.append('file', file)
+    formDataUpload.append('type', 'image')
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setFormData({ ...formData, thumbnailUrl: data.url })
+        toast.success('Thumbnail uploaded successfully!')
+      } else {
+        toast.error('Failed to upload thumbnail')
+      }
+    } catch (error) {
+      toast.error('Error uploading thumbnail')
+    } finally {
+      setUploadingThumbnail(false)
+    }
+  }
 
   useEffect(() => {
     fetchVideos()
