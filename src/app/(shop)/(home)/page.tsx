@@ -211,8 +211,8 @@ export default async function PageHome() {
       {/* FAQ */}
       <FAQ />
       
-      {/* Instagram Feed */}
-      <InstagramFeed />
+      {/* Shoppable Video Reels - Replaces Instagram Feed */}
+      <ShoppableVideos />
       
       <Footer />
     </div>
