@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/context/UserAuthContext'
@@ -14,7 +14,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signIn } = useAuth()
+  
+  // Get redirect URL from query params
+  const redirectUrl = searchParams.get('redirect') || '/'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +28,7 @@ export default function LoginPage() {
       const result = await signIn(email, password)
       if (result.success) {
         toast.success('Welcome back!')
-        router.push('/')
+        router.push(redirectUrl)
       } else {
         toast.error(result.message)
       }
