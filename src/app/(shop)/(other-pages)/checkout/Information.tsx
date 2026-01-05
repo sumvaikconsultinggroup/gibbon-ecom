@@ -155,8 +155,55 @@ const Information: React.FC<InformationProps> = ({ onUpdateUserInfo, onUpdatePay
     )
   }
 
+  if (!clerkUser) {
+    // User is not logged in - show login prompt
+    return (
+      <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20">
+            <HugeiconsIcon icon={UserCircle02Icon} className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            Sign in to continue
+          </h3>
+          <p className="mb-6 text-neutral-600 dark:text-neutral-400">
+            Please sign in to your account to complete your purchase. Your cart items will be saved.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/login?redirect=/checkout"
+              className="inline-flex items-center justify-center rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register?redirect=/checkout"
+              className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600"
+            >
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!userData) {
-    return <p>Could not load user data. Please try again.</p>
+    return (
+      <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+        <div className="text-center">
+          <p className="mb-4 text-neutral-600 dark:text-neutral-400">
+            Could not load your profile data. Please try again.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center justify-center rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const selectedAddress = userData.billing_address?.[selectedAddressIndex]
