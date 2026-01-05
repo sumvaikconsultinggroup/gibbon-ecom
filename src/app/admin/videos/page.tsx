@@ -173,9 +173,12 @@ export default function AdminVideosPage() {
 
   // Fetch products for tagging
   const fetchProducts = useCallback(async (query: string) => {
-    if (!query || query.length < 2) return
+    if (!query || query.length < 3) {
+      setProducts([])
+      return
+    }
     try {
-      const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=10`)
+      const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=10&published=true`)
       if (res.ok) {
         const data = await res.json()
         // Transform products to match expected format
@@ -187,9 +190,13 @@ export default function AdminVideosPage() {
           images: p.images || []
         }))
         setProducts(transformedProducts)
+      } else {
+        console.error('Product fetch failed:', res.status)
+        setProducts([])
       }
     } catch (error) {
-      console.error('Failed to fetch products')
+      console.error('Failed to fetch products:', error)
+      setProducts([])
     }
   }, [])
 
@@ -286,7 +293,7 @@ export default function AdminVideosPage() {
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      if (productSearch) fetchProducts(productSearch)
+      fetchProducts(productSearch)
     }, 300)
     return () => clearTimeout(debounce)
   }, [productSearch, fetchProducts])
@@ -340,8 +347,13 @@ export default function AdminVideosPage() {
 
   // Save video
   const saveVideo = async () => {
-    if (!formData.title || !formData.videoUrl) {
-      toast.error('Title and Video URL are required')
+    if (!formData.title) {
+      toast.error('Title is required')
+      return
+    }
+
+    if (!formData.videoUrl) {
+      toast.error('Video is required - Please provide a URL or upload a file')
       return
     }
 
