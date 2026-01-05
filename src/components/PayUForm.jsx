@@ -14,7 +14,7 @@ const PayUForm = ({
   hash,
 }) => {
   return (
-    <form className='' action="https://test.payu.in/_payment" method="post">
+    <form className='' action={process.env.NEXT_PUBLIC_PAYU_URL || "https://test.payu.in/_payment"} method="post">
       <input type="hidden" name="key" value={merchantKey} />
       <input type="hidden" name="txnid" value={txnid} />
       <input type="hidden" name="amount" value={amount} />
