@@ -203,7 +203,7 @@ export default function CustomersPage() {
               </div>
             </div>
           ))
-        ) : filteredCustomers.length === 0 ? (
+        ) : customers.length === 0 ? (
           <div className="col-span-full py-12 text-center">
             <Users className="mx-auto h-12 w-12 text-neutral-300" />
             <p className="mt-4 text-lg font-medium text-neutral-900 dark:text-white">No customers found</p>
