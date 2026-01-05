@@ -16,6 +16,7 @@ const nextConfig = {
   allowedDevOrigins: [
     'gibbon-dashboard.preview.emergentagent.com',
     'reviewhub-29.preview.emergentagent.com',
+    'a2c497b9-6c94-4871-92dd-983833deba17.preview.emergentagent.com',
     '*.preview.emergentagent.com',
   ],
   images: {
