@@ -40,3 +40,7 @@ next-env.d.ts
 
 # uploads (user generated content)
 /public/uploads/
+-e 
+# Environment files
+*.env
+*.env.*
