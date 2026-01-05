@@ -13,6 +13,13 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   
+  // Increase body size limit for video uploads (100MB)
+  serverRuntimeConfig: {
+    bodyParser: {
+      sizeLimit: '100mb',
+    },
+  },
+  
   allowedDevOrigins: [
     'gibbon-dashboard.preview.emergentagent.com',
     'reviewhub-29.preview.emergentagent.com',
