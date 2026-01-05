@@ -38,6 +38,7 @@ import {
   Newspaper,
   MessageSquare,
   Sparkles,
+  Video,
 } from 'lucide-react'
 
 interface NavItem {
