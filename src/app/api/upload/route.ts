@@ -3,33 +3,57 @@ import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
+// Allowed file types
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif']
+const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
+    const uploadType = formData.get('type') as string // 'image' or 'video'
     
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif']
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ success: false, error: 'Invalid file type' }, { status: 400 })
+    // Determine allowed types and max size based on upload type
+    let allowedTypes: string[]
+    let maxSize: number
+    let subDir: string
+
+    if (uploadType === 'video') {
+      allowedTypes = allowedVideoTypes
+      maxSize = 100 * 1024 * 1024 // 100MB for videos
+      subDir = 'videos'
+    } else {
+      allowedTypes = allowedImageTypes
+      maxSize = 5 * 1024 * 1024 // 5MB for images
+      subDir = 'images'
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024
+    // Validate file type
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Invalid file type. Allowed: ${allowedTypes.join(', ')}` 
+      }, { status: 400 })
+    }
+
+    // Validate file size
     if (file.size > maxSize) {
-      return NextResponse.json({ success: false, error: 'File too large' }, { status: 400 })
+      return NextResponse.json({ 
+        success: false, 
+        error: `File too large. Max size: ${maxSize / (1024 * 1024)}MB` 
+      }, { status: 400 })
     }
 
     // Create unique filename
-    const ext = file.name.split('.').pop() || 'jpg'
+    const ext = file.name.split('.').pop() || (uploadType === 'video' ? 'mp4' : 'jpg')
     const filename = `${uuidv4()}.${ext}`
     
     // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', subDir)
     try {
       await mkdir(uploadDir, { recursive: true })
     } catch (e) {
@@ -43,7 +67,7 @@ export async function POST(request: Request) {
     await writeFile(filepath, buffer)
 
     // Return public URL
-    const url = `/uploads/${filename}`
+    const url = `/uploads/${subDir}/${filename}`
 
     return NextResponse.json({
       success: true,
