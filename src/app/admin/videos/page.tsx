@@ -172,10 +172,20 @@ export default function AdminVideosPage() {
   const fetchProducts = useCallback(async (query: string) => {
     if (!query || query.length < 2) return
     try {
-      const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=10`)
+      const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=10`)
       if (res.ok) {
         const data = await res.json()
-        setProducts(data.products || [])
+        // Transform products to match expected format
+        const transformedProducts = (data.data || data.products || []).map((p: any) => ({
+          id: p._id || p.id,
+          title: p.title,
+          handle: p.handle,
+          price: p.variants?.[0]?.price || 0,
+          images: p.images || []
+        }))
+        setProducts(transformedProducts)
+      }
+    } catch (error) {
       }
     } catch (error) {
       console.error('Failed to fetch products')
