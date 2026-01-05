@@ -102,7 +102,7 @@ export default function CustomersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-neutral-500">Total Customers</p>
-              <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">{totalCustomers}</p>
+              <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">{stats?.totalCustomers || 0}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
               <Users className="h-6 w-6 text-blue-600" />
