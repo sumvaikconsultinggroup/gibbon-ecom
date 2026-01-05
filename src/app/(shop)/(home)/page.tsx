@@ -8,8 +8,8 @@ import {
   Testimonials,
   Newsletter,
   FAQ,
-  InstagramFeed,
 } from '@/components/homepage'
+import ShoppableVideos from '@/components/homepage/ShoppableVideos'
 import BestSellers from '@/components/homepage/BestSellers'
 import NewArrivals from '@/components/homepage/NewArrivals'
 import FlashDeals from '@/components/homepage/FlashDeals'
