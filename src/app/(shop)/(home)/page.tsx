@@ -8,13 +8,13 @@ import {
   Testimonials,
   Newsletter,
   FAQ,
-} from '@/components/homepage'
+} from '@/components/Homepage'
 import ShoppableVideos from '@/components/homepage/ShoppableVideos'
-import BestSellers from '@/components/homepage/BestSellers'
-import NewArrivals from '@/components/homepage/NewArrivals'
-import FlashDeals from '@/components/homepage/FlashDeals'
-import TrendingProducts from '@/components/homepage/TrendingProducts'
-import BrandPromise from '@/components/homepage/BrandPromise'
+import BestSellers from '@/components/Homepage/BestSellers'
+import NewArrivals from '@/components/Homepage/NewArrivals'
+import FlashDeals from '@/components/Homepage/FlashDeals'
+import TrendingProducts from '@/components/Homepage/TrendingProducts'
+import BrandPromise from '@/components/Homepage/BrandPromise'
 import connectDb from '@/lib/mongodb'
 import Product from '@/models/product.model'
 import { Metadata } from 'next'
